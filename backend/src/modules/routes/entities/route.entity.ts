@@ -13,6 +13,7 @@ import {
 } from 'typeorm';
 import { numericTransformer } from '../../../common/transformers/numeric.transformer.js';
 import { AutonomyLevel, Difficulty } from '../routes.enums.js';
+import type { LineString } from '../types/line-string.js';
 import { GearRecommendation } from './gear-recommendation.entity.js';
 import { PointOfInterest } from './point-of-interest.entity.js';
 import { RoutePhoto } from './route-photo.entity.js';
@@ -116,7 +117,7 @@ export class Route {
   startLongitude: number;
 
   @Column({ type: 'jsonb', nullable: true })
-  track: Record<string, unknown> | null;
+  track: LineString | null;
 
   @Column({
     name: 'private_price',
