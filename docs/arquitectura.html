@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Arquitectura del sistema</title>
+<style>
+  :root { --ink:#1c2430; --mute:#6b7380; --line:#1c2430; --soft:#eef0f3; --accent:#1c2430; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:"Segoe UI", Arial, sans-serif; color:var(--ink); background:#fff; width:1240px; padding:36px 44px 40px; }
+  header { display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid var(--ink); padding-bottom:14px; }
+  header h1 { font-size:30px; font-weight:800; }
+  header .brand { font-size:13px; color:var(--mute); margin-top:4px; }
+  header .meta { text-align:right; font-size:12px; color:var(--mute); line-height:1.5; }
+  h2 { font-size:19px; font-weight:800; margin:30px 0 4px; }
+  h2 span.n { color:var(--ink); margin-right:6px; }
+  h2 small { font-size:13px; font-weight:400; color:var(--mute); margin-left:8px; }
+  .row { display:flex; justify-content:center; gap:26px; }
+  .box { border:2px solid var(--line); border-radius:8px; padding:10px 14px; text-align:center; background:#fff; }
+  .box b { display:block; font-size:18px; }
+  .box i { font-style:normal; font-size:12px; color:var(--mute); }
+  .dark { background:var(--ink); color:#fff; border-color:var(--ink); }
+  .dark i { color:#c9ced6; }
+  .label { font-family:Consolas, monospace; font-size:12px; border:1.5px solid var(--line); background:#fff; padding:2px 8px; border-radius:3px; }
+  .arrow-down { display:flex; flex-direction:column; align-items:center; }
+  .arrow-down .stem { width:2px; height:18px; background:var(--line); }
+  .arrow-down .head { width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent; border-top:9px solid var(--line); }
+  .api { border:2px solid var(--line); border-radius:10px; padding:12px 18px 14px; margin:0 40px; }
+  .api h3 { text-align:center; font-size:22px; }
+  .api p { text-align:center; font-size:13px; color:var(--mute); margin:2px 0 10px; }
+  .mods { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; }
+  .mod { border:1.5px solid #c4c9d1; border-radius:6px; padding:8px 10px; background:var(--soft); }
+  .mod b { font-size:13px; display:block; margin-bottom:4px; }
+  .mod code { font-family:Consolas, monospace; font-size:11.5px; display:inline-block; background:#fff; border:1px solid #c4c9d1; border-radius:3px; padding:1px 6px; margin:2px 2px 0 0; }
+  .mod.core { border:2px solid var(--ink); background:#fff; }
+  .db { display:flex; align-items:center; gap:14px; border:2px solid var(--line); border-radius:8px; padding:10px 16px; margin:0 140px; }
+  .db b { font-size:18px; white-space:nowrap; }
+  .db span { font-family:Consolas, monospace; font-size:11.5px; color:var(--mute); }
+  /* sección 2 */
+  .flow { display:flex; align-items:center; justify-content:center; gap:0; margin-top:14px; }
+  .st { border:2px solid var(--ink); border-radius:6px; padding:8px 10px; text-align:center; width:148px; background:#fff; }
+  .st b { font-size:13px; display:block; font-family:Consolas, monospace; }
+  .st i { font-style:normal; font-size:11.5px; color:var(--mute); display:block; margin-top:3px; line-height:1.3; }
+  .st.dark { background:var(--ink); }
+  .st.dark b { color:#fff; } .st.dark i { color:#c9ced6; }
+  .rarrow { display:flex; align-items:center; width:34px; }
+  .rarrow .stem { flex:1; height:2px; background:var(--ink); }
+  .rarrow .head { border-top:6px solid transparent; border-bottom:6px solid transparent; border-left:9px solid var(--ink); }
+  .pay { display:flex; justify-content:center; gap:0; margin-top:8px; }
+  .pay div { width:182px; text-align:center; font-size:11.5px; color:var(--ink); }
+  .pay div.tag { font-weight:700; }
+  .exits { text-align:center; font-size:12px; color:var(--mute); margin-top:10px; }
+  .exits code { font-family:Consolas, monospace; font-size:11.5px; color:var(--ink); border:1px dashed var(--ink); padding:1px 6px; border-radius:3px; margin:0 3px; }
+  .modules3 { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:16px; }
+  .m3 { border:2px solid var(--ink); border-radius:8px; padding:12px 14px; }
+  .m3 h4 { font-size:15px; margin-bottom:4px; }
+  .m3 .who { font-size:11.5px; color:var(--mute); margin-bottom:8px; }
+  .m3 ul { list-style:none; font-size:12.5px; line-height:1.55; }
+  .m3 li::before { content:"– "; color:var(--mute); }
+  .m3 .link { margin-top:8px; font-size:11.5px; border-top:1px dashed #b5bbc4; padding-top:6px; color:var(--mute); }
+  /* sección 3 */
+  .ext { display:grid; grid-template-columns:230px 60px 200px 1fr 200px 60px 250px; align-items:center; margin-top:18px; position:relative; }
+  .pills { display:flex; flex-direction:column; gap:10px; }
+  .pill { border:2px solid var(--ink); border-radius:16px; padding:6px 12px; font-size:13px; font-weight:700; text-align:center; background:#fff; }
+  .pill i { display:block; font-style:normal; font-weight:400; font-size:11px; color:var(--mute); }
+  .hline { height:2px; background:var(--ink); position:relative; }
+  .hline.r::after { content:""; position:absolute; right:-1px; top:-5px; border-top:6px solid transparent; border-bottom:6px solid transparent; border-left:9px solid var(--ink); }
+  .hline.l::after { content:""; position:absolute; left:-1px; top:-5px; border-top:6px solid transparent; border-bottom:6px solid transparent; border-right:9px solid var(--ink); }
+  .mid { text-align:center; font-family:Consolas, monospace; font-size:12px; font-weight:700; position:relative; }
+  .mid .hline { margin-top:6px; }
+  .divider { position:absolute; left:54.5%; top:-26px; bottom:-30px; border-left:2px dashed var(--ink); }
+  .zone { position:absolute; top:-26px; font-size:12px; font-weight:700; }
+  .zone.a { left:calc(54.5% - 92px); } .zone.b { left:calc(54.5% + 12px); }
+  .foot { text-align:center; font-size:12.5px; font-weight:700; margin-top:40px; }
+  .note { font-size:11.5px; color:var(--mute); text-align:center; margin-top:6px; }
+  footer { margin-top:26px; border-top:1px solid #c4c9d1; padding-top:8px; font-size:11px; color:var(--mute); display:flex; justify-content:space-between; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Arquitectura del sistema</h1>
+    <div class="brand">Plataforma de senderismo en La Paz · nombre provisional "Altura Paz"</div>
+  </div>
+  <div class="meta">Tecnologías Web II<br>Arquitectura cliente-servidor · borrador v0.1</div>
+</header>
+
+<!-- 1 -->
+<h2><span class="n">1.</span>El recorrido de una petición. <small>Tres clientes consumen un único backend monolítico.</small></h2>
+
+<div class="row" style="margin-top:14px">
+  <div class="box" style="width:300px"><b>Web pública de senderos</b><i>React + Vite · turista · ES / EN</i></div>
+  <div class="box" style="width:300px"><b>Panel del guía</b><i>React + Vite · guía aprobado</i></div>
+  <div class="box" style="width:300px"><b>Panel de administración</b><i>React + Vite · admin</i></div>
+</div>
+<div class="row" style="gap:150px">
+  <div class="arrow-down"><div class="stem"></div><span class="label">JSON sobre HTTPS</span><div class="stem"></div><div class="head"></div></div>
+  <div class="arrow-down"><div class="stem"></div><span class="label">Bearer &lt;JWT&gt;</span><div class="stem"></div><div class="head"></div></div>
+  <div class="arrow-down"><div class="stem"></div><span class="label">Bearer &lt;JWT&gt; · rol admin</span><div class="stem"></div><div class="head"></div></div>
+</div>
+
+<div class="api">
+  <h3>API REST · Express + TypeScript</h3>
+  <p>Monolito organizado por módulos (rutas → controlador → servicio → repositorio). Middlewares validan cada dato, la sesión JWT y el rol.</p>
+  <div class="mods">
+    <div class="mod"><b>Transversales</b><code>auth</code><code>usuarios</code><code>notificaciones</code><code>archivos</code></div>
+    <div class="mod core"><b>Módulo 1 · Rutas</b><code>rutas</code><code>puntos-interes</code><code>itinerarios</code><code>especies</code><code>clima</code></div>
+    <div class="mod core"><b>Módulo 2 · Reservas de guías</b><code>guias</code><code>disponibilidad</code><code>reservas</code><code>pagos</code><code>resenas</code></div>
+    <div class="mod"><b>Administración</b><code>admin</code><code>aprobaciones</code><code>precios-ruta</code><code>comisiones</code></div>
+    <div class="mod core"><b>Módulo 3 · Pares (grupos)</b><code>grupos</code><code>miembros</code><code>chat</code><code>seguridad</code></div>
+    <div class="mod"><b>Tareas programadas · node-cron</b><code>expirar-solicitudes</code><code>cobro-saldo-48h</code><code>alertas-regreso</code></div>
+  </div>
+</div>
+
+<div class="row"><div class="arrow-down"><div class="stem"></div><span class="label">TypeORM → SQL</span><div class="stem"></div><div class="head"></div></div></div>
+
+<div class="db">
+  <b>PostgreSQL + PostGIS</b>
+  <span>Usuario · Guia · DocumentoGuia · GuiaRuta · Ruta · PuntoInteres · Itinerario · Etapa · Especie · Disponibilidad · Reserva · Pago · Resena · Grupo · MiembroGrupo · Mensaje · Incidente</span>
+</div>
+
+<!-- 2 -->
+<h2><span class="n">2.</span>Los tres módulos del negocio. <small>Independientes entre sí; Pares solo se conecta con Reservas al contratar un guía.</small></h2>
+
+<div class="modules3">
+  <div class="m3">
+    <h4>Módulo 1 · Rutas</h4>
+    <div class="who">Lo crea y administra solo el admin · visible sin iniciar sesión</div>
+    <ul>
+      <li>Trazado en mapa (Leaflet + OpenStreetMap)</li>
+      <li>Distancia, desnivel, duración, dificultad</li>
+      <li>Puntos de interés: camping, agua, mirador, peligro</li>
+      <li>Flora y fauna, cómo llegar, qué llevar</li>
+      <li>Itinerarios por días con tiempos por tramo</li>
+      <li>Nivel de autonomía y clima de 7 días</li>
+    </ul>
+  </div>
+  <div class="m3">
+    <h4>Módulo 2 · Reservas de guías</h4>
+    <div class="who">Guía verificado por ruta (CI, credencial, primeros auxilios)</div>
+    <ul>
+      <li>Precio fijo por ruta definido por el admin</li>
+      <li>Grupo de hasta 5 personas</li>
+      <li>Horario recurrente, salidas y fechas bloqueadas</li>
+      <li>Doble confirmación: solicitud y aceptación</li>
+      <li>Anticipo 50 % y saldo 48 h antes</li>
+      <li>Reseña al guía tras un tour completado</li>
+    </ul>
+  </div>
+  <div class="m3">
+    <h4>Módulo 3 · Pares</h4>
+    <div class="who">Turistas que forman grupos para caminar juntos · requiere sesión</div>
+    <ul>
+      <li>Grupo sobre una ruta y fecha, máximo 5 personas</li>
+      <li>Comunicación dentro de la plataforma, sin compartir celulares</li>
+      <li>Punto de encuentro en la ciudad</li>
+      <li>Plan de horarios por punto de paso</li>
+      <li>Seguimiento del grupo e incidentes</li>
+    </ul>
+    <div class="link">Conexión opcional: "contratar guía para este grupo" → Módulo 2</div>
+  </div>
+</div>
+
+<div class="flow" style="margin-top:22px">
+  <div class="st"><b>SOLICITADA</b><i>el turista pide ruta, fecha y personas</i></div>
+  <div class="rarrow"><div class="stem"></div><div class="head"></div></div>
+  <div class="st"><b>ACEPTADA</b><i>el guía confirma disponibilidad (24 h)</i></div>
+  <div class="rarrow"><div class="stem"></div><div class="head"></div></div>
+  <div class="st"><b>CONFIRMADA</b><i>saldo pagado hasta 48 h antes</i></div>
+  <div class="rarrow"><div class="stem"></div><div class="head"></div></div>
+  <div class="st"><b>EN_CURSO</b><i>día del tour</i></div>
+  <div class="rarrow"><div class="stem"></div><div class="head"></div></div>
+  <div class="st dark"><b>COMPLETADA</b><i>se libera el pago al guía menos la comisión</i></div>
+</div>
+<div class="pay">
+  <div class="tag">Anticipo 50 %: se retiene</div>
+  <div class="tag">Anticipo: se cobra</div>
+  <div class="tag">Saldo 50 %: se cobra</div>
+  <div></div>
+  <div class="tag">Liquidación al guía</div>
+</div>
+<div class="exits">Salidas del flujo: <code>RECHAZADA</code> la retención se anula sin costo <code>EXPIRADA</code> <code>CANCELADA_TURISTA</code> <code>CANCELADA_GUIA</code> <code>REPROGRAMADA_CLIMA</code> la decide el guía, sin penalización</div>
+
+<!-- 3 -->
+<h2><span class="n">3.</span>Integraciones externas. <small>Separadas según quién puede tener la clave.</small></h2>
+
+<div class="ext" style="margin-top:44px">
+  <span class="zone a">Sin claves</span><span class="zone b">Con claves secretas</span>
+  <div class="divider"></div>
+  <div class="pills">
+    <div class="pill">OpenStreetMap + Leaflet<i>mapa y trazados</i></div>
+    <div class="pill">Open-Meteo<i>pronóstico por coordenadas</i></div>
+    <div class="pill">Botón de la pasarela<i>checkout del turista</i></div>
+  </div>
+  <div class="hline l"></div>
+  <div class="box"><b>Navegador</b><i>de los tres clientes</i></div>
+  <div class="mid">JSON + JWT<div class="hline r"></div></div>
+  <div class="box dark"><b>Servidor</b><i>Express, guarda las claves</i></div>
+  <div class="hline r"></div>
+  <div class="pills">
+    <div class="pill">Pasarela de pagos<i>retener, cobrar, anular, reembolsar · por definir</i></div>
+    <div class="pill">Cloudinary<i>fotos de rutas y documentos de guías</i></div>
+    <div class="pill">Correo SMTP<i>avisos de solicitud, pago y alertas</i></div>
+  </div>
+</div>
+
+<div class="foot">Si una clave viajara al navegador, cualquiera podría copiarla.</div>
+<div class="note">La pasarela queda abstraída detrás de un PaymentProvider. Candidata actual: PayPal (sandbox); falta confirmar si una cuenta boliviana puede recibir pagos.</div>
+
+<footer><span>Borrador para el informe · sujeto a cambios de diseño, nombre y pasarela</span><span>Frontend React · Backend Express + TypeScript · PostgreSQL</span></footer>
+
+</body>
+</html>

@@ -1,0 +1,17 @@
+import Joi from 'joi';
+import { Environment } from '../common/enums/environment.enum.js';
+
+export const envValidation = Joi.object({
+  NODE_ENV: Joi.string()
+    .valid(...Object.values(Environment))
+    .default(Environment.DEVELOPMENT),
+  PORT: Joi.number().port().default(3010),
+  API_PREFIX: Joi.string().default('api'),
+
+  DB_HOST: Joi.string().required(),
+  DB_PORT: Joi.number().port().required(),
+  DB_USER: Joi.string().required(),
+  DB_PASSWORD: Joi.string().required(),
+  DB_NAME: Joi.string().required(),
+  DB_LOGS: Joi.boolean().default(false),
+});

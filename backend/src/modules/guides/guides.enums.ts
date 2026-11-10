@@ -1,0 +1,5 @@
+export enum GuideDocumentType {
+  NATIONAL_ID = 'NATIONAL_ID',
+  GUIDE_CREDENTIAL = 'GUIDE_CREDENTIAL',
+  FIRST_AID = 'FIRST_AID',
+}

@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Modelo entidad relación</title>
+<style>
+  body { font-family:"Segoe UI", Arial, sans-serif; color:#1c2430; background:#fff; margin:0; padding:30px 40px; }
+  header { border-bottom:2px solid #1c2430; padding-bottom:10px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:flex-end; }
+  h1 { font-size:28px; margin:0; }
+  .sub { font-size:13px; color:#6b7380; }
+  h2 { font-size:18px; margin:26px 0 6px; }
+  h2 small { font-weight:400; color:#6b7380; font-size:13px; margin-left:6px; }
+  .leg { border-collapse:collapse; font-size:14px; margin:10px auto 0; }
+  .leg td { border:1px solid #c4c9d1; padding:5px 10px; }
+  .leg td:first-child { font-family:Consolas, monospace; white-space:nowrap; font-weight:700; }
+  .mermaid { display:flex; justify-content:center; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+</head>
+<body>
+<header>
+  <div><h1>Modelo entidad relación</h1><div class="sub">Plataforma de senderismo en La Paz · nombre provisional "Altura Paz"</div></div>
+  <div class="sub" style="text-align:right">Tecnologías Web II<br>PostgreSQL + PostGIS · borrador v0.1</div>
+</header>
+
+<h2>1. Usuarios y verificación <small>Turistas, guías, agencias y administradores comparten la tabla usuario.</small></h2>
+<pre class="mermaid">
+erDiagram
+  usuario ||--o| perfil_guia : "es"
+  usuario ||--o| agencia : "es"
+  usuario ||--o{ documento_verificacion : "sube"
+  perfil_guia ||--o{ guia_ruta : "solicita"
+  ruta ||--o{ guia_ruta : "habilita"
+  usuario ||--o{ aceptacion_terminos : "acepta"
+  terminos_version ||--o{ aceptacion_terminos : "versiona"
+
+  usuario {
+    uuid id PK
+    varchar email UK
+    varchar password_hash
+    varchar nombre
+    varchar apellido
+    varchar telefono
+    char pais
+    enum idioma "es | en"
+    enum rol "TURISTA | GUIA | AGENCIA | ADMIN"
+    enum estado "ACTIVO | SUSPENDIDO"
+    timestamptz creado_en
+    timestamptz eliminado_en
+  }
+  perfil_guia {
+    uuid id PK
+    uuid usuario_id FK,UK
+    varchar ci_numero
+    text biografia_es
+    text biografia_en
+    text_array idiomas
+    int anios_experiencia
+    enum estado_verificacion "PENDIENTE | APROBADO | RECHAZADO"
+    text motivo_rechazo
+    uuid verificado_por FK
+    numeric calificacion_promedio
+    int total_resenas
+  }
+  agencia {
+    uuid id PK
+    uuid usuario_id FK,UK
+    varchar razon_social
+    varchar nit UK
+    varchar licencia_operadora
+    varchar asociacion
+    varchar direccion
+    text descripcion_es
+    text descripcion_en
+    enum estado_verificacion "PENDIENTE | APROBADO | RECHAZADO"
+    text motivo_rechazo
+    uuid verificado_por FK
+    numeric calificacion_promedio
+    int total_resenas
+  }
+  documento_verificacion {
+    uuid id PK
+    uuid usuario_id FK
+    enum tipo "CI | CREDENCIAL_GUIA | PRIMEROS_AUXILIOS | NIT | LICENCIA | ASOCIACION"
+    varchar url
+    varchar public_id
+    date vence_en
+  }
+  guia_ruta {
+    uuid id PK
+    uuid perfil_guia_id FK
+    uuid ruta_id FK
+    enum estado "PENDIENTE | APROBADA | RECHAZADA"
+    uuid revisado_por FK
+  }
+  terminos_version {
+    uuid id PK
+    varchar version UK
+    text contenido_es
+    text contenido_en
+    timestamptz vigente_desde
+  }
+  aceptacion_terminos {
+    uuid id PK
+    uuid usuario_id FK
+    uuid terminos_version_id FK
+    uuid reserva_id FK
+    timestamptz aceptado_en
+    varchar ip
+  }
+</pre>
+
+<h2>2. Rutas <small>Las administra solo el admin. Cada variante tiene su itinerario y su lista de equipo.</small></h2>
+<pre class="mermaid">
+erDiagram
+  ruta ||--|{ variante_ruta : "tiene"
+  ruta ||--o{ punto_interes : "contiene"
+  ruta ||--o{ foto_ruta : "muestra"
+  ruta ||--o{ ruta_especie : ""
+  especie ||--o{ ruta_especie : ""
+  variante_ruta ||--|{ etapa_itinerario : "se divide en"
+  punto_interes ||--o{ etapa_itinerario : "es parada de"
+  variante_ruta ||--o{ recomendacion_equipo : "recomienda"
+
+  ruta {
+    uuid id PK
+    varchar slug UK
+    varchar nombre_es
+    varchar nombre_en
+    text descripcion_es
+    text descripcion_en
+    enum dificultad "FACIL | MODERADA | DIFICIL"
+    enum nivel_autonomia "POR_CUENTA | RECOMENDADO_GUIA | OBLIGATORIO_GUIA"
+    text como_llegar_es
+    text como_llegar_en
+    text mejor_epoca_es
+    text mejor_epoca_en
+    geography_point punto_inicio
+    numeric precio_privado
+    smallint cupo_max_privado
+    numeric precio_min_grupal
+    smallint cupo_max_grupal
+    boolean publicada
+  }
+  variante_ruta {
+    uuid id PK
+    uuid ruta_id FK
+    varchar nombre_es
+    varchar nombre_en
+    smallint dias
+    numeric distancia_km
+    int desnivel_positivo_m
+    int desnivel_negativo_m
+    int altitud_max_m
+    time hora_inicio_desde
+    time hora_inicio_hasta
+    geography_linestring trazado
+  }
+  punto_interes {
+    uuid id PK
+    uuid ruta_id FK
+    enum tipo "INICIO | FIN | CAMPING | REFUGIO | AGUA | MIRADOR | PELIGRO | RUINAS | TRANSPORTE"
+    varchar nombre_es
+    varchar nombre_en
+    text descripcion_es
+    text descripcion_en
+    geography_point ubicacion
+    int altitud_m
+  }
+  etapa_itinerario {
+    uuid id PK
+    uuid variante_id FK
+    uuid punto_interes_id FK
+    smallint orden
+    smallint dia
+    int minutos_desde_anterior
+    boolean es_pernocte
+  }
+  recomendacion_equipo {
+    uuid id PK
+    uuid variante_id FK
+    enum categoria "COMIDA | AGUA | ROPA | EQUIPO | BOTIQUIN"
+    varchar descripcion_es
+    varchar descripcion_en
+    int peso_estimado_g
+    boolean obligatorio
+  }
+  especie {
+    uuid id PK
+    varchar nombre_es
+    varchar nombre_en
+    varchar nombre_cientifico
+    enum tipo "FLORA | FAUNA"
+    varchar foto_url
+  }
+  ruta_especie {
+    uuid ruta_id PK,FK
+    uuid especie_id PK,FK
+  }
+  foto_ruta {
+    uuid id PK
+    uuid ruta_id FK
+    varchar url
+    varchar public_id
+    varchar credito
+    smallint orden
+  }
+</pre>
+
+<h2>3. Reservas, salidas grupales y pagos <small>Una sola tabla reserva para los módulos 1 y 3, distinguida por su tipo.</small></h2>
+<pre class="mermaid">
+erDiagram
+  perfil_guia ||--o{ disponibilidad_semanal : "define"
+  perfil_guia ||--o{ bloqueo_fecha : "bloquea"
+  agencia ||--o{ salida_grupal : "publica"
+  variante_ruta ||--o{ salida_grupal : "se ofrece en"
+  variante_ruta ||--o{ reserva : "se reserva"
+  usuario ||--o{ reserva : "turista"
+  perfil_guia ||--o{ reserva : "tipo PRIVADA"
+  salida_grupal ||--o{ reserva : "tipo GRUPAL"
+  reserva ||--o{ pago : "se paga con"
+  pago ||--o{ reembolso : "puede tener"
+  reserva ||--o| liquidacion : "genera"
+  reserva ||--o{ reprogramacion : "registra"
+
+  disponibilidad_semanal {
+    uuid id PK
+    uuid perfil_guia_id FK
+    smallint dia_semana
+    time hora_desde
+    time hora_hasta
+  }
+  bloqueo_fecha {
+    uuid id PK
+    uuid perfil_guia_id FK
+    date fecha_desde
+    date fecha_hasta
+    varchar motivo
+  }
+  salida_grupal {
+    uuid id PK
+    uuid agencia_id FK
+    uuid variante_id FK
+    date fecha
+    time hora_encuentro
+    varchar punto_encuentro
+    numeric precio_por_persona
+    smallint cupo_minimo
+    smallint cupo_maximo
+    varchar nombre_guia
+    enum estado "ver E1"
+    timestamptz cierre_en
+  }
+  reserva {
+    uuid id PK
+    varchar codigo UK
+    enum tipo "PRIVADA | GRUPAL"
+    enum origen "WEB | MANUAL"
+    uuid turista_id FK
+    uuid perfil_guia_id FK
+    uuid salida_grupal_id FK
+    uuid variante_id FK
+    date fecha_tour
+    time hora_inicio
+    smallint cantidad_personas
+    varchar contacto_manual
+    numeric monto_total
+    enum estado "ver E2"
+    timestamptz responder_antes_de
+    timestamptz pagar_antes_de
+  }
+  pago {
+    uuid id PK
+    uuid reserva_id FK
+    varchar pasarela
+    varchar id_externo_orden
+    varchar id_externo_autorizacion
+    varchar id_externo_captura
+    numeric monto
+    char moneda
+    numeric comision_pasarela
+    enum estado "ver E4"
+  }
+  reembolso {
+    uuid id PK
+    uuid pago_id FK
+    numeric monto
+    enum motivo "ver E3"
+    varchar id_externo
+    enum estado "PENDIENTE | COMPLETADO | FALLIDO"
+  }
+  liquidacion {
+    uuid id PK
+    uuid reserva_id FK,UK
+    uuid beneficiario_id FK
+    numeric monto_bruto
+    numeric porcentaje_comision
+    numeric monto_comision
+    numeric descuento_penalizacion
+    numeric monto_neto
+    enum estado "PENDIENTE | PAGADA"
+  }
+  reprogramacion {
+    uuid id PK
+    uuid reserva_id FK
+    date fecha_anterior
+    date fecha_nueva
+    varchar motivo
+    enum respuesta "PENDIENTE | ACEPTA | RECHAZA"
+    timestamptz respondido_en
+  }
+</pre>
+
+<table class="leg">
+<tr><td>E1 salida_grupal.estado</td><td>PUBLICADA, CONFIRMADA, EN_CURSO, COMPLETADA, CANCELADA_MINIMO, CANCELADA_AGENCIA, CANCELADA_CLIMA</td></tr>
+<tr><td>E2 reserva.estado</td><td>SOLICITADA, ACEPTADA, CONFIRMADA, EN_CURSO, COMPLETADA, RECHAZADA, EXPIRADA, CANCELADA_TURISTA, CANCELADA_PROVEEDOR, CANCELADA_CLIMA</td></tr>
+<tr><td>E3 reembolso.motivo</td><td>CANCELACION_TURISTA, CANCELACION_PROVEEDOR, CLIMA, REPROGRAMACION_RECHAZADA, RECLAMO</td></tr>
+<tr><td>E4 pago.estado</td><td>PENDIENTE, RETENIDO, COBRADO, ANULADO, REEMBOLSADO, FALLIDO</td></tr>
+<tr><td>Regla reserva.tipo</td><td>PRIVADA exige perfil_guia_id y deja salida_grupal_id vacío. GRUPAL exige salida_grupal_id y deja perfil_guia_id vacío. Origen MANUAL solo existe en GRUPAL y no tiene turista_id.</td></tr>
+</table>
+
+<h2>4. Reputación, control y configuración <small>Reseñas verificadas, strikes, reclamos y parámetros que cambia el admin.</small></h2>
+<pre class="mermaid">
+erDiagram
+  reserva ||--o| resena : "se califica"
+  perfil_guia ||--o{ resena : "recibe en PRIVADA"
+  agencia ||--o{ resena : "recibe en GRUPAL"
+  usuario ||--o{ strike : "proveedor"
+  reserva ||--o{ strike : "origina"
+  reserva ||--o{ reclamo : "motiva"
+  reclamo ||--o| strike : "puede generar"
+  usuario ||--o{ notificacion : "recibe"
+
+  resena {
+    uuid id PK
+    uuid reserva_id FK,UK
+    uuid autor_id FK
+    uuid perfil_guia_id FK
+    uuid agencia_id FK
+    smallint puntuacion
+    text comentario
+  }
+  strike {
+    uuid id PK
+    uuid usuario_id FK
+    uuid reserva_id FK
+    uuid reclamo_id FK
+    enum motivo "CANCELACION_SIN_CLIMA | NO_PRESENTACION | RECLAMO"
+    enum estado "ACTIVO | REVERTIDO | VENCIDO"
+    timestamptz vence_en
+  }
+  reclamo {
+    uuid id PK
+    uuid reserva_id FK
+    uuid autor_id FK
+    text descripcion
+    enum estado "ABIERTO | ACEPTADO | RECHAZADO"
+    uuid resuelto_por FK
+    text resolucion
+  }
+  notificacion {
+    uuid id PK
+    uuid usuario_id FK
+    varchar tipo
+    varchar asunto
+    enum estado "PENDIENTE | ENVIADA | FALLIDA"
+    timestamptz enviada_en
+  }
+  configuracion {
+    varchar clave PK
+    varchar valor
+    varchar descripcion
+  }
+</pre>
+
+<script>
+  mermaid.initialize({ startOnLoad:true, theme:"neutral", er:{ layoutDirection:"LR", fontSize:13, useMaxWidth:false } });
+</script>
+</body>
+</html>
