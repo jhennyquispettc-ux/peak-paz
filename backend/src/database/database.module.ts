@@ -14,16 +14,7 @@ import { AppConfig } from '../config/app.config.js';
         username: config.db.user,
         password: config.db.password,
         database: config.db.name,
-        entities: [
-          join(
-            import.meta.dirname,
-            '..',
-            'modules',
-            '**',
-            'entities',
-            '*.entity.js',
-          ),
-        ],
+        autoLoadEntities: true,
         migrations: [join(import.meta.dirname, 'migrations', '*.js')],
         migrationsRun: true,
         uuidExtension: 'pgcrypto',

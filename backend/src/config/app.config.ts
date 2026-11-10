@@ -16,6 +16,10 @@ export class AppConfig {
     name: string;
     logging: boolean;
   };
+  readonly jwt: {
+    secret: string;
+    expiresIn: string;
+  };
 
   constructor(config: ConfigService) {
     this.nodeEnv = config.getOrThrow<Environment>('NODE_ENV');
@@ -29,6 +33,10 @@ export class AppConfig {
       password: config.getOrThrow<string>('DB_PASSWORD'),
       name: config.getOrThrow<string>('DB_NAME'),
       logging: config.getOrThrow<boolean>('DB_LOGS'),
+    };
+    this.jwt = {
+      secret: config.getOrThrow<string>('JWT_SECRET'),
+      expiresIn: config.getOrThrow<string>('JWT_EXPIRES_IN'),
     };
   }
 }

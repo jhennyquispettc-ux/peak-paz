@@ -14,4 +14,14 @@ export const envValidation = Joi.object({
   DB_PASSWORD: Joi.string().required(),
   DB_NAME: Joi.string().required(),
   DB_LOGS: Joi.boolean().default(false),
+
+  JWT_SECRET: Joi.string().min(32).required(),
+  JWT_EXPIRES_IN: Joi.string()
+    .pattern(/^\d+[smhd]$/)
+    .default('8h'),
+
+  SEED_ADMIN_EMAIL: Joi.string().email().required(),
+  SEED_ADMIN_PASSWORD: Joi.string().min(8).required(),
+  SEED_ADMIN_FIRST_NAME: Joi.string().default('Admin'),
+  SEED_ADMIN_LAST_NAME: Joi.string().default('Peak Paz'),
 });
