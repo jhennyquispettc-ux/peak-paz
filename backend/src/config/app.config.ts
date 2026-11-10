@@ -20,6 +20,11 @@ export class AppConfig {
     secret: string;
     expiresIn: string;
   };
+  readonly weather: {
+    apiUrl: string;
+    timeoutMs: number;
+    cacheMinutes: number;
+  };
 
   constructor(config: ConfigService) {
     this.nodeEnv = config.getOrThrow<Environment>('NODE_ENV');
@@ -37,6 +42,11 @@ export class AppConfig {
     this.jwt = {
       secret: config.getOrThrow<string>('JWT_SECRET'),
       expiresIn: config.getOrThrow<string>('JWT_EXPIRES_IN'),
+    };
+    this.weather = {
+      apiUrl: config.getOrThrow<string>('WEATHER_API_URL'),
+      timeoutMs: config.getOrThrow<number>('WEATHER_TIMEOUT_MS'),
+      cacheMinutes: config.getOrThrow<number>('WEATHER_CACHE_MINUTES'),
     };
   }
 }
