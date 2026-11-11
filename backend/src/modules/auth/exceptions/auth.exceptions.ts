@@ -48,3 +48,12 @@ export class InsufficientRoleException extends ForbiddenException {
     });
   }
 }
+
+export class TaxIdAlreadyRegisteredException extends ConflictException {
+  constructor() {
+    super({
+      error: 'TAX_ID_ALREADY_REGISTERED',
+      message: 'That tax id is already registered by another agency.',
+    });
+  }
+}

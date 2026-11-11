@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtModule, JwtSignOptions } from '@nestjs/jwt';
 import { AppConfig } from '../../config/app.config.js';
+import { AgenciesModule } from '../agencies/agencies.module.js';
+import { GuidesModule } from '../guides/guides.module.js';
 import { UsersModule } from '../users/users.module.js';
 import { AuthController } from './controllers/auth.controller.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
@@ -12,6 +14,8 @@ import { PasswordService } from './services/password.service.js';
 @Module({
   imports: [
     UsersModule,
+    GuidesModule,
+    AgenciesModule,
     JwtModule.registerAsync({
       inject: [AppConfig],
       useFactory: (config: AppConfig) => ({

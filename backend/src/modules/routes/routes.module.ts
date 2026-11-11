@@ -42,6 +42,6 @@ import { WeatherService } from './services/weather.service.js';
     GpxService,
     WeatherService,
   ],
-  exports: [RoutesService],
+  exports: [RoutesService, RoutesRepository],
 })
 export class RoutesModule {}

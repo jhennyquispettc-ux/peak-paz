@@ -23,7 +23,7 @@ import {
 import { RoutesRepository } from '../repositories/routes.repository.js';
 import { GpxService } from './gpx.service.js';
 import { ItineraryService, toMinutes } from './itinerary.service.js';
-import type { UploadedFileData } from '../types/uploaded-file.js';
+import type { UploadedFileData } from '../../../common/types/uploaded-file.js';
 import { WeatherService } from './weather.service.js';
 
 const MIN_ITINERARY_STOPS = 2;

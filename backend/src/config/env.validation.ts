@@ -26,6 +26,12 @@ export const envValidation = Joi.object({
   WEATHER_TIMEOUT_MS: Joi.number().integer().min(500).default(5000),
   WEATHER_CACHE_MINUTES: Joi.number().integer().min(0).default(30),
 
+  STORAGE_DRIVER: Joi.string().valid('local', 'cloudinary').default('local'),
+  STORAGE_LOCAL_DIR: Joi.string().default('uploads'),
+  CLOUDINARY_CLOUD_NAME: Joi.string().allow('').default(''),
+  CLOUDINARY_API_KEY: Joi.string().allow('').default(''),
+  CLOUDINARY_API_SECRET: Joi.string().allow('').default(''),
+
   SEED_ADMIN_EMAIL: Joi.string().email().required(),
   SEED_ADMIN_PASSWORD: Joi.string().min(8).required(),
   SEED_ADMIN_FIRST_NAME: Joi.string().default('Admin'),

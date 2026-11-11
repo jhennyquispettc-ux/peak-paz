@@ -40,7 +40,7 @@ import { TrackSummaryDto } from '../dto/track-summary.dto.js';
 import { UpdatePublicationDto } from '../dto/update-publication.dto.js';
 import { UpdateRouteDto } from '../dto/update-route.dto.js';
 import { RoutesService } from '../services/routes.service.js';
-import type { UploadedFileData } from '../types/uploaded-file.js';
+import type { UploadedFileData } from '../../../common/types/uploaded-file.js';
 
 const MAX_GPX_BYTES = 5 * 1024 * 1024;
 
