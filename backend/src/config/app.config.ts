@@ -25,6 +25,15 @@ export class AppConfig {
     timeoutMs: number;
     cacheMinutes: number;
   };
+  readonly storage: {
+    driver: 'local' | 'cloudinary';
+    localDir: string;
+    cloudinary: {
+      cloudName: string;
+      apiKey: string;
+      apiSecret: string;
+    };
+  };
 
   constructor(config: ConfigService) {
     this.nodeEnv = config.getOrThrow<Environment>('NODE_ENV');
@@ -47,6 +56,15 @@ export class AppConfig {
       apiUrl: config.getOrThrow<string>('WEATHER_API_URL'),
       timeoutMs: config.getOrThrow<number>('WEATHER_TIMEOUT_MS'),
       cacheMinutes: config.getOrThrow<number>('WEATHER_CACHE_MINUTES'),
+    };
+    this.storage = {
+      driver: config.getOrThrow<'local' | 'cloudinary'>('STORAGE_DRIVER'),
+      localDir: config.getOrThrow<string>('STORAGE_LOCAL_DIR'),
+      cloudinary: {
+        cloudName: config.get<string>('CLOUDINARY_CLOUD_NAME') ?? '',
+        apiKey: config.get<string>('CLOUDINARY_API_KEY') ?? '',
+        apiSecret: config.get<string>('CLOUDINARY_API_SECRET') ?? '',
+      },
     };
   }
 }

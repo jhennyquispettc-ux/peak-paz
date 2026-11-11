@@ -4,3 +4,10 @@ export enum AgencyDocumentType {
   ASSOCIATION_CERTIFICATE = 'ASSOCIATION_CERTIFICATE',
   REPRESENTATIVE_ID = 'REPRESENTATIVE_ID',
 }
+
+export const REQUIRED_AGENCY_DOCUMENTS = [
+  AgencyDocumentType.TAX_ID,
+  AgencyDocumentType.OPERATOR_LICENSE,
+  AgencyDocumentType.ASSOCIATION_CERTIFICATE,
+  AgencyDocumentType.REPRESENTATIVE_ID,
+] as const;
