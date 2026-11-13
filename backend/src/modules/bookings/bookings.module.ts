@@ -1,0 +1,37 @@
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { GroupDeparture } from '../group-departures/entities/group-departure.entity.js';
+import { GuidesModule } from '../guides/guides.module.js';
+import { RoutesModule } from '../routes/routes.module.js';
+import { SettingsModule } from '../settings/settings.module.js';
+import { AdminBookingsController } from './controllers/admin-bookings.controller.js';
+import { BookingsController } from './controllers/bookings.controller.js';
+import { GuideBookingsController } from './controllers/guide-bookings.controller.js';
+import { Booking } from './entities/booking.entity.js';
+import { Reschedule } from './entities/reschedule.entity.js';
+import { BookingsRepository } from './repositories/bookings.repository.js';
+import { BookingExpirationService } from './services/booking-expiration.service.js';
+import { BookingRequestsService } from './services/booking-requests.service.js';
+import { GuideBookingsService } from './services/guide-bookings.service.js';
+
+@Module({
+  imports: [
+    TypeOrmModule.forFeature([Booking, Reschedule, GroupDeparture]),
+    GuidesModule,
+    RoutesModule,
+    SettingsModule,
+  ],
+  controllers: [
+    BookingsController,
+    GuideBookingsController,
+    AdminBookingsController,
+  ],
+  providers: [
+    BookingsRepository,
+    BookingRequestsService,
+    GuideBookingsService,
+    BookingExpirationService,
+  ],
+  exports: [BookingsRepository],
+})
+export class BookingsModule {}
