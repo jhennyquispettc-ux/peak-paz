@@ -39,12 +39,6 @@ export class RouteDetailDto extends RouteSummaryDto {
   emergencyContacts: string;
 
   @ApiProperty()
-  startLatitude: number;
-
-  @ApiProperty()
-  startLongitude: number;
-
-  @ApiProperty()
   privateMaxPeople: number;
 
   @ApiProperty()
@@ -89,8 +83,6 @@ export class RouteDetailDto extends RouteSummaryDto {
       bestSeasonEs: route.bestSeasonEs,
       bestSeasonEn: route.bestSeasonEn,
       emergencyContacts: route.emergencyContacts,
-      startLatitude: route.startLatitude,
-      startLongitude: route.startLongitude,
       privateMaxPeople: route.privateMaxPeople,
       groupMaxPeople: route.groupMaxPeople,
       track: route.track,
