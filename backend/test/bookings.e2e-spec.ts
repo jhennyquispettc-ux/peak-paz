@@ -234,7 +234,7 @@ describe('Guide bookings (e2e)', () => {
     expect(schedule.body.slots).toHaveLength(7);
   });
 
-  it('lists the guide for the route and hides them on blocked dates', async () => {
+  it('lists the guide for the route and hides them during an all-day commitment', async () => {
     const all = await request(server)
       .get(`/api/routes/${slug}/guides`)
       .expect(200);
@@ -243,11 +243,18 @@ describe('Guide bookings (e2e)', () => {
     ]);
 
     const blockedDay = addDays(day, 20);
-    await request(server)
-      .post('/api/guides/me/schedule/blocked-dates')
+    const vacation = await request(server)
+      .post('/api/guides/me/schedule/commitments')
       .set(auth(guideToken))
-      .send({ dateFrom: blockedDay, dateTo: addDays(blockedDay, 1) })
+      .send({
+        title: 'Vacaciones',
+        dateFrom: blockedDay,
+        dateTo: addDays(blockedDay, 1),
+      })
       .expect(201);
+    expect(new Date(vacation.body.endsAt).toISOString()).toBe(
+      `${addDays(blockedDay, 2)}T04:00:00.000Z`,
+    );
 
     const free = await request(server)
       .get(`/api/routes/${slug}/guides`)
@@ -261,11 +268,11 @@ describe('Guide bookings (e2e)', () => {
       .expect(200);
     expect(blocked.body).toHaveLength(0);
 
-    const outsideSlot = await request(server)
+    const outsideWindow = await request(server)
       .get(`/api/routes/${slug}/guides`)
       .query({ date: day, startTime: '10:00' })
-      .expect(200);
-    expect(outsideSlot.body).toHaveLength(0);
+      .expect(400);
+    expect(outsideWindow.body.error).toBe('START_TIME_OUTSIDE_WINDOW');
 
     const booking = await requestBooking(touristAToken, {
       tourDate: blockedDay,
@@ -511,5 +518,115 @@ describe('Guide bookings (e2e)', () => {
       .set(auth(guideToken))
       .expect(200);
     expect(panel.body.id).toBe(guideId);
+  });
+
+  describe('by-date mode and commitments', () => {
+    const groupDay = addDays(day, 30);
+    const guidesAt = (date: string, startTime: string) =>
+      request(server)
+        .get(`/api/routes/${slug}/guides`)
+        .query({ date, startTime })
+        .expect(200);
+
+    it('uses only the dates the guide publishes', async () => {
+      const mode = await request(server)
+        .put('/api/guides/me/schedule/mode')
+        .set(auth(guideToken))
+        .send({ mode: 'BY_DATE' })
+        .expect(200);
+      expect(mode.body.mode).toBe('BY_DATE');
+
+      expect((await guidesAt(groupDay, '07:00')).body).toHaveLength(0);
+
+      await request(server)
+        .post('/api/guides/me/schedule/available-dates')
+        .set(auth(guideToken))
+        .send({ date: groupDay, timeFrom: '05:00', timeTo: '09:00' })
+        .expect(201);
+      const overlapping = await request(server)
+        .post('/api/guides/me/schedule/available-dates')
+        .set(auth(guideToken))
+        .send({ date: groupDay, timeFrom: '08:00', timeTo: '10:00' })
+        .expect(400);
+      expect(overlapping.body.error).toBe('OVERLAPPING_SLOTS');
+
+      expect((await guidesAt(groupDay, '07:00')).body).toHaveLength(1);
+      expect((await guidesAt(addDays(groupDay, 1), '07:00')).body).toHaveLength(
+        0,
+      );
+    });
+
+    it('keeps a two hour margin after a dawn transfer', async () => {
+      await request(server)
+        .post('/api/guides/me/schedule/commitments')
+        .set(auth(guideToken))
+        .send({
+          title: 'Transfer de madrugada',
+          dateFrom: groupDay,
+          timeFrom: '03:00',
+          dateTo: groupDay,
+          timeTo: '05:00',
+        })
+        .expect(201);
+
+      expect((await guidesAt(groupDay, '07:00')).body).toHaveLength(1);
+      expect((await guidesAt(groupDay, '06:00')).body).toHaveLength(0);
+
+      const tooClose = await requestBooking(touristBToken, {
+        tourDate: groupDay,
+        startTime: '06:00',
+      }).expect(409);
+      expect(tooClose.body.error).toBe('GUIDE_NOT_AVAILABLE');
+    });
+
+    it('builds the agenda and protects accepted bookings from new commitments', async () => {
+      const booking = await requestBooking(touristAToken, {
+        tourDate: groupDay,
+        startTime: '07:00',
+      }).expect(201);
+      await request(server)
+        .post(`/api/guides/me/bookings/${booking.body.id}/accept`)
+        .set(auth(guideToken))
+        .expect(200);
+
+      const clash = await request(server)
+        .post('/api/guides/me/schedule/commitments')
+        .set(auth(guideToken))
+        .send({
+          title: 'Full day con otro grupo',
+          dateFrom: addDays(groupDay, 1),
+          timeFrom: '08:00',
+          dateTo: addDays(groupDay, 1),
+          timeTo: '17:00',
+        })
+        .expect(409);
+      expect(clash.body.error).toBe('COMMITMENT_OVERLAPS_BOOKING');
+
+      const agenda = await request(server)
+        .get('/api/guides/me/agenda')
+        .query({ from: groupDay, to: addDays(groupDay, 1) })
+        .set(auth(guideToken))
+        .expect(200);
+      expect(agenda.body).toMatchObject({
+        mode: 'BY_DATE',
+        bufferMinutes: 120,
+        availableWindows: [
+          { date: groupDay, timeFrom: '05:00', timeTo: '09:00' },
+        ],
+      });
+      expect(
+        agenda.body.commitments.map((item: { title: string }) => item.title),
+      ).toEqual(['Transfer de madrugada']);
+      expect(agenda.body.bookings).toMatchObject([
+        { id: booking.body.id, status: 'ACCEPTED' },
+      ]);
+
+      const wrongRange = await request(server)
+        .get('/api/guides/me/agenda')
+        .query({ from: addDays(groupDay, 1), to: groupDay })
+        .set(auth(guideToken))
+        .expect(400);
+      expect(wrongRange.body.error).toBe('INVALID_DATE_RANGE');
+    });
   });
 });

@@ -1,13 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { PaginationMetaDto } from '../../../common/dto/pagination-meta.dto.js';
 import {
-  addDays,
   addMinutes,
   laPazInstant,
   weekdayOf,
 } from '../../../common/time/la-paz-time.js';
 import type { AuthenticatedUser } from '../../auth/types/authenticated-user.js';
-import { GuidesRepository } from '../../guides/repositories/guides.repository.js';
+import {
+  busyWindow,
+  GuidesRepository,
+} from '../../guides/repositories/guides.repository.js';
 import { Route } from '../../routes/entities/route.entity.js';
 import {
   RouteNotFoundException,
@@ -15,6 +17,10 @@ import {
 } from '../../routes/exceptions/routes.exceptions.js';
 import { RoutesRepository } from '../../routes/repositories/routes.repository.js';
 import { toMinutes } from '../../routes/services/itinerary.service.js';
+import {
+  TourInterval,
+  TourIntervalService,
+} from '../../routes/services/tour-interval.service.js';
 import { SettingsService } from '../../settings/services/settings.service.js';
 import { SettingKey } from '../../settings/setting-keys.js';
 import { UserRole } from '../../users/users.enums.js';
@@ -50,6 +56,7 @@ export class BookingRequestsService {
     private readonly routes: RoutesRepository,
     private readonly guides: GuidesRepository,
     private readonly settings: SettingsService,
+    private readonly tourIntervals: TourIntervalService,
   ) {}
 
   async create(touristId: string, dto: CreateBookingDto): Promise<BookingDto> {
@@ -59,7 +66,7 @@ export class BookingRequestsService {
     await this.assertPeopleCount(route, dto.peopleCount);
     this.assertStartWindow(route, dto.startTime);
     await this.assertAdvance(dto.tourDate, dto.startTime);
-    await this.assertGuideAvailable(route, dto);
+    const interval = await this.assertGuideAvailable(route, dto);
 
     if (
       await this.bookings.existsOpenRequest(
@@ -83,6 +90,7 @@ export class BookingRequestsService {
       routeId: route.id,
       tourDate: dto.tourDate,
       startTime: dto.startTime,
+      endsAt: interval.endsAt,
       peopleCount: dto.peopleCount,
       totalAmount: route.privatePrice,
       status: BookingStatus.REQUESTED,
@@ -178,7 +186,10 @@ export class BookingRequestsService {
     }
   }
 
-  private async assertGuideAvailable(route: Route, dto: CreateBookingDto) {
+  private async assertGuideAvailable(
+    route: Route,
+    dto: CreateBookingDto,
+  ): Promise<TourInterval> {
     const authorized = await this.guides.findAvailableForRoute({
       routeId: route.id,
       guideProfileId: dto.guideProfileId,
@@ -187,16 +198,25 @@ export class BookingRequestsService {
       throw new GuideNotAuthorizedForRouteException();
     }
 
+    const interval = await this.tourIntervals.forTour(
+      route,
+      dto.tourDate,
+      dto.startTime,
+    );
+    const buffer = await this.settings.getNumber(
+      SettingKey.SCHEDULE_BUFFER_MIN,
+    );
     const available = await this.guides.findAvailableForRoute({
       routeId: route.id,
       guideProfileId: dto.guideProfileId,
       slot: {
-        startDate: dto.tourDate,
-        endDate: addDays(dto.tourDate, route.days - 1),
+        date: dto.tourDate,
         weekday: weekdayOf(dto.tourDate),
         startTime: dto.startTime,
+        ...busyWindow(interval, buffer),
       },
     });
     if (available.length === 0) throw new GuideNotAvailableException();
+    return interval;
   }
 }

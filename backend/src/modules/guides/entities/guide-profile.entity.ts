@@ -14,8 +14,10 @@ import {
 import { VerificationStatus } from '../../../common/enums/verification-status.enum.js';
 import { numericTransformer } from '../../../common/transformers/numeric.transformer.js';
 import { User } from '../../users/entities/user.entity.js';
+import { AvailabilityMode } from '../guides.enums.js';
 import { GuideAvailability } from './guide-availability.entity.js';
-import { GuideBlockedDate } from './guide-blocked-date.entity.js';
+import { GuideAvailableDate } from './guide-available-date.entity.js';
+import { GuideCommitment } from './guide-commitment.entity.js';
 import { GuideDocument } from './guide-document.entity.js';
 import { GuideRoute } from './guide-route.entity.js';
 
@@ -46,6 +48,15 @@ export class GuideProfile {
 
   @Column({ name: 'years_experience', type: 'smallint', default: 0 })
   yearsExperience: number;
+
+  @Column({
+    name: 'availability_mode',
+    type: 'enum',
+    enum: AvailabilityMode,
+    enumName: 'guide_availability_mode',
+    default: AvailabilityMode.WEEKLY,
+  })
+  availabilityMode: AvailabilityMode;
 
   @Column({
     name: 'verification_status',
@@ -100,6 +111,9 @@ export class GuideProfile {
   )
   availabilities: Relation<GuideAvailability[]>;
 
-  @OneToMany(() => GuideBlockedDate, (blockedDate) => blockedDate.guideProfile)
-  blockedDates: Relation<GuideBlockedDate[]>;
+  @OneToMany(() => GuideAvailableDate, (date) => date.guideProfile)
+  availableDates: Relation<GuideAvailableDate[]>;
+
+  @OneToMany(() => GuideCommitment, (commitment) => commitment.guideProfile)
+  commitments: Relation<GuideCommitment[]>;
 }

@@ -52,6 +52,12 @@ const DEFAULT_SETTINGS: Pick<Setting, 'key' | 'value' | 'description'>[] = [
     value: '30',
     description: 'Días que un proveedor queda oculto con 2 strikes',
   },
+  {
+    key: 'SCHEDULE_BUFFER_MIN',
+    value: '120',
+    description:
+      'Minutos libres que el guía necesita antes y después de cada compromiso',
+  },
 ];
 
 export async function seedSettings(dataSource: DataSource): Promise<number> {

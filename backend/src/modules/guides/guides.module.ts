@@ -1,12 +1,14 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RoutesModule } from '../routes/routes.module.js';
+import { SettingsModule } from '../settings/settings.module.js';
 import { AdminGuidesController } from './controllers/admin-guides.controller.js';
 import { GuideAvailabilityController } from './controllers/guide-availability.controller.js';
 import { GuideProfileController } from './controllers/guide-profile.controller.js';
 import { PublicGuidesController } from './controllers/public-guides.controller.js';
 import { GuideAvailability } from './entities/guide-availability.entity.js';
-import { GuideBlockedDate } from './entities/guide-blocked-date.entity.js';
+import { GuideAvailableDate } from './entities/guide-available-date.entity.js';
+import { GuideCommitment } from './entities/guide-commitment.entity.js';
 import { GuideDocument } from './entities/guide-document.entity.js';
 import { GuideProfile } from './entities/guide-profile.entity.js';
 import { GuideRoute } from './entities/guide-route.entity.js';
@@ -23,9 +25,11 @@ import { PublicGuidesService } from './services/public-guides.service.js';
       GuideDocument,
       GuideRoute,
       GuideAvailability,
-      GuideBlockedDate,
+      GuideAvailableDate,
+      GuideCommitment,
     ]),
     RoutesModule,
+    SettingsModule,
   ],
   controllers: [
     GuideProfileController,
@@ -40,6 +44,6 @@ import { PublicGuidesService } from './services/public-guides.service.js';
     GuideAvailabilityService,
     PublicGuidesService,
   ],
-  exports: [GuidesRepository, GuideProfilesService],
+  exports: [GuidesRepository, GuideProfilesService, GuideAvailabilityService],
 })
 export class GuidesModule {}

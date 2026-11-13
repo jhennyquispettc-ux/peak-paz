@@ -13,6 +13,7 @@ import {
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiConflictResponse,
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNoContentResponse,
@@ -28,10 +29,14 @@ import { Roles } from '../../auth/decorators/roles.decorator.js';
 import type { AuthenticatedUser } from '../../auth/types/authenticated-user.js';
 import { UserRole } from '../../users/users.enums.js';
 import {
-  BlockedDateDto,
-  CreateBlockedDateDto,
-} from '../dto/blocked-date.dto.js';
-import { GuideScheduleDto } from '../dto/guide-schedule.dto.js';
+  AvailableDateDto,
+  CreateAvailableDateDto,
+} from '../dto/available-date.dto.js';
+import { CommitmentDto, CreateCommitmentDto } from '../dto/commitment.dto.js';
+import {
+  GuideScheduleDto,
+  SetAvailabilityModeDto,
+} from '../dto/guide-schedule.dto.js';
 import { SetAvailabilityDto } from '../dto/set-availability.dto.js';
 import { GuideAvailabilityService } from '../services/guide-availability.service.js';
 
@@ -40,12 +45,14 @@ import { GuideAvailabilityService } from '../services/guide-availability.service
 @ApiUnauthorizedResponse({ type: ErrorResponseDto })
 @ApiForbiddenResponse({ type: ErrorResponseDto })
 @Roles(UserRole.GUIDE)
-@Controller('guides/me')
+@Controller('guides/me/schedule')
 export class GuideAvailabilityController {
   constructor(private readonly availability: GuideAvailabilityService) {}
 
-  @Get('schedule')
-  @ApiOperation({ summary: 'Horarios semanales y fechas bloqueadas' })
+  @Get()
+  @ApiOperation({
+    summary: 'Modalidad, horarios semanales, fechas disponibles y compromisos',
+  })
   @ApiOkResponse({ type: GuideScheduleDto })
   getSchedule(
     @CurrentUser() user: AuthenticatedUser,
@@ -53,7 +60,18 @@ export class GuideAvailabilityController {
     return this.availability.getSchedule(user.id);
   }
 
-  @Put('schedule/slots')
+  @Put('mode')
+  @ApiOperation({ summary: 'Elegir la modalidad semanal o por fecha' })
+  @ApiOkResponse({ type: GuideScheduleDto })
+  @ApiBadRequestResponse({ type: ErrorResponseDto })
+  setMode(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: SetAvailabilityModeDto,
+  ): Promise<GuideScheduleDto> {
+    return this.availability.setMode(user.id, dto.mode);
+  }
+
+  @Put('slots')
   @ApiOperation({ summary: 'Reemplazar los horarios semanales' })
   @ApiOkResponse({ type: GuideScheduleDto })
   @ApiBadRequestResponse({ type: ErrorResponseDto })
@@ -64,26 +82,53 @@ export class GuideAvailabilityController {
     return this.availability.setSlots(user.id, dto.slots);
   }
 
-  @Post('schedule/blocked-dates')
-  @ApiOperation({ summary: 'Bloquear un rango de fechas' })
-  @ApiCreatedResponse({ type: BlockedDateDto })
+  @Post('available-dates')
+  @ApiOperation({ summary: 'Agregar una fecha disponible con su horario' })
+  @ApiCreatedResponse({ type: AvailableDateDto })
   @ApiBadRequestResponse({ type: ErrorResponseDto })
-  addBlockedDate(
+  addAvailableDate(
     @CurrentUser() user: AuthenticatedUser,
-    @Body() dto: CreateBlockedDateDto,
-  ): Promise<BlockedDateDto> {
-    return this.availability.addBlockedDate(user.id, dto);
+    @Body() dto: CreateAvailableDateDto,
+  ): Promise<AvailableDateDto> {
+    return this.availability.addAvailableDate(user.id, dto);
   }
 
-  @Delete('schedule/blocked-dates/:id')
+  @Delete('available-dates/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Liberar un rango bloqueado' })
+  @ApiOperation({ summary: 'Quitar una fecha disponible' })
   @ApiNoContentResponse()
   @ApiNotFoundResponse({ type: ErrorResponseDto })
-  removeBlockedDate(
+  removeAvailableDate(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<void> {
-    return this.availability.removeBlockedDate(user.id, id);
+    return this.availability.removeAvailableDate(user.id, id);
+  }
+
+  @Post('commitments')
+  @ApiOperation({
+    summary:
+      'Registrar un compromiso fuera de la plataforma (transfer, tour, vacaciones)',
+  })
+  @ApiCreatedResponse({ type: CommitmentDto })
+  @ApiBadRequestResponse({ type: ErrorResponseDto })
+  @ApiConflictResponse({ type: ErrorResponseDto })
+  addCommitment(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: CreateCommitmentDto,
+  ): Promise<CommitmentDto> {
+    return this.availability.addCommitment(user.id, dto);
+  }
+
+  @Delete('commitments/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Quitar un compromiso' })
+  @ApiNoContentResponse()
+  @ApiNotFoundResponse({ type: ErrorResponseDto })
+  removeCommitment(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
+    return this.availability.removeCommitment(user.id, id);
   }
 }

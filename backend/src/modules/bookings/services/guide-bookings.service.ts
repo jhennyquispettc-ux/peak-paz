@@ -2,9 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { PaginationMetaDto } from '../../../common/dto/pagination-meta.dto.js';
-import { addDays, addMinutes } from '../../../common/time/la-paz-time.js';
+import {
+  addDays,
+  addMinutes,
+  laPazInstant,
+} from '../../../common/time/la-paz-time.js';
 import { GuideNotFoundException } from '../../guides/exceptions/guides.exceptions.js';
-import { GuidesRepository } from '../../guides/repositories/guides.repository.js';
+import {
+  busyWindow,
+  GuidesRepository,
+} from '../../guides/repositories/guides.repository.js';
 import { Route } from '../../routes/entities/route.entity.js';
 import { SettingsService } from '../../settings/services/settings.service.js';
 import { SettingKey } from '../../settings/setting-keys.js';
@@ -20,7 +27,7 @@ import {
 import { BookingsRepository } from '../repositories/bookings.repository.js';
 
 const DISPLACED_REASON =
-  'The guide accepted another booking for the same dates.';
+  'The guide accepted another booking at overlapping times.';
 
 @Injectable()
 export class GuideBookingsService {
@@ -50,6 +57,9 @@ export class GuideBookingsService {
     const paymentMinutes = await this.settings.getNumber(
       SettingKey.PAYMENT_WINDOW_MIN,
     );
+    const bufferMinutes = await this.settings.getNumber(
+      SettingKey.SCHEDULE_BUFFER_MIN,
+    );
 
     await this.dataSource.transaction(async (manager) => {
       await this.guides.lockById(guideProfileId, manager);
@@ -68,11 +78,16 @@ export class GuideBookingsService {
       const route = await manager
         .getRepository(Route)
         .findOneByOrFail({ id: booking.routeId! });
-      const span = {
-        startDate: booking.tourDate!,
-        endDate: addDays(booking.tourDate!, route.days - 1),
-      };
-      if (await this.bookings.hasConflict(guideProfileId, span, manager)) {
+      const busy = busyWindow(
+        {
+          startsAt: laPazInstant(booking.tourDate!, booking.startTime!),
+          endsAt:
+            booking.endsAt ??
+            laPazInstant(addDays(booking.tourDate!, route.days), '00:00'),
+        },
+        bufferMinutes,
+      );
+      if (await this.bookings.hasConflict(guideProfileId, busy, manager)) {
         throw new GuideNotAvailableException();
       }
 
@@ -82,7 +97,7 @@ export class GuideBookingsService {
       await this.bookings.save(booking, manager);
       await this.bookings.rejectOverlappingRequests(
         guideProfileId,
-        span,
+        busy,
         booking.id,
         DISPLACED_REASON,
         manager,
