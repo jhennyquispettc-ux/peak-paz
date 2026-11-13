@@ -395,7 +395,8 @@ describe('Guide bookings (e2e)', () => {
       .set(auth(touristAToken))
       .send({ reason: 'Cambio de planes' })
       .expect(200);
-    expect(cancelled.body.status).toBe('CANCELLED_BY_TOURIST');
+    expect(cancelled.body.booking.status).toBe('CANCELLED_BY_TOURIST');
+    expect(cancelled.body.refund).toBeNull();
 
     const listing = await request(server)
       .get(`/api/routes/${slug}/guides`)

@@ -112,6 +112,9 @@ export class BookingDto {
   acceptedAt: Date | null;
 
   @ApiProperty({ nullable: true })
+  confirmedAt: Date | null;
+
+  @ApiProperty({ nullable: true })
   cancelledAt: Date | null;
 
   @ApiProperty({ nullable: true })
@@ -163,6 +166,7 @@ export class BookingDto {
       respondBy: booking.respondBy,
       payBy: booking.payBy,
       acceptedAt: booking.acceptedAt,
+      confirmedAt: booking.confirmedAt,
       cancelledAt: booking.cancelledAt,
       cancellationReason: booking.cancellationReason,
       createdAt: booking.createdAt,

@@ -38,16 +38,10 @@ import {
   GuideNotAuthorizedForRouteException,
   GuideNotAvailableException,
   InsufficientAdvanceException,
-  InvalidBookingStatusException,
   TooManyPeopleException,
 } from '../exceptions/bookings.exceptions.js';
 import { BookingsRepository } from '../repositories/bookings.repository.js';
 import { generateBookingCode } from './booking-code.js';
-
-const TOURIST_CANCELLABLE = new Set([
-  BookingStatus.REQUESTED,
-  BookingStatus.ACCEPTED,
-]);
 
 @Injectable()
 export class BookingRequestsService {
@@ -129,25 +123,6 @@ export class BookingRequestsService {
       return BookingDto.fromEntity(booking, true);
     }
     throw new BookingNotFoundException();
-  }
-
-  async cancel(
-    touristId: string,
-    id: string,
-    reason: string | undefined,
-  ): Promise<BookingDto> {
-    const booking = await this.bookings.findDetailById(id);
-    if (!booking || booking.touristId !== touristId) {
-      throw new BookingNotFoundException();
-    }
-    if (!TOURIST_CANCELLABLE.has(booking.status)) {
-      throw new InvalidBookingStatusException(booking.status);
-    }
-    booking.status = BookingStatus.CANCELLED_BY_TOURIST;
-    booking.cancelledAt = new Date();
-    booking.cancellationReason = reason ?? null;
-    await this.bookings.save(booking);
-    return this.getForTourist(touristId, id);
   }
 
   private async getForTourist(

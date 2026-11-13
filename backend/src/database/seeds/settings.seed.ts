@@ -58,6 +58,11 @@ const DEFAULT_SETTINGS: Pick<Setting, 'key' | 'value' | 'description'>[] = [
     description:
       'Minutos libres que el guía necesita antes y después de cada compromiso',
   },
+  {
+    key: 'BOB_PER_USD',
+    value: '6.96',
+    description: 'Bolivianos por dólar para cobrar en USD por PayPal',
+  },
 ];
 
 export async function seedSettings(dataSource: DataSource): Promise<number> {

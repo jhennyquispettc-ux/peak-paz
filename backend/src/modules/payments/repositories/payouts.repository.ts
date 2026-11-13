@@ -1,0 +1,63 @@
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { EntityManager, Repository } from 'typeorm';
+import { Payout } from '../entities/payout.entity.js';
+import { PayoutStatus } from '../payments.enums.js';
+
+export interface PayoutPageFilters {
+  skip: number;
+  take: number;
+  status?: PayoutStatus;
+  guideProfileId?: string;
+}
+
+@Injectable()
+export class PayoutsRepository {
+  constructor(
+    @InjectRepository(Payout) private readonly payouts: Repository<Payout>,
+  ) {}
+
+  async insertIfMissing(
+    data: Partial<Payout>,
+    manager: EntityManager,
+  ): Promise<void> {
+    await manager
+      .createQueryBuilder()
+      .insert()
+      .into(Payout)
+      .values(data)
+      .orIgnore()
+      .execute();
+  }
+
+  findById(id: string): Promise<Payout | null> {
+    return this.payouts.findOne({
+      where: { id },
+      relations: { booking: { route: true } },
+    });
+  }
+
+  save(payout: Payout): Promise<Payout> {
+    return this.payouts.save(payout);
+  }
+
+  findPage(filters: PayoutPageFilters): Promise<[Payout[], number]> {
+    const query = this.payouts
+      .createQueryBuilder('payout')
+      .innerJoinAndSelect('payout.booking', 'booking')
+      .leftJoinAndSelect('booking.route', 'route')
+      .orderBy('payout.createdAt', 'DESC')
+      .skip(filters.skip)
+      .take(filters.take);
+
+    if (filters.status) {
+      query.andWhere('payout.status = :status', { status: filters.status });
+    }
+    if (filters.guideProfileId) {
+      query.andWhere('booking.guideProfileId = :guideProfileId', {
+        guideProfileId: filters.guideProfileId,
+      });
+    }
+    return query.getManyAndCount();
+  }
+}

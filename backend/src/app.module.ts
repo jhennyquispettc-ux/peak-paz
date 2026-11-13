@@ -6,6 +6,7 @@ import { HealthModule } from './health/health.module.js';
 import { StorageModule } from './storage/storage.module.js';
 import { AgenciesModule } from './modules/agencies/agencies.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
+import { PaymentsModule } from './modules/payments/payments.module.js';
 import { BookingsModule } from './modules/bookings/bookings.module.js';
 import { GuidesModule } from './modules/guides/guides.module.js';
 import { RoutesModule } from './modules/routes/routes.module.js';
@@ -26,6 +27,7 @@ import { UsersModule } from './modules/users/users.module.js';
     AgenciesModule,
     SettingsModule,
     BookingsModule,
+    PaymentsModule,
   ],
 })
 export class AppModule {}

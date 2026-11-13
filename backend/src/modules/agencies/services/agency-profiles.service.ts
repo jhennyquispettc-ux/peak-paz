@@ -36,7 +36,7 @@ import { AgenciesRepository } from '../repositories/agencies.repository.js';
 export class AgencyProfilesService {
   constructor(
     private readonly agencies: AgenciesRepository,
-    @InjectRepository(AgencyDocument)
+    @InjectRepository(AgencyDocument) //es una anotacion que es necesaria para inyectar el repositorio
     private readonly documents: Repository<AgencyDocument>,
     private readonly storage: StorageService,
   ) {}
@@ -52,7 +52,7 @@ export class AgencyProfilesService {
   ): Promise<Agency> {
     const agency = this.agencies.create(
       {
-        userId: user.id,
+        userId: user.id, //llega del JWT
         legalName: dto.legalName,
         taxId: dto.taxId,
         operatorLicense: dto.operatorLicense,
@@ -64,7 +64,7 @@ export class AgencyProfilesService {
       },
       manager,
     );
-    return this.agencies.save(agency, manager);
+    return this.agencies.save(agency, manager); //se guarda en la base de datos
   }
 
   async getMine(userId: string): Promise<AgencyDto> {
