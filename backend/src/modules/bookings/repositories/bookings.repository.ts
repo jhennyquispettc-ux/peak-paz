@@ -139,6 +139,20 @@ export class BookingsRepository {
       .getMany();
   }
 
+  findFinishedConfirmedIds(now: Date, limit: number): Promise<string[]> {
+    return this.repository
+      .createQueryBuilder('booking')
+      .select('booking.id', 'id')
+      .where('booking.status = :confirmed', {
+        confirmed: BookingStatus.CONFIRMED,
+      })
+      .andWhere(`${bookingEndsSql('booking')} < :now`, { now })
+      .orderBy('booking.tourDate', 'ASC')
+      .limit(limit)
+      .getRawMany<{ id: string }>()
+      .then((rows) => rows.map((row) => row.id));
+  }
+
   async expireOverdue(now: Date): Promise<number> {
     const result = await this.repository
       .createQueryBuilder()

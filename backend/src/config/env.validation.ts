@@ -32,6 +32,20 @@ export const envValidation = Joi.object({
   CLOUDINARY_API_KEY: Joi.string().allow('').default(''),
   CLOUDINARY_API_SECRET: Joi.string().allow('').default(''),
 
+  PAYMENT_DRIVER: Joi.string().valid('fake', 'paypal').default('fake'),
+  PAYPAL_BASE_URL: Joi.string()
+    .uri()
+    .default('https://api-m.sandbox.paypal.com'),
+  PAYPAL_CLIENT_ID: Joi.string().allow('').default(''),
+  PAYPAL_CLIENT_SECRET: Joi.string().allow('').default(''),
+  PAYMENT_RETURN_URL: Joi.string()
+    .uri()
+    .default('http://localhost:5173/pagos/confirmar'),
+  PAYMENT_CANCEL_URL: Joi.string()
+    .uri()
+    .default('http://localhost:5173/pagos/cancelado'),
+  TERMS_VERSION: Joi.string().max(20).default('1.0'),
+
   SEED_ADMIN_EMAIL: Joi.string().email().required(),
   SEED_ADMIN_PASSWORD: Joi.string().min(8).required(),
   SEED_ADMIN_FIRST_NAME: Joi.string().default('Admin'),

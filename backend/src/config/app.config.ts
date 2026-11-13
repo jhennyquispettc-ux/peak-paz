@@ -34,6 +34,17 @@ export class AppConfig {
       apiSecret: string;
     };
   };
+  readonly payments: {
+    driver: 'fake' | 'paypal';
+    returnUrl: string;
+    cancelUrl: string;
+    termsVersion: string;
+    paypal: {
+      baseUrl: string;
+      clientId: string;
+      clientSecret: string;
+    };
+  };
 
   constructor(config: ConfigService) {
     this.nodeEnv = config.getOrThrow<Environment>('NODE_ENV');
@@ -64,6 +75,17 @@ export class AppConfig {
         cloudName: config.get<string>('CLOUDINARY_CLOUD_NAME') ?? '',
         apiKey: config.get<string>('CLOUDINARY_API_KEY') ?? '',
         apiSecret: config.get<string>('CLOUDINARY_API_SECRET') ?? '',
+      },
+    };
+    this.payments = {
+      driver: config.getOrThrow<'fake' | 'paypal'>('PAYMENT_DRIVER'),
+      returnUrl: config.getOrThrow<string>('PAYMENT_RETURN_URL'),
+      cancelUrl: config.getOrThrow<string>('PAYMENT_CANCEL_URL'),
+      termsVersion: config.getOrThrow<string>('TERMS_VERSION'),
+      paypal: {
+        baseUrl: config.getOrThrow<string>('PAYPAL_BASE_URL'),
+        clientId: config.get<string>('PAYPAL_CLIENT_ID') ?? '',
+        clientSecret: config.get<string>('PAYPAL_CLIENT_SECRET') ?? '',
       },
     };
   }

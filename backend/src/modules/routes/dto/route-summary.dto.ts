@@ -42,6 +42,12 @@ export class RouteSummaryDto {
   @ApiProperty({ nullable: true })
   coverPhotoUrl: string | null;
 
+  @ApiProperty({ example: -16.3315 })
+  startLatitude: number;
+
+  @ApiProperty({ example: -68.0381 })
+  startLongitude: number;
+
   @ApiProperty()
   isPublished: boolean;
 
@@ -63,6 +69,8 @@ export class RouteSummaryDto {
       privatePrice: route.privatePrice,
       groupMinPrice: route.groupMinPrice,
       coverPhotoUrl: cover?.url ?? null,
+      startLatitude: route.startLatitude,
+      startLongitude: route.startLongitude,
       isPublished: route.isPublished,
     };
   }

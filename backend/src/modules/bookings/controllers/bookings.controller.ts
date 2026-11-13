@@ -2,8 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  HttpCode,
-  HttpStatus,
   Param,
   ParseUUIDPipe,
   Post,
@@ -26,7 +24,6 @@ import { CurrentUser } from '../../auth/decorators/current-user.decorator.js';
 import { Roles } from '../../auth/decorators/roles.decorator.js';
 import type { AuthenticatedUser } from '../../auth/types/authenticated-user.js';
 import { UserRole } from '../../users/users.enums.js';
-import { BookingReasonDto } from '../dto/booking-action.dto.js';
 import { BookingQueryDto } from '../dto/booking-query.dto.js';
 import { BookingDto, BookingPageDto } from '../dto/booking.dto.js';
 import { CreateBookingDto } from '../dto/create-booking.dto.js';
@@ -76,20 +73,5 @@ export class BookingsController {
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<BookingDto> {
     return this.requests.getForViewer(user, id);
-  }
-
-  @Post(':id/cancel')
-  @Roles(UserRole.TOURIST)
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Cancelar una solicitud que todavía no se pagó' })
-  @ApiOkResponse({ type: BookingDto })
-  @ApiNotFoundResponse({ type: ErrorResponseDto })
-  @ApiConflictResponse({ type: ErrorResponseDto })
-  cancel(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: BookingReasonDto,
-  ): Promise<BookingDto> {
-    return this.requests.cancel(user.id, id, dto.reason);
   }
 }
