@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
-import { BLOCKING_BOOKING_STATUSES } from '../../guides/repositories/guides.repository.js';
+import { GuideCommitment } from '../../guides/entities/guide-commitment.entity.js';
+import {
+  BLOCKING_BOOKING_STATUSES,
+  bookingEndsSql,
+  bookingStartsSql,
+} from '../../guides/repositories/guides.repository.js';
 import { BookingStatus, BookingType } from '../bookings.enums.js';
 import { Booking } from '../entities/booking.entity.js';
 
@@ -14,13 +19,13 @@ export interface BookingPageFilters {
   type?: BookingType;
 }
 
-export interface DateSpan {
-  startDate: string;
-  endDate: string;
+export interface BusyWindow {
+  busyFrom: Date;
+  busyUntil: Date;
 }
 
-const OVERLAPS_SPAN = `booking.tour_date <= :endDate
-  AND booking.tour_date + ((SELECT days FROM routes WHERE routes.id = booking.route_id) - 1) >= :startDate`;
+const OVERLAPS_BUSY = (alias: string) =>
+  `${bookingStartsSql(alias)} < :busyUntil AND ${bookingEndsSql(alias)} > :busyFrom`;
 
 @Injectable()
 export class BookingsRepository {
@@ -72,25 +77,34 @@ export class BookingsRepository {
       .getExists();
   }
 
-  hasConflict(
+  async hasConflict(
     guideProfileId: string,
-    span: DateSpan,
+    busy: BusyWindow,
     manager: EntityManager,
   ): Promise<boolean> {
-    return manager
+    const bookingClash = await manager
       .getRepository(Booking)
       .createQueryBuilder('booking')
       .where('booking.guide_profile_id = :guideProfileId', { guideProfileId })
       .andWhere('booking.status IN (:...statuses)', {
         statuses: BLOCKING_BOOKING_STATUSES,
       })
-      .andWhere(OVERLAPS_SPAN, span)
+      .andWhere(OVERLAPS_BUSY('booking'), busy)
+      .getExists();
+    if (bookingClash) return true;
+
+    return manager
+      .getRepository(GuideCommitment)
+      .createQueryBuilder('commitment')
+      .where('commitment.guideProfileId = :guideProfileId', { guideProfileId })
+      .andWhere('commitment.startsAt < :busyUntil', busy)
+      .andWhere('commitment.endsAt > :busyFrom', busy)
       .getExists();
   }
 
   async rejectOverlappingRequests(
     guideProfileId: string,
-    span: DateSpan,
+    busy: BusyWindow,
     exceptId: string,
     reason: string,
     manager: EntityManager,
@@ -102,9 +116,27 @@ export class BookingsRepository {
       .where('guide_profile_id = :guideProfileId', { guideProfileId })
       .andWhere('status = :requested', { requested: BookingStatus.REQUESTED })
       .andWhere('id <> :exceptId', { exceptId })
-      .andWhere(OVERLAPS_SPAN.replaceAll('booking.', 'bookings.'), span)
+      .andWhere(OVERLAPS_BUSY('bookings'), busy)
       .execute();
     return result.affected ?? 0;
+  }
+
+  findInRange(
+    guideProfileId: string,
+    from: Date,
+    until: Date,
+  ): Promise<Booking[]> {
+    return this.repository
+      .createQueryBuilder('booking')
+      .innerJoinAndSelect('booking.route', 'route')
+      .where('booking.guideProfileId = :guideProfileId', { guideProfileId })
+      .andWhere('booking.status IN (:...statuses)', {
+        statuses: [BookingStatus.REQUESTED, ...BLOCKING_BOOKING_STATUSES],
+      })
+      .andWhere(OVERLAPS_BUSY('booking'), { busyFrom: from, busyUntil: until })
+      .orderBy('booking.tourDate', 'ASC')
+      .addOrderBy('booking.startTime', 'ASC')
+      .getMany();
   }
 
   async expireOverdue(now: Date): Promise<number> {

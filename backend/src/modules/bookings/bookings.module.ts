@@ -5,13 +5,16 @@ import { GuidesModule } from '../guides/guides.module.js';
 import { RoutesModule } from '../routes/routes.module.js';
 import { SettingsModule } from '../settings/settings.module.js';
 import { AdminBookingsController } from './controllers/admin-bookings.controller.js';
+import { GuideAgendaController } from './controllers/guide-agenda.controller.js';
 import { BookingsController } from './controllers/bookings.controller.js';
 import { GuideBookingsController } from './controllers/guide-bookings.controller.js';
 import { Booking } from './entities/booking.entity.js';
 import { Reschedule } from './entities/reschedule.entity.js';
 import { BookingsRepository } from './repositories/bookings.repository.js';
+import { AdminBookingsService } from './services/admin-bookings.service.js';
 import { BookingExpirationService } from './services/booking-expiration.service.js';
 import { BookingRequestsService } from './services/booking-requests.service.js';
+import { GuideAgendaService } from './services/guide-agenda.service.js';
 import { GuideBookingsService } from './services/guide-bookings.service.js';
 
 @Module({
@@ -24,13 +27,16 @@ import { GuideBookingsService } from './services/guide-bookings.service.js';
   controllers: [
     BookingsController,
     GuideBookingsController,
+    GuideAgendaController,
     AdminBookingsController,
   ],
   providers: [
     BookingsRepository,
+    AdminBookingsService,
     BookingRequestsService,
     GuideBookingsService,
     BookingExpirationService,
+    GuideAgendaService,
   ],
   exports: [BookingsRepository],
 })

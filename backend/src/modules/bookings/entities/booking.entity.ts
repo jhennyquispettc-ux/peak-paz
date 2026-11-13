@@ -99,6 +99,9 @@ export class Booking {
   @Column({ name: 'start_time', type: 'time', nullable: true })
   startTime: string | null;
 
+  @Column({ name: 'ends_at', type: 'timestamptz', nullable: true })
+  endsAt: Date | null;
+
   @Column({ name: 'people_count', type: 'smallint' })
   peopleCount: number;
 

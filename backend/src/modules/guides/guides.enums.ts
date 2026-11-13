@@ -9,3 +9,8 @@ export const REQUIRED_GUIDE_DOCUMENTS = [
   GuideDocumentType.GUIDE_CREDENTIAL,
   GuideDocumentType.FIRST_AID,
 ] as const;
+
+export enum AvailabilityMode {
+  WEEKLY = 'WEEKLY',
+  BY_DATE = 'BY_DATE',
+}

@@ -15,6 +15,7 @@ import { ItineraryService } from './services/itinerary.service.js';
 import { RouteContentService } from './services/route-content.service.js';
 import { RoutesService } from './services/routes.service.js';
 import { SpeciesService } from './services/species.service.js';
+import { TourIntervalService } from './services/tour-interval.service.js';
 import { WeatherService } from './services/weather.service.js';
 
 @Module({
@@ -41,7 +42,8 @@ import { WeatherService } from './services/weather.service.js';
     ItineraryService,
     GpxService,
     WeatherService,
+    TourIntervalService,
   ],
-  exports: [RoutesService, RoutesRepository],
+  exports: [RoutesService, RoutesRepository, TourIntervalService],
 })
 export class RoutesModule {}
