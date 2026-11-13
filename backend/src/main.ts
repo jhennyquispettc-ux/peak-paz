@@ -18,7 +18,7 @@ async function bootstrap() {
       new DocumentBuilder()
         .setTitle('Peak Paz API')
         .setDescription('Rutas, reservas de guías y salidas grupales en La Paz')
-        .setVersion('0.6.0')
+        .setVersion('0.7.0')
         .addBearerAuth()
         .build(),
     );

@@ -9,6 +9,7 @@ export interface PayoutPageFilters {
   take: number;
   status?: PayoutStatus;
   guideProfileId?: string;
+  agencyId?: string;
 }
 
 @Injectable()
@@ -33,7 +34,7 @@ export class PayoutsRepository {
   findById(id: string): Promise<Payout | null> {
     return this.payouts.findOne({
       where: { id },
-      relations: { booking: { route: true } },
+      relations: { booking: { route: true, groupDeparture: { route: true } } },
     });
   }
 
@@ -46,6 +47,8 @@ export class PayoutsRepository {
       .createQueryBuilder('payout')
       .innerJoinAndSelect('payout.booking', 'booking')
       .leftJoinAndSelect('booking.route', 'route')
+      .leftJoinAndSelect('booking.groupDeparture', 'departure')
+      .leftJoinAndSelect('departure.route', 'departureRoute')
       .orderBy('payout.createdAt', 'DESC')
       .skip(filters.skip)
       .take(filters.take);
@@ -56,6 +59,11 @@ export class PayoutsRepository {
     if (filters.guideProfileId) {
       query.andWhere('booking.guideProfileId = :guideProfileId', {
         guideProfileId: filters.guideProfileId,
+      });
+    }
+    if (filters.agencyId) {
+      query.andWhere('departure.agencyId = :agencyId', {
+        agencyId: filters.agencyId,
       });
     }
     return query.getManyAndCount();

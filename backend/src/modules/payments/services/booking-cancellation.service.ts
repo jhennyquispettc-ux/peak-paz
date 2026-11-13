@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, EntityManager } from 'typeorm';
-import { laPazInstant } from '../../../common/time/la-paz-time.js';
-import { BookingStatus } from '../../bookings/bookings.enums.js';
+import { bookingStartsAt } from '../../bookings/booking-schedule.js';
+import { BookingSource, BookingStatus } from '../../bookings/bookings.enums.js';
 import { BookingDto } from '../../bookings/dto/booking.dto.js';
 import { Booking } from '../../bookings/entities/booking.entity.js';
 import {
@@ -58,7 +58,8 @@ export class BookingCancellationService {
     const minDays = await this.settings.getNumber(SettingKey.REFUND_MIN_DAYS);
 
     const outcome = await this.dataSource.transaction(async (manager) => {
-      const booking = await this.bookings.findForUpdate(bookingId, manager);
+      await this.bookings.findForUpdate(bookingId, manager);
+      const booking = await this.bookings.findDetailById(bookingId, manager);
       if (!booking || booking.touristId !== touristId) {
         throw new BookingNotFoundException();
       }
@@ -76,7 +77,7 @@ export class BookingCancellationService {
       }
       this.assertConfirmedAndNotStarted(booking, now);
 
-      const startsAt = laPazInstant(booking.tourDate!, booking.startTime!);
+      const startsAt = bookingStartsAt(booking);
       if (isRefundable(startsAt, now, minDays)) {
         const refund = await this.refundCapture(
           booking,
@@ -120,7 +121,8 @@ export class BookingCancellationService {
       : BookingStatus.CANCELLED_BY_PROVIDER;
 
     const outcome = await this.dataSource.transaction(async (manager) => {
-      const booking = await this.bookings.findForUpdate(bookingId, manager);
+      await this.bookings.findForUpdate(bookingId, manager);
+      const booking = await this.bookings.findDetailById(bookingId, manager);
       if (!booking || booking.guideProfileId !== profile.id) {
         throw new BookingNotFoundException();
       }
@@ -144,11 +146,27 @@ export class BookingCancellationService {
     return this.result(bookingId, outcome, true);
   }
 
+  async cancelForProvider(
+    booking: Booking,
+    status: BookingStatus,
+    refundReason: RefundReason,
+    reason: string,
+    now: Date,
+    manager: EntityManager,
+  ): Promise<boolean> {
+    const refunded =
+      booking.status === BookingStatus.CONFIRMED &&
+      booking.source === BookingSource.WEB;
+    if (refunded) await this.refundCapture(booking, refundReason, manager);
+    await this.close(booking, status, reason, now, manager);
+    return refunded;
+  }
+
   private assertConfirmedAndNotStarted(booking: Booking, now: Date): void {
     if (booking.status !== BookingStatus.CONFIRMED) {
       throw new InvalidBookingStatusException(booking.status);
     }
-    if (laPazInstant(booking.tourDate!, booking.startTime!) <= now) {
+    if (bookingStartsAt(booking) <= now) {
       throw new TourAlreadyStartedException();
     }
   }

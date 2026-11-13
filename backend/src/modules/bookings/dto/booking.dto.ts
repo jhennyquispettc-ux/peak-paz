@@ -39,6 +39,14 @@ export class BookingGuideDto {
   lastName: string;
 }
 
+export class BookingAgencyDto {
+  @ApiProperty({ format: 'uuid' })
+  id: string;
+
+  @ApiProperty()
+  legalName: string;
+}
+
 export class BookingTouristDto {
   @ApiProperty()
   firstName: string;
@@ -81,8 +89,22 @@ export class BookingDto {
   @ApiProperty({ type: BookingRouteDto })
   route: BookingRouteDto;
 
-  @ApiProperty({ type: BookingGuideDto })
-  guide: BookingGuideDto;
+  @ApiProperty({
+    type: BookingGuideDto,
+    nullable: true,
+    description: 'Solo en reservas particulares',
+  })
+  guide: BookingGuideDto | null;
+
+  @ApiProperty({
+    type: BookingAgencyDto,
+    nullable: true,
+    description: 'Solo en salidas grupales',
+  })
+  agency: BookingAgencyDto | null;
+
+  @ApiProperty({ format: 'uuid', nullable: true })
+  groupDepartureId: string | null;
 
   @ApiProperty({ type: BookingTouristDto, nullable: true })
   tourist: BookingTouristDto | null;
@@ -124,12 +146,13 @@ export class BookingDto {
   createdAt: Date;
 
   static fromEntity(booking: Booking, hideContact = false): BookingDto {
-    const route = booking.route!;
-    const guideUser = booking.guideProfile!.user;
+    const departure = booking.groupDeparture;
+    const route = booking.route ?? departure!.route;
+    const guideUser = booking.guideProfile?.user;
     const tourist = booking.tourist;
     const showContact =
       !hideContact || CONTACT_VISIBLE_STATUSES.has(booking.status);
-    const tourDate = booking.tourDate!;
+    const tourDate = booking.tourDate ?? departure!.departureDate;
 
     return {
       id: booking.id,
@@ -143,11 +166,17 @@ export class BookingDto {
         nameEn: route.nameEn,
         days: route.days,
       },
-      guide: {
-        id: booking.guideProfileId!,
-        firstName: guideUser.firstName,
-        lastName: guideUser.lastName,
-      },
+      guide: guideUser
+        ? {
+            id: booking.guideProfileId!,
+            firstName: guideUser.firstName,
+            lastName: guideUser.lastName,
+          }
+        : null,
+      agency: departure?.agency
+        ? { id: departure.agency.id, legalName: departure.agency.legalName }
+        : null,
+      groupDepartureId: booking.groupDepartureId,
       tourist: tourist
         ? {
             firstName: tourist.firstName,
@@ -160,7 +189,7 @@ export class BookingDto {
         : null,
       tourDate,
       endDate: addDays(tourDate, route.days - 1),
-      startTime: booking.startTime!.slice(0, 5),
+      startTime: (booking.startTime ?? departure!.meetingTime).slice(0, 5),
       peopleCount: booking.peopleCount,
       totalAmount: booking.totalAmount,
       respondBy: booking.respondBy,

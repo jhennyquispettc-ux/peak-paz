@@ -43,6 +43,17 @@ export class PayoutsController {
     return this.payouts.listForGuide(user.id, query);
   }
 
+  @Get('agencies/me/payouts')
+  @Roles(UserRole.AGENCY)
+  @ApiOperation({ summary: 'Liquidaciones de la agencia' })
+  @ApiOkResponse({ type: PayoutPageDto })
+  listAgency(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query() query: PayoutQueryDto,
+  ): Promise<PayoutPageDto> {
+    return this.payouts.listForAgency(user.id, query);
+  }
+
   @Get('admin/payouts')
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Liquidaciones pendientes y pagadas' })

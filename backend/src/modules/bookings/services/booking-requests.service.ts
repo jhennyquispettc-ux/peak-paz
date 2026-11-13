@@ -119,7 +119,10 @@ export class BookingRequestsService {
 
     if (viewer.role === UserRole.ADMIN) return BookingDto.fromEntity(booking);
     if (booking.touristId === viewer.id) return BookingDto.fromEntity(booking);
-    if (booking.guideProfile?.userId === viewer.id) {
+    if (
+      booking.guideProfile?.userId === viewer.id ||
+      booking.groupDeparture?.agency?.userId === viewer.id
+    ) {
       return BookingDto.fromEntity(booking, true);
     }
     throw new BookingNotFoundException();

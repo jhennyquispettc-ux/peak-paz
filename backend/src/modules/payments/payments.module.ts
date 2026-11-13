@@ -1,11 +1,14 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppConfig } from '../../config/app.config.js';
+import { AgenciesModule } from '../agencies/agencies.module.js';
 import { BookingsModule } from '../bookings/bookings.module.js';
+import { GroupDeparturesModule } from '../group-departures/group-departures.module.js';
 import { GuidesModule } from '../guides/guides.module.js';
 import { SettingsModule } from '../settings/settings.module.js';
 import { BookingCancellationController } from './controllers/booking-cancellation.controller.js';
 import { BookingPaymentsController } from './controllers/booking-payments.controller.js';
+import { DepartureCancellationController } from './controllers/departure-cancellation.controller.js';
 import { PayoutsController } from './controllers/payouts.controller.js';
 import { Payment } from './entities/payment.entity.js';
 import { Payout } from './entities/payout.entity.js';
@@ -18,6 +21,7 @@ import { PayoutsRepository } from './repositories/payouts.repository.js';
 import { BookingCancellationService } from './services/booking-cancellation.service.js';
 import { BookingCompletionService } from './services/booking-completion.service.js';
 import { BookingPaymentsService } from './services/booking-payments.service.js';
+import { DepartureLifecycleService } from './services/departure-lifecycle.service.js';
 import { PayoutsService } from './services/payouts.service.js';
 
 @Module({
@@ -25,11 +29,14 @@ import { PayoutsService } from './services/payouts.service.js';
     TypeOrmModule.forFeature([Payment, Refund, Payout]),
     BookingsModule,
     GuidesModule,
+    AgenciesModule,
+    GroupDeparturesModule,
     SettingsModule,
   ],
   controllers: [
     BookingPaymentsController,
     BookingCancellationController,
+    DepartureCancellationController,
     PayoutsController,
   ],
   providers: [
@@ -51,6 +58,7 @@ import { PayoutsService } from './services/payouts.service.js';
     BookingPaymentsService,
     BookingCancellationService,
     BookingCompletionService,
+    DepartureLifecycleService,
   ],
 })
 export class PaymentsModule {}

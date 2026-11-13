@@ -61,7 +61,7 @@ export class BookingPaymentsService {
 
     const order = await this.provider.createOrder({
       reference: booking.code,
-      description: `Peak Paz ${booking.code}: ${booking.route?.nameEs ?? 'tour'}`,
+      description: `Peak Paz ${booking.code}: ${(booking.route ?? booking.groupDeparture?.route)?.nameEs ?? 'tour'}`,
       amount: payment.chargedAmount!,
       currency: CHARGE_CURRENCY,
       requestId: payment.id,
