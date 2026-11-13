@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
 import { PaginationMetaDto } from '../../../common/dto/pagination-meta.dto.js';
+import { AgencyNotFoundException } from '../../agencies/exceptions/agencies.exceptions.js';
+import { AgenciesRepository } from '../../agencies/repositories/agencies.repository.js';
 import { Booking } from '../../bookings/entities/booking.entity.js';
 import { GuideNotFoundException } from '../../guides/exceptions/guides.exceptions.js';
 import { GuidesRepository } from '../../guides/repositories/guides.repository.js';
@@ -20,6 +22,7 @@ export class PayoutsService {
   constructor(
     private readonly payouts: PayoutsRepository,
     private readonly guides: GuidesRepository,
+    private readonly agencies: AgenciesRepository,
     private readonly settings: SettingsService,
   ) {}
 
@@ -61,6 +64,15 @@ export class PayoutsService {
     return this.page(query, profile.id);
   }
 
+  async listForAgency(
+    userId: string,
+    query: PayoutQueryDto,
+  ): Promise<PayoutPageDto> {
+    const agency = await this.agencies.findIdByUserId(userId);
+    if (!agency) throw new AgencyNotFoundException();
+    return this.page(query, undefined, agency.id);
+  }
+
   async markPaid(id: string): Promise<PayoutDto> {
     const payout = await this.payouts.findById(id);
     if (!payout) throw new PayoutNotFoundException();
@@ -76,12 +88,14 @@ export class PayoutsService {
   private async page(
     query: PayoutQueryDto,
     guideProfileId?: string,
+    agencyId?: string,
   ): Promise<PayoutPageDto> {
     const [payouts, total] = await this.payouts.findPage({
       skip: query.skip,
       take: query.limit,
       status: query.status,
       guideProfileId,
+      agencyId,
     });
     return {
       data: payouts.map((payout) => PayoutDto.fromEntity(payout)),

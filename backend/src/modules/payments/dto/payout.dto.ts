@@ -57,8 +57,13 @@ export class PayoutDto {
       id: payout.id,
       bookingId: payout.bookingId,
       bookingCode: payout.booking?.code,
-      tourDate: payout.booking?.tourDate ?? null,
-      routeNameEs: payout.booking?.route?.nameEs ?? null,
+      tourDate:
+        payout.booking?.tourDate ??
+        payout.booking?.groupDeparture?.departureDate ??
+        null,
+      routeNameEs:
+        (payout.booking?.route ?? payout.booking?.groupDeparture?.route)
+          ?.nameEs ?? null,
       grossAmount: payout.grossAmount,
       commissionRate: payout.commissionRate,
       commissionAmount: payout.commissionAmount,

@@ -8,6 +8,7 @@ import { AgenciesModule } from './modules/agencies/agencies.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { PaymentsModule } from './modules/payments/payments.module.js';
 import { BookingsModule } from './modules/bookings/bookings.module.js';
+import { GroupDeparturesModule } from './modules/group-departures/group-departures.module.js';
 import { GuidesModule } from './modules/guides/guides.module.js';
 import { RoutesModule } from './modules/routes/routes.module.js';
 import { SettingsModule } from './modules/settings/settings.module.js';
@@ -27,6 +28,7 @@ import { UsersModule } from './modules/users/users.module.js';
     AgenciesModule,
     SettingsModule,
     BookingsModule,
+    GroupDeparturesModule,
     PaymentsModule,
   ],
 })

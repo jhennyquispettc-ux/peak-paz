@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Interval } from '@nestjs/schedule';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
-import { BookingStatus } from '../../bookings/bookings.enums.js';
+import { BookingSource, BookingStatus } from '../../bookings/bookings.enums.js';
 import { BookingsRepository } from '../../bookings/repositories/bookings.repository.js';
 import { PayoutsService } from './payouts.service.js';
 
@@ -40,7 +40,9 @@ export class BookingCompletionService {
         if (booking?.status !== BookingStatus.CONFIRMED) return;
         booking.status = BookingStatus.COMPLETED;
         await this.bookings.save(booking, manager);
-        await this.payouts.createForBooking(booking, manager);
+        if (booking.source === BookingSource.WEB) {
+          await this.payouts.createForBooking(booking, manager);
+        }
         completed++;
       });
     }

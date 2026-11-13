@@ -13,6 +13,7 @@ export enum RefundReason {
   WEATHER = 'WEATHER',
   RESCHEDULE_REJECTED = 'RESCHEDULE_REJECTED',
   COMPLAINT = 'COMPLAINT',
+  MINIMUM_NOT_REACHED = 'MINIMUM_NOT_REACHED',
 }
 
 export enum RefundStatus {

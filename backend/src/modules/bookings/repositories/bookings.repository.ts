@@ -40,7 +40,12 @@ export class BookingsRepository {
   findDetailById(id: string, manager?: EntityManager): Promise<Booking | null> {
     return this.repo(manager).findOne({
       where: { id },
-      relations: { route: true, guideProfile: { user: true }, tourist: true },
+      relations: {
+        route: true,
+        guideProfile: { user: true },
+        tourist: true,
+        groupDeparture: { route: true, agency: true },
+      },
     });
   }
 
@@ -178,6 +183,9 @@ export class BookingsRepository {
       .leftJoinAndSelect('booking.guideProfile', 'guide')
       .leftJoinAndSelect('guide.user', 'guideUser')
       .leftJoinAndSelect('booking.tourist', 'tourist')
+      .leftJoinAndSelect('booking.groupDeparture', 'departure')
+      .leftJoinAndSelect('departure.route', 'departureRoute')
+      .leftJoinAndSelect('departure.agency', 'agency')
       .orderBy('booking.tourDate', 'ASC')
       .addOrderBy('booking.createdAt', 'DESC')
       .skip(filters.skip)
