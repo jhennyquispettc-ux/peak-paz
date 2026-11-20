@@ -12,6 +12,8 @@ import {
 import { BookingsRepository } from '../../bookings/repositories/bookings.repository.js';
 import { GuideNotFoundException } from '../../guides/exceptions/guides.exceptions.js';
 import { GuidesRepository } from '../../guides/repositories/guides.repository.js';
+import type { UploadedFileData } from '../../../common/types/uploaded-file.js';
+import { CancellationReviewsService } from '../../strikes/services/cancellation-reviews.service.js';
 import { SettingsService } from '../../settings/services/settings.service.js';
 import { SettingKey } from '../../settings/setting-keys.js';
 import { CancellationResultDto } from '../dto/cancellation.dto.js';
@@ -47,6 +49,7 @@ export class BookingCancellationService {
     private readonly payouts: PayoutsService,
     private readonly provider: PaymentProvider,
     private readonly settings: SettingsService,
+    private readonly reviews: CancellationReviewsService,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
@@ -105,7 +108,7 @@ export class BookingCancellationService {
       return null;
     });
 
-    return this.result(bookingId, outcome, false);
+    return this.result(bookingId, outcome, false, null);
   }
 
   async cancelByGuide(
@@ -113,6 +116,7 @@ export class BookingCancellationService {
     bookingId: string,
     reason: string,
     weather: boolean,
+    evidence?: UploadedFileData,
   ): Promise<CancellationResultDto> {
     const profile = await this.guides.findIdByUserId(userId);
     if (!profile) throw new GuideNotFoundException();
@@ -120,7 +124,9 @@ export class BookingCancellationService {
       ? BookingStatus.CANCELLED_WEATHER
       : BookingStatus.CANCELLED_BY_PROVIDER;
 
-    const outcome = await this.dataSource.transaction(async (manager) => {
+    const stored = await this.reviews.storeEvidence(profile.id, evidence);
+    let reviewId: string | null = null;
+    const work = this.dataSource.transaction(async (manager) => {
       await this.bookings.findForUpdate(bookingId, manager);
       const booking = await this.bookings.findDetailById(bookingId, manager);
       if (!booking || booking.guideProfileId !== profile.id) {
@@ -128,22 +134,33 @@ export class BookingCancellationService {
       }
       const now = new Date();
 
-      if (booking.status === BookingStatus.ACCEPTED) {
-        await this.close(booking, status, reason, now, manager);
-        return null;
+      let refund: RefundOutcome | null = null;
+      if (booking.status !== BookingStatus.ACCEPTED) {
+        this.assertConfirmedAndNotStarted(booking, now);
+        refund = await this.refundCapture(
+          booking,
+          weather ? RefundReason.WEATHER : RefundReason.PROVIDER_CANCELLATION,
+          manager,
+        );
       }
-      this.assertConfirmedAndNotStarted(booking, now);
-
-      const refund = await this.refundCapture(
-        booking,
-        weather ? RefundReason.WEATHER : RefundReason.PROVIDER_CANCELLATION,
+      await this.close(booking, status, reason, now, manager);
+      const review = await this.reviews.openForBooking(
+        booking.id,
+        stored,
         manager,
       );
-      await this.close(booking, status, reason, now, manager);
+      reviewId = review.id;
       return refund;
     });
 
-    return this.result(bookingId, outcome, true);
+    let outcome: RefundOutcome | null;
+    try {
+      outcome = await work;
+    } catch (error) {
+      await this.reviews.discardEvidence(stored);
+      throw error;
+    }
+    return this.result(bookingId, outcome, true, reviewId);
   }
 
   async cancelForProvider(
@@ -225,6 +242,7 @@ export class BookingCancellationService {
     bookingId: string,
     outcome: RefundOutcome | null,
     viewedByGuide: boolean,
+    reviewId: string | null,
   ): Promise<CancellationResultDto> {
     const booking = await this.bookings.findDetailById(bookingId);
     return {
@@ -232,6 +250,7 @@ export class BookingCancellationService {
       refund: outcome
         ? RefundDto.fromEntity(outcome.refund, outcome.currency)
         : null,
+      reviewId,
     };
   }
 }

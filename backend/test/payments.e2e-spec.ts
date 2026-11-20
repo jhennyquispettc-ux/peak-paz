@@ -16,6 +16,7 @@ import { Payout } from './../src/modules/payments/entities/payout.entity.js';
 import { Refund } from './../src/modules/payments/entities/refund.entity.js';
 import { BookingCompletionService } from './../src/modules/payments/services/booking-completion.service.js';
 import { Route } from './../src/modules/routes/entities/route.entity.js';
+import { CancellationReview } from './../src/modules/strikes/entities/cancellation-review.entity.js';
 import { User } from './../src/modules/users/entities/user.entity.js';
 
 const PDF = Buffer.from('%PDF-1.4\n%%EOF');
@@ -220,6 +221,12 @@ describe('Payments, refunds and payouts (e2e)', () => {
 
   afterAll(async () => {
     if (bookingIds.length > 0) {
+      await dataSource
+        .createQueryBuilder()
+        .delete()
+        .from(CancellationReview)
+        .where('booking_id IN (:...ids)', { ids: bookingIds })
+        .execute();
       const payments = await dataSource
         .getRepository(Payment)
         .createQueryBuilder('payment')
@@ -381,6 +388,7 @@ describe('Payments, refunds and payouts (e2e)', () => {
       reason: 'WEATHER',
       status: 'COMPLETED',
     });
+    expect(cancelled.body.reviewId).toEqual(expect.any(String));
     expect(cancelled.body.booking.tourist.email).toBeNull();
   });
 

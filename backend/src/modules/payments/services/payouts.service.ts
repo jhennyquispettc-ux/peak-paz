@@ -8,6 +8,7 @@ import { GuideNotFoundException } from '../../guides/exceptions/guides.exception
 import { GuidesRepository } from '../../guides/repositories/guides.repository.js';
 import { SettingsService } from '../../settings/services/settings.service.js';
 import { SettingKey } from '../../settings/setting-keys.js';
+import { FinesService } from '../../strikes/services/fines.service.js';
 import { PayoutDto, PayoutPageDto, PayoutQueryDto } from '../dto/payout.dto.js';
 import {
   PayoutAlreadyPaidException,
@@ -24,18 +25,29 @@ export class PayoutsService {
     private readonly guides: GuidesRepository,
     private readonly agencies: AgenciesRepository,
     private readonly settings: SettingsService,
+    private readonly fines: FinesService,
   ) {}
 
   async createForBooking(
     booking: Booking,
     manager: EntityManager,
   ): Promise<void> {
+    if (await this.payouts.existsForBooking(booking.id, manager)) return;
     const commissionRate = await this.settings.getNumber(
       SettingKey.COMMISSION_RATE,
     );
+    const beforeFines = splitPayout(booking.totalAmount, commissionRate);
+    const penaltyDeduction = booking.guideProfileId
+      ? await this.fines.settle(
+          booking.guideProfileId,
+          beforeFines.netAmount,
+          manager,
+        )
+      : 0;
     const { commissionAmount, netAmount } = splitPayout(
       booking.totalAmount,
       commissionRate,
+      penaltyDeduction,
     );
     await this.payouts.insertIfMissing(
       {
@@ -43,7 +55,7 @@ export class PayoutsService {
         grossAmount: booking.totalAmount,
         commissionRate,
         commissionAmount,
-        penaltyDeduction: 0,
+        penaltyDeduction,
         netAmount,
         status: PayoutStatus.PENDING,
       },

@@ -6,11 +6,16 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBadGatewayResponse,
   ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
   ApiConflictResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
@@ -20,6 +25,8 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { ErrorResponseDto } from '../../../common/dto/error-response.dto.js';
+import type { UploadedFileData } from '../../../common/types/uploaded-file.js';
+import { MAX_DOCUMENT_BYTES } from '../../../common/verification/verification-documents.js';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator.js';
 import { Roles } from '../../auth/decorators/roles.decorator.js';
 import type { AuthenticatedUser } from '../../auth/types/authenticated-user.js';
@@ -61,9 +68,28 @@ export class BookingCancellationController {
   @Post('guides/me/bookings/:id/cancel')
   @Roles(UserRole.GUIDE)
   @HttpCode(HttpStatus.OK)
+  @UseInterceptors(
+    FileInterceptor('evidence', { limits: { fileSize: MAX_DOCUMENT_BYTES } }),
+  )
   @ApiOperation({
     summary:
-      'Cancelar una reserva aceptada o pagada. El turista recibe el 100% si ya pagó',
+      'Cancelar una reserva aceptada o pagada con su motivo y un justificante opcional. El turista recibe el 100% si ya pagó y el administrador revisa la cancelación',
+  })
+  @ApiConsumes('multipart/form-data', 'application/json')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['reason'],
+      properties: {
+        reason: { type: 'string', example: 'Tengo fiebre y no puedo subir' },
+        weather: { type: 'boolean', default: false },
+        evidence: {
+          type: 'string',
+          format: 'binary',
+          description: 'Justificante opcional. PDF, JPG o PNG de hasta 5 MB',
+        },
+      },
+    },
   })
   @ApiOkResponse({ type: CancellationResultDto })
   @ApiBadRequestResponse({ type: ErrorResponseDto })
@@ -71,12 +97,14 @@ export class BookingCancellationController {
     @CurrentUser() user: AuthenticatedUser,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: GuideCancellationDto,
+    @UploadedFile() evidence: UploadedFileData | undefined,
   ): Promise<CancellationResultDto> {
     return this.cancellations.cancelByGuide(
       user.id,
       id,
       dto.reason,
       dto.weather ?? false,
+      evidence,
     );
   }
 }
