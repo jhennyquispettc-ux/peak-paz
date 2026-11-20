@@ -1,5 +1,6 @@
 import {
   BadGatewayException,
+  BadRequestException,
   ConflictException,
   NotFoundException,
 } from '@nestjs/common';
@@ -58,6 +59,67 @@ export class PayoutAlreadyPaidException extends ConflictException {
     super({
       error: 'PAYOUT_ALREADY_PAID',
       message: 'This payout was already marked as paid.',
+    });
+  }
+}
+
+export class PayoutOnHoldException extends ConflictException {
+  constructor() {
+    super({
+      error: 'PAYOUT_ON_HOLD',
+      message: 'This payout waits until the open complaint is resolved.',
+    });
+  }
+}
+
+export class ComplaintNotFoundException extends NotFoundException {
+  constructor() {
+    super({ error: 'COMPLAINT_NOT_FOUND', message: 'Complaint not found.' });
+  }
+}
+
+export class ComplaintAlreadyExistsException extends ConflictException {
+  constructor() {
+    super({
+      error: 'COMPLAINT_ALREADY_EXISTS',
+      message: 'This tour already has a complaint.',
+    });
+  }
+}
+
+export class ComplaintWindowClosedException extends ConflictException {
+  constructor(hours: number) {
+    super({
+      error: 'COMPLAINT_WINDOW_CLOSED',
+      message: `A complaint can be made once the tour ends and up to ${hours} hours later.`,
+    });
+  }
+}
+
+export class ComplaintResolvedException extends ConflictException {
+  constructor() {
+    super({
+      error: 'COMPLAINT_RESOLVED',
+      message: 'This complaint was already resolved.',
+    });
+  }
+}
+
+export class RefundPercentRequiredException extends BadRequestException {
+  constructor() {
+    super({
+      error: 'REFUND_PERCENT_REQUIRED',
+      message:
+        'An accepted complaint needs the refund percentage, even if it is 0.',
+    });
+  }
+}
+
+export class ComplaintOptionsNotAllowedException extends BadRequestException {
+  constructor() {
+    super({
+      error: 'COMPLAINT_OPTIONS_NOT_ALLOWED',
+      message: 'A rejected complaint cannot have a refund or a strike.',
     });
   }
 }

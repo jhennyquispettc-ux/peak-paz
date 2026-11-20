@@ -1,3 +1,5 @@
+import { Complaint } from './entities/complaint.entity.js';
+import { ComplaintsRepository } from './repositories/complaints.repository.js';
 import { AgenciesModule } from '../agencies/agencies.module.js';
 import { AgencySanctionsController } from './controllers/agency-sanctions.controller.js';
 import { Module } from '@nestjs/common';
@@ -20,7 +22,7 @@ import { StrikesService } from './services/strikes.service.js';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Strike, CancellationReview]),
+    TypeOrmModule.forFeature([Strike, CancellationReview, Complaint]),
     GuidesModule,
     AgenciesModule,
     UsersModule,
@@ -34,6 +36,7 @@ import { StrikesService } from './services/strikes.service.js';
   providers: [
     StrikesRepository,
     CancellationReviewsRepository,
+    ComplaintsRepository,
     StrikePenaltiesService,
     FinesService,
     CancellationReviewsService,
@@ -41,6 +44,11 @@ import { StrikesService } from './services/strikes.service.js';
     StrikeExpiryService,
     StrikeIssuerService,
   ],
-  exports: [CancellationReviewsService, FinesService, StrikeIssuerService],
+  exports: [
+    CancellationReviewsService,
+    FinesService,
+    StrikeIssuerService,
+    ComplaintsRepository,
+  ],
 })
 export class StrikesModule {}

@@ -21,7 +21,7 @@ import { RefundDto } from '../dto/payment.dto.js';
 import { Refund } from '../entities/refund.entity.js';
 import { TourAlreadyStartedException } from '../exceptions/payments.exceptions.js';
 import { reconfirmationMissed } from '../../bookings/tour-checks.js';
-import { isRefundable } from '../money.js';
+import { isRefundable, round2 } from '../money.js';
 import {
   PaymentStatus,
   RefundReason,
@@ -224,19 +224,32 @@ export class BookingCancellationService {
     }
   }
 
+  async refundShare(
+    booking: Booking,
+    percent: number,
+    reason: RefundReason,
+    manager: EntityManager,
+  ): Promise<RefundDto | null> {
+    if (percent <= 0 || booking.source !== BookingSource.WEB) return null;
+    const outcome = await this.refundCapture(booking, reason, manager, percent);
+    return RefundDto.fromEntity(outcome.refund, outcome.currency);
+  }
+
   private async refundCapture(
     booking: Booking,
     reason: RefundReason,
     manager: EntityManager,
+    percent = 100,
   ): Promise<RefundOutcome> {
     const payment = await this.payments.findCaptured(booking.id, manager);
     if (!payment?.externalCaptureId || payment.chargedAmount === null) {
       throw new InvalidBookingStatusException(booking.status);
     }
+    const amount = round2((payment.chargedAmount * percent) / 100);
     const refund = await this.payments.saveRefund(
       {
         paymentId: payment.id,
-        amount: payment.chargedAmount,
+        amount,
         reason,
         status: RefundStatus.PENDING,
       },
@@ -245,7 +258,7 @@ export class BookingCancellationService {
 
     const result = await this.provider.refund({
       captureId: payment.externalCaptureId,
-      amount: payment.chargedAmount,
+      amount,
       currency: payment.chargeCurrency,
       requestId: refund.id,
     });
@@ -255,8 +268,10 @@ export class BookingCancellationService {
       : RefundStatus.PENDING;
     await manager.getRepository(Refund).save(refund);
 
-    payment.status = PaymentStatus.REFUNDED;
-    await this.payments.savePayment(payment, manager);
+    if (percent >= 100) {
+      payment.status = PaymentStatus.REFUNDED;
+      await this.payments.savePayment(payment, manager);
+    }
     return { refund, currency: payment.chargeCurrency };
   }
 

@@ -111,6 +111,12 @@ const DEFAULT_SETTINGS: Pick<Setting, 'key' | 'value' | 'description'>[] = [
       'Días después del tour en que el turista puede dejar su reseña',
   },
   {
+    key: 'COMPLAINT_WINDOW_HOURS',
+    value: '72',
+    description:
+      'Horas después del fin del tour en que el turista puede reclamar',
+  },
+  {
     key: 'SCHEDULE_BUFFER_MIN',
     value: '120',
     description:
