@@ -29,7 +29,8 @@
     "db:up": "docker compose -f ../docker-compose.yml up -d",
     "db:down": "docker compose -f ../docker-compose.yml down",
     "openapi:export": "nest build && node dist/openapi-export.js",
-    "seed:demo": "tsx src/database/seeds/run-demo-seed.ts"
+    "seed:demo": "tsx src/database/seeds/run-demo-seed.ts",
+    "seed:demo-cases": "nest build && node dist/database/seeds/run-demo-cases.js"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",

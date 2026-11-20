@@ -33,6 +33,14 @@ Para cargar rutas de demostración:
 npm run seed:demo --prefix backend
 ```
 
+Para cargar casos completos de reservas, sanciones, disputas, reclamos, reseñas y avisos, solo en la base local:
+
+```bash
+npm run seed:demo-cases --prefix backend
+```
+
+Crea cuentas con el dominio `demo.peakpaz.local`: dos guías, dos turistas y una agencia. La contraseña es el valor de `DEMO_PASSWORD` en `backend/.env` o, si no existe, la que define el script. Si las cuentas ya existen, no crea nada.
+
 Ctrl+C detiene la API y la web. Para detener los contenedores, conservando los datos:
 
 ```bash
