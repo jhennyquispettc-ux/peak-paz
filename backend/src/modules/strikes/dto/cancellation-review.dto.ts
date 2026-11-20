@@ -11,15 +11,14 @@ import {
 } from 'class-validator';
 import { PaginationMetaDto } from '../../../common/dto/pagination-meta.dto.js';
 import { PaginationQueryDto } from '../../../common/dto/pagination-query.dto.js';
-import { bookingStartsAt } from '../../bookings/booking-schedule.js';
-import { BookingStatus } from '../../bookings/bookings.enums.js';
+import { laPazInstant } from '../../../common/time/la-paz-time.js';
 import { CancellationReview } from '../entities/cancellation-review.entity.js';
 import { SanctionLevel } from '../sanctions.js';
 import {
   CancellationDecision,
   CancellationReviewStatus,
 } from '../strikes.enums.js';
-import { guideNameOf, StrikeDto } from './strike.dto.js';
+import { SanctionSubjectDto, StrikeDto, subjectOf } from './strike.dto.js';
 
 const MS_PER_HOUR = 60 * 60 * 1000;
 
@@ -38,7 +37,8 @@ export class ResolveCancellationDto {
   @ApiPropertyOptional({
     example: 20,
     minimum: 1,
-    description: 'Solo con STRIKE_AND_FINE. Porcentaje del total de la reserva',
+    description:
+      'Solo con STRIKE_AND_FINE. Porcentaje del monto pagado de la reserva o de la salida',
   })
   @IsOptional()
   @Type(() => Number)
@@ -55,54 +55,31 @@ export class ResolveCancellationDto {
   resolution: string;
 }
 
-export class CancellationReviewDto {
+export class CancellationReviewDto extends SanctionSubjectDto {
   @ApiProperty({ format: 'uuid' })
   id: string;
-
-  @ApiProperty({ format: 'uuid' })
-  bookingId: string;
-
-  @ApiProperty({ example: 'PP-7K3M9QX2' })
-  bookingCode: string;
-
-  @ApiProperty({ enum: BookingStatus })
-  bookingStatus: BookingStatus;
-
-  @ApiProperty({ example: '2026-12-05', nullable: true })
-  tourDate: string | null;
-
-  @ApiProperty({ example: '07:00:00', nullable: true })
-  startTime: string | null;
-
-  @ApiProperty({ nullable: true })
-  routeNameEs: string | null;
-
-  @ApiProperty({
-    example: 300,
-    description: 'Total de la reserva en bolivianos',
-  })
-  totalAmount: number;
-
-  @ApiProperty({ format: 'uuid', nullable: true })
-  guideProfileId: string | null;
-
-  @ApiProperty({ example: 'Juan Mamani', nullable: true })
-  guideName: string | null;
 
   @ApiProperty({ example: 'Tengo fiebre y no puedo subir', nullable: true })
   cancellationReason: string | null;
 
-  @ApiProperty({ nullable: true })
-  cancelledAt: Date | null;
+  @ApiProperty()
+  cancelledAt: Date;
 
   @ApiProperty({
     example: 30,
     nullable: true,
-    description: 'Horas que faltaban para el inicio cuando el guía canceló',
+    description: 'Horas que faltaban para el inicio cuando se canceló',
   })
   hoursBeforeStart: number | null;
 
-  @ApiProperty({ description: 'El guía adjuntó un justificante' })
+  @ApiProperty({
+    example: 300,
+    description:
+      'Monto en bolivianos sobre el que se calcula la multa: la reserva, o lo pagado por los inscritos de la salida',
+  })
+  fineBaseAmount: number;
+
+  @ApiProperty({ description: 'Se adjuntó un justificante' })
   hasEvidence: boolean;
 
   @ApiProperty({ enum: CancellationReviewStatus })
@@ -127,29 +104,23 @@ export class CancellationReviewDto {
   createdAt: Date;
 
   static fromEntity(review: CancellationReview): CancellationReviewDto {
-    const booking = review.booking;
+    const subject = subjectOf(review.booking, review.groupDeparture);
+    const cancelledAt = review.booking?.cancelledAt ?? review.createdAt;
     const hoursBeforeStart =
-      booking.cancelledAt && booking.tourDate
+      subject.tourDate && subject.startTime
         ? Math.floor(
-            (bookingStartsAt(booking).getTime() -
-              booking.cancelledAt.getTime()) /
+            (laPazInstant(subject.tourDate, subject.startTime).getTime() -
+              cancelledAt.getTime()) /
               MS_PER_HOUR,
           )
         : null;
-    return {
+    return Object.assign(subject, {
       id: review.id,
-      bookingId: review.bookingId,
-      bookingCode: booking.code,
-      bookingStatus: booking.status,
-      tourDate: booking.tourDate,
-      startTime: booking.startTime,
-      routeNameEs: booking.route?.nameEs ?? null,
-      totalAmount: booking.totalAmount,
-      guideProfileId: booking.guideProfileId,
-      guideName: guideNameOf(booking),
-      cancellationReason: booking.cancellationReason,
-      cancelledAt: booking.cancelledAt,
+      cancellationReason:
+        review.booking?.cancellationReason ?? review.reason ?? null,
+      cancelledAt,
       hoursBeforeStart,
+      fineBaseAmount: review.fineBaseAmount,
       hasEvidence: review.evidencePublicId !== null,
       status: review.status,
       decision: review.decision,
@@ -158,13 +129,16 @@ export class CancellationReviewDto {
       resolution: review.resolution,
       resolvedAt: review.resolvedAt,
       createdAt: review.createdAt,
-    };
+    });
   }
 }
 
 export class CancellationReviewDetailDto extends CancellationReviewDto {
-  @ApiProperty({ example: 1, description: 'Strikes activos del guía hoy' })
-  guideActiveStrikes: number;
+  @ApiProperty({
+    example: 1,
+    description: 'Strikes activos que ya tiene el guía o la agencia',
+  })
+  activeStrikes: number;
 }
 
 export class CancellationReviewPageDto {

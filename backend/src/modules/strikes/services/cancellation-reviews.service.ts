@@ -29,13 +29,24 @@ import {
   FineTooHighException,
 } from '../exceptions/strikes.exceptions.js';
 import { CancellationReviewsRepository } from '../repositories/cancellation-reviews.repository.js';
-import { fineFor, SanctionLevel } from '../sanctions.js';
+import {
+  fineFor,
+  ProviderKind,
+  SanctionedProvider,
+  SanctionLevel,
+} from '../sanctions.js';
 import {
   CancellationDecision,
   CancellationReviewStatus,
   StrikeReason,
 } from '../strikes.enums.js';
 import { StrikeIssuerService } from './strike-issuer.service.js';
+
+export interface DepartureReviewData {
+  groupDepartureId: string;
+  reason: string;
+  fineBaseAmount: number;
+}
 
 @Injectable()
 export class CancellationReviewsService {
@@ -48,12 +59,12 @@ export class CancellationReviewsService {
   ) {}
 
   async storeEvidence(
-    guideProfileId: string,
+    folder: string,
     file: UploadedFileData | undefined,
   ): Promise<StoredFile | null> {
     if (!file) return null;
     const prepared = prepareDocumentFile(file, undefined);
-    return this.storage.save(`cancellations/${guideProfileId}`, prepared);
+    return this.storage.save(`cancellations/${folder}`, prepared);
   }
 
   async discardEvidence(stored: StoredFile | null): Promise<void> {
@@ -61,15 +72,31 @@ export class CancellationReviewsService {
   }
 
   openForBooking(
-    bookingId: string,
+    booking: { id: string; totalAmount: number },
     evidence: StoredFile | null,
     manager: EntityManager,
   ): Promise<CancellationReview> {
     return this.reviews.create(
       {
-        bookingId,
-        evidenceUrl: evidence?.url ?? null,
-        evidencePublicId: evidence?.publicId ?? null,
+        bookingId: booking.id,
+        fineBaseAmount: booking.totalAmount,
+        ...this.evidenceColumns(evidence),
+      },
+      manager,
+    );
+  }
+
+  openForDeparture(
+    data: DepartureReviewData,
+    evidence: StoredFile | null,
+    manager: EntityManager,
+  ): Promise<CancellationReview> {
+    return this.reviews.create(
+      {
+        groupDepartureId: data.groupDepartureId,
+        reason: data.reason,
+        fineBaseAmount: data.fineBaseAmount,
+        ...this.evidenceColumns(evidence),
       },
       manager,
     );
@@ -91,11 +118,12 @@ export class CancellationReviewsService {
 
   async get(id: string): Promise<CancellationReviewDetailDto> {
     const review = await this.findOrFail(id);
-    const guideActiveStrikes = review.booking.guideProfileId
-      ? await this.issuer.countActive(review.booking.guideProfileId, new Date())
-      : 0;
+    const activeStrikes = await this.issuer.countActive(
+      this.providerOf(review),
+      new Date(),
+    );
     return Object.assign(CancellationReviewDto.fromEntity(review), {
-      guideActiveStrikes,
+      activeStrikes,
     });
   }
 
@@ -137,21 +165,21 @@ export class CancellationReviewsService {
         throw new CancellationReviewResolvedException();
       }
       const now = new Date();
+      const provider = this.providerOf(review);
 
       review.status = CancellationReviewStatus.RESOLVED;
       review.decision = dto.decision;
       review.fineAmount = withFine
-        ? fineFor(review.booking.totalAmount, dto.finePercent!)
+        ? fineFor(review.fineBaseAmount, dto.finePercent!)
         : 0;
       review.resolution = dto.resolution;
       review.resolvedById = adminId;
       review.resolvedAt = now;
       await this.reviews.save(review, manager);
 
-      const guideProfileId = review.booking.guideProfileId!;
       if (dto.decision === CancellationDecision.NO_SANCTION) {
         const activeStrikes = await this.issuer.countActive(
-          guideProfileId,
+          provider,
           now,
           manager,
         );
@@ -160,8 +188,8 @@ export class CancellationReviewsService {
 
       const issued = await this.issuer.issue(
         {
-          bookingId: review.bookingId,
-          guideProfileId,
+          provider,
+          subjectId: review.bookingId ?? review.groupDepartureId!,
           reason: StrikeReason.CANCELLED_WITHOUT_WEATHER,
           weight: 1,
           adminId,
@@ -185,6 +213,19 @@ export class CancellationReviewsService {
       activeStrikes: outcome.activeStrikes,
       sanction: outcome.sanction?.level ?? SanctionLevel.NONE,
       hiddenUntil: outcome.sanction?.hiddenUntil ?? null,
+    };
+  }
+
+  private providerOf(review: CancellationReview): SanctionedProvider {
+    return review.groupDeparture
+      ? { kind: ProviderKind.AGENCY, id: review.groupDeparture.agencyId }
+      : { kind: ProviderKind.GUIDE, id: review.booking!.guideProfileId! };
+  }
+
+  private evidenceColumns(evidence: StoredFile | null) {
+    return {
+      evidenceUrl: evidence?.url ?? null,
+      evidencePublicId: evidence?.publicId ?? null,
     };
   }
 

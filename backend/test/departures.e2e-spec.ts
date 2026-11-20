@@ -18,6 +18,8 @@ import { Refund } from './../src/modules/payments/entities/refund.entity.js';
 import { BookingCompletionService } from './../src/modules/payments/services/booking-completion.service.js';
 import { DepartureLifecycleService } from './../src/modules/payments/services/departure-lifecycle.service.js';
 import { Route } from './../src/modules/routes/entities/route.entity.js';
+import { CancellationReview } from './../src/modules/strikes/entities/cancellation-review.entity.js';
+import { Strike } from './../src/modules/strikes/entities/strike.entity.js';
 import { User } from './../src/modules/users/entities/user.entity.js';
 
 const PDF = Buffer.from('%PDF-1.4\n%%EOF');
@@ -254,6 +256,11 @@ describe('Group departures (e2e)', () => {
           .delete({ bookingId: In(bookingIds) });
         await dataSource.getRepository(Booking).delete({ id: In(bookingIds) });
       }
+      for (const entity of [Strike, CancellationReview]) {
+        await dataSource
+          .getRepository(entity)
+          .delete({ groupDepartureId: In(departureIds) });
+      }
       await dataSource
         .getRepository(GroupDeparture)
         .delete({ id: In(departureIds) });
@@ -263,6 +270,10 @@ describe('Group departures (e2e)', () => {
       await dataSource.getRepository(User).delete({ email });
     }
     await dataSource.getRepository(Route).delete({ slug });
+    await rm(join('uploads', 'cancellations', 'agencies', agencyId), {
+      recursive: true,
+      force: true,
+    });
     await rm(join('uploads', 'agencies', agencyId), {
       recursive: true,
       force: true,
@@ -455,5 +466,157 @@ describe('Group departures (e2e)', () => {
       .send({ reason: 'Otra vez' })
       .expect(409);
     expect(again.body.error).toBe('INVALID_BOOKING_STATUS');
+  });
+
+  it('opens a review for the agency cancellation and fines the agency', async () => {
+    const departureId = departureIds[0];
+    const pending = await request(server)
+      .get('/api/admin/cancellation-reviews')
+      .query({ status: 'PENDING', limit: 100 })
+      .set(auth(adminToken))
+      .expect(200);
+    const review = pending.body.data.find(
+      (item: { groupDepartureId: string }) =>
+        item.groupDepartureId === departureId,
+    );
+    expect(review).toMatchObject({
+      providerKind: 'AGENCY',
+      agencyId,
+      bookingId: null,
+      cancellationReason: 'Nevada fuerte en la zona',
+      hasEvidence: false,
+    });
+    expect(review.fineBaseAmount).toBeGreaterThan(0);
+
+    const resolved = await request(server)
+      .post(`/api/admin/cancellation-reviews/${review.id}/resolve`)
+      .set(auth(adminToken))
+      .send({
+        decision: 'STRIKE_AND_FINE',
+        finePercent: 10,
+        resolution: 'El pronóstico no justificaba suspender la salida.',
+      })
+      .expect(200);
+    expect(resolved.body).toMatchObject({
+      activeStrikes: 1,
+      sanction: 'NONE',
+      strike: {
+        providerKind: 'AGENCY',
+        agencyId,
+        groupDepartureId: departureId,
+      },
+    });
+    expect(resolved.body.review.fineAmount).toBeCloseTo(
+      review.fineBaseAmount * 0.1,
+      2,
+    );
+
+    const sanctions = await request(server)
+      .get('/api/agencies/me/sanctions')
+      .set(auth(agencyToken))
+      .expect(200);
+    expect(sanctions.body).toMatchObject({
+      activeStrikes: 1,
+      hiddenUntil: null,
+      pendingFines: resolved.body.review.fineAmount,
+    });
+  });
+
+  it('hides the agency at the second strike and suspends it at the third', async () => {
+    const created: string[] = [];
+    for (const daysAhead of [20, 22, 24]) {
+      const departure = await publish({
+        departureDate: addDays(today, daysAhead),
+      }).expect(201);
+      departureIds.push(departure.body.id);
+      created.push(departure.body.id);
+    }
+    const [second, stillOpen, third] = created;
+
+    const cancelled = await request(server)
+      .post(`/api/agencies/me/departures/${second}/cancel`)
+      .set(auth(agencyToken))
+      .field('reason', 'Nuestro guía se enfermó y no conseguimos reemplazo')
+      .attach('evidence', PDF, 'certificado.pdf')
+      .expect(200);
+    expect(cancelled.body.status).toBe('CANCELLED_BY_AGENCY');
+
+    const reviews = await request(server)
+      .get('/api/admin/cancellation-reviews')
+      .query({ status: 'PENDING', limit: 100 })
+      .set(auth(adminToken))
+      .expect(200);
+    const secondReview = reviews.body.data.find(
+      (item: { groupDepartureId: string }) => item.groupDepartureId === second,
+    );
+    expect(secondReview.hasEvidence).toBe(true);
+
+    const hidden = await request(server)
+      .post(`/api/admin/cancellation-reviews/${secondReview.id}/resolve`)
+      .set(auth(adminToken))
+      .send({
+        decision: 'STRIKE',
+        resolution: 'La agencia debía reponer al guía.',
+      })
+      .expect(200);
+    expect(hidden.body).toMatchObject({ activeStrikes: 2, sanction: 'HIDDEN' });
+
+    const open = await request(server)
+      .get('/api/departures')
+      .query({ routeSlug: slug, limit: 100 })
+      .expect(200);
+    expect(
+      open.body.data.some((item: { id: string }) => item.id === stillOpen),
+    ).toBe(false);
+    await request(server).get(`/api/departures/${stillOpen}`).expect(404);
+    await joinDeparture('b', stillOpen, 1).expect(404);
+
+    await request(server)
+      .post(`/api/agencies/me/departures/${third}/cancel`)
+      .set(auth(agencyToken))
+      .send({ reason: 'Decidimos no operar esa fecha' })
+      .expect(200);
+    const thirdReviews = await request(server)
+      .get('/api/admin/cancellation-reviews')
+      .query({ status: 'PENDING', limit: 100 })
+      .set(auth(adminToken))
+      .expect(200);
+    const thirdReview = thirdReviews.body.data.find(
+      (item: { groupDepartureId: string }) => item.groupDepartureId === third,
+    );
+    const suspended = await request(server)
+      .post(`/api/admin/cancellation-reviews/${thirdReview.id}/resolve`)
+      .set(auth(adminToken))
+      .send({
+        decision: 'STRIKE',
+        resolution: 'Tercera cancelación sin causa.',
+      })
+      .expect(200);
+    expect(suspended.body).toMatchObject({
+      activeStrikes: 3,
+      sanction: 'SUSPENDED',
+    });
+
+    const login = await request(server)
+      .post('/api/auth/login')
+      .send({ email: agencyEmail, password: 'Agencia2026' })
+      .expect(403);
+    expect(login.body.error).toBe('USER_SUSPENDED');
+
+    const cancelledByJob = await app
+      .get(DepartureLifecycleService)
+      .cancelForSuspendedAgencies(new Date());
+    expect(cancelledByJob).toBeGreaterThanOrEqual(1);
+    const departure = await dataSource
+      .getRepository(GroupDeparture)
+      .findOneByOrFail({ id: stillOpen });
+    expect(departure.status).toBe('CANCELLED_BY_AGENCY');
+
+    const strikes = await request(server)
+      .get('/api/admin/strikes')
+      .query({ agencyId })
+      .set(auth(adminToken))
+      .expect(200);
+    expect(strikes.body.meta.total).toBe(3);
   });
 });

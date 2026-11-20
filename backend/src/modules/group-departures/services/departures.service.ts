@@ -1,3 +1,4 @@
+import { GroupDeparture } from '../entities/group-departure.entity.js';
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -30,6 +31,11 @@ import {
 } from '../repositories/group-departures.repository.js';
 import { AgencyDeparturesService } from './agency-departures.service.js';
 
+function isHidden(departure: GroupDeparture, now: Date): boolean {
+  const until = departure.agency?.hiddenUntil;
+  return until !== null && until !== undefined && until > now;
+}
+
 @Injectable()
 export class DeparturesService {
   constructor(
@@ -59,7 +65,9 @@ export class DeparturesService {
 
   async getById(id: string): Promise<DepartureDto> {
     const departure = await this.departures.findById(id);
-    if (!departure) throw new DepartureNotFoundException();
+    if (!departure || isHidden(departure, new Date())) {
+      throw new DepartureNotFoundException();
+    }
     const seats = await this.departures.seatsTaken([id]);
     return DepartureDto.fromEntity(departure, seats.get(id) ?? 0);
   }
@@ -75,7 +83,9 @@ export class DeparturesService {
 
     const bookingId = await this.dataSource.transaction(async (manager) => {
       const departure = await this.departures.lockById(id, manager);
-      if (!departure) throw new DepartureNotFoundException();
+      if (!departure || isHidden(departure, new Date())) {
+        throw new DepartureNotFoundException();
+      }
 
       const open = await manager.getRepository(Booking).exists({
         where: SEAT_HOLDING_STATUSES.map((status) => ({

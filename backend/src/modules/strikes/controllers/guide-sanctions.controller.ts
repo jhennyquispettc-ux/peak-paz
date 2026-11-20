@@ -13,7 +13,7 @@ import { CurrentUser } from '../../auth/decorators/current-user.decorator.js';
 import { Roles } from '../../auth/decorators/roles.decorator.js';
 import type { AuthenticatedUser } from '../../auth/types/authenticated-user.js';
 import { UserRole } from '../../users/users.enums.js';
-import { GuideSanctionsDto } from '../dto/strike.dto.js';
+import { SanctionsSummaryDto } from '../dto/strike.dto.js';
 import { StrikesService } from '../services/strikes.service.js';
 
 @ApiTags('Guide / Sanctions')
@@ -29,9 +29,9 @@ export class GuideSanctionsController {
   @ApiOperation({
     summary: 'Ver mis strikes, si estoy oculto y las multas por descontar',
   })
-  @ApiOkResponse({ type: GuideSanctionsDto })
+  @ApiOkResponse({ type: SanctionsSummaryDto })
   @ApiNotFoundResponse({ type: ErrorResponseDto })
-  get(@CurrentUser() user: AuthenticatedUser): Promise<GuideSanctionsDto> {
+  get(@CurrentUser() user: AuthenticatedUser): Promise<SanctionsSummaryDto> {
     return this.strikes.summaryForGuide(user.id);
   }
 }

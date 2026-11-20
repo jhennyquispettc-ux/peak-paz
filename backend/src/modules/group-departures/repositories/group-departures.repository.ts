@@ -1,3 +1,4 @@
+import { UserStatus } from '../../users/users.enums.js';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
@@ -70,6 +71,9 @@ export class GroupDeparturesRepository {
       })
       .andWhere('departure.closesAt > :now', { now: filters.now })
       .andWhere('route.isPublished = true')
+      .andWhere('(agency.hiddenUntil IS NULL OR agency.hiddenUntil <= :now)', {
+        now: filters.now,
+      })
       .orderBy('departure.departureDate', 'ASC')
       .addOrderBy('departure.meetingTime', 'ASC')
       .skip(filters.skip)
@@ -78,6 +82,24 @@ export class GroupDeparturesRepository {
       query.andWhere('route.slug = :slug', { slug: filters.routeSlug });
     }
     return query.getManyAndCount();
+  }
+
+  findOpenOfSuspendedAgencies(now: Date): Promise<GroupDeparture[]> {
+    return this.repository
+      .createQueryBuilder('departure')
+      .innerJoin('departure.agency', 'agency')
+      .innerJoin('agency.user', 'agencyUser')
+      .where('agencyUser.status = :suspended', {
+        suspended: UserStatus.SUSPENDED,
+      })
+      .andWhere('departure.status IN (:...open)', {
+        open: [GroupDepartureStatus.PUBLISHED, GroupDepartureStatus.CONFIRMED],
+      })
+      .andWhere(
+        "((departure.departure_date + departure.meeting_time) AT TIME ZONE 'America/La_Paz') > :now",
+        { now },
+      )
+      .getMany();
   }
 
   findByAgency(agencyId: string): Promise<GroupDeparture[]> {

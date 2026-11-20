@@ -2,13 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import { Strike } from '../entities/strike.entity.js';
+import { providerFilterSql, SanctionedProvider } from '../sanctions.js';
 import { StrikeStatus } from '../strikes.enums.js';
 
 export interface StrikePageFilters {
   skip: number;
   take: number;
   status?: StrikeStatus;
-  guideProfileId?: string;
+  provider?: SanctionedProvider;
 }
 
 @Injectable()
@@ -30,26 +31,27 @@ export class StrikesRepository {
     return this.query().where('strike.id = :id', { id }).getOne();
   }
 
-  async countActiveForGuide(
-    guideProfileId: string,
+  async countActive(
+    provider: SanctionedProvider,
     now: Date,
     manager?: EntityManager,
   ): Promise<number> {
     const repository = manager?.getRepository(Strike) ?? this.strikes;
     const row = await repository
       .createQueryBuilder('strike')
-      .innerJoin('strike.booking', 'booking')
+      .leftJoin('strike.booking', 'booking')
+      .leftJoin('strike.groupDeparture', 'departure')
       .select('COALESCE(SUM(strike.weight), 0)', 'total')
-      .where('booking.guideProfileId = :guideProfileId', { guideProfileId })
+      .where(providerFilterSql(provider.kind), { providerId: provider.id })
       .andWhere('strike.status = :active', { active: StrikeStatus.ACTIVE })
       .andWhere('strike.expiresAt > :now', { now })
       .getRawOne<{ total: string }>();
     return Number(row?.total ?? 0);
   }
 
-  findForGuide(guideProfileId: string): Promise<Strike[]> {
+  findForProvider(provider: SanctionedProvider): Promise<Strike[]> {
     return this.query()
-      .where('booking.guideProfileId = :guideProfileId', { guideProfileId })
+      .where(providerFilterSql(provider.kind), { providerId: provider.id })
       .getMany();
   }
 
@@ -58,9 +60,9 @@ export class StrikesRepository {
     if (filters.status) {
       query.andWhere('strike.status = :status', { status: filters.status });
     }
-    if (filters.guideProfileId) {
-      query.andWhere('booking.guideProfileId = :guideProfileId', {
-        guideProfileId: filters.guideProfileId,
+    if (filters.provider) {
+      query.andWhere(providerFilterSql(filters.provider.kind), {
+        providerId: filters.provider.id,
       });
     }
     return query.getManyAndCount();
@@ -80,10 +82,13 @@ export class StrikesRepository {
   private query() {
     return this.strikes
       .createQueryBuilder('strike')
-      .innerJoinAndSelect('strike.booking', 'booking')
+      .leftJoinAndSelect('strike.booking', 'booking')
       .leftJoinAndSelect('booking.route', 'route')
       .leftJoinAndSelect('booking.guideProfile', 'guide')
       .leftJoinAndSelect('guide.user', 'guideUser')
+      .leftJoinAndSelect('strike.groupDeparture', 'departure')
+      .leftJoinAndSelect('departure.route', 'departureRoute')
+      .leftJoinAndSelect('departure.agency', 'agency')
       .orderBy('strike.createdAt', 'DESC');
   }
 }

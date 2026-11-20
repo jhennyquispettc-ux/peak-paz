@@ -80,6 +80,9 @@ export class Agency {
   })
   ratingAverage: number;
 
+  @Column({ name: 'hidden_until', type: 'timestamptz', nullable: true })
+  hiddenUntil: Date | null;
+
   @Column({ name: 'reviews_count', type: 'int', default: 0 })
   reviewsCount: number;
 
