@@ -6,6 +6,7 @@ import { BookingsModule } from '../bookings/bookings.module.js';
 import { GroupDeparturesModule } from '../group-departures/group-departures.module.js';
 import { GuidesModule } from '../guides/guides.module.js';
 import { SettingsModule } from '../settings/settings.module.js';
+import { StrikesModule } from '../strikes/strikes.module.js';
 import { BookingCancellationController } from './controllers/booking-cancellation.controller.js';
 import { BookingPaymentsController } from './controllers/booking-payments.controller.js';
 import { DepartureCancellationController } from './controllers/departure-cancellation.controller.js';
@@ -23,6 +24,7 @@ import { BookingCompletionService } from './services/booking-completion.service.
 import { BookingPaymentsService } from './services/booking-payments.service.js';
 import { DepartureLifecycleService } from './services/departure-lifecycle.service.js';
 import { PayoutsService } from './services/payouts.service.js';
+import { SuspendedGuideBookingsService } from './services/suspended-guide-bookings.service.js';
 
 @Module({
   imports: [
@@ -32,6 +34,7 @@ import { PayoutsService } from './services/payouts.service.js';
     AgenciesModule,
     GroupDeparturesModule,
     SettingsModule,
+    StrikesModule,
   ],
   controllers: [
     BookingPaymentsController,
@@ -59,6 +62,7 @@ import { PayoutsService } from './services/payouts.service.js';
     BookingCancellationService,
     BookingCompletionService,
     DepartureLifecycleService,
+    SuspendedGuideBookingsService,
   ],
 })
 export class PaymentsModule {}

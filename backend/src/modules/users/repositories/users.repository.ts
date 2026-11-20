@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { User } from '../entities/user.entity.js';
 import { UserRole, UserStatus } from '../users.enums.js';
 
@@ -44,6 +44,14 @@ export class UsersRepository {
 
   save(user: User): Promise<User> {
     return this.repository.save(user);
+  }
+
+  async updateStatus(
+    id: string,
+    status: UserStatus,
+    manager: EntityManager,
+  ): Promise<void> {
+    await manager.getRepository(User).update({ id }, { status });
   }
 
   findPage(filters: UserPageFilters): Promise<[User[], number]> {

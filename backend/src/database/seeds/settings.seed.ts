@@ -53,6 +53,23 @@ const DEFAULT_SETTINGS: Pick<Setting, 'key' | 'value' | 'description'>[] = [
     description: 'Días que un proveedor queda oculto con 2 strikes',
   },
   {
+    key: 'MAX_FINE_PERCENT',
+    value: '20',
+    description:
+      'Multa máxima por cancelación del guía, en porcentaje de la reserva',
+  },
+  {
+    key: 'STRIKES_TO_HIDE',
+    value: '2',
+    description: 'Strikes activos con los que el guía queda oculto',
+  },
+  {
+    key: 'STRIKES_TO_SUSPEND',
+    value: '3',
+    description:
+      'Strikes activos con los que el guía queda suspendido de forma permanente',
+  },
+  {
     key: 'SCHEDULE_BUFFER_MIN',
     value: '120',
     description:

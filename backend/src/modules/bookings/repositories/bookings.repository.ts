@@ -7,6 +7,7 @@ import {
   bookingEndsSql,
   bookingStartsSql,
 } from '../../guides/repositories/guides.repository.js';
+import { UserStatus } from '../../users/users.enums.js';
 import { BookingStatus, BookingType } from '../bookings.enums.js';
 import { Booking } from '../entities/booking.entity.js';
 
@@ -152,6 +153,29 @@ export class BookingsRepository {
         confirmed: BookingStatus.CONFIRMED,
       })
       .andWhere(`${bookingEndsSql('booking')} < :now`, { now })
+      .orderBy('booking.tourDate', 'ASC')
+      .limit(limit)
+      .getRawMany<{ id: string }>()
+      .then((rows) => rows.map((row) => row.id));
+  }
+
+  findOpenOfSuspendedGuidesIds(now: Date, limit: number): Promise<string[]> {
+    return this.repository
+      .createQueryBuilder('booking')
+      .innerJoin('booking.guideProfile', 'guide')
+      .innerJoin('guide.user', 'guideUser')
+      .select('booking.id', 'id')
+      .where('guideUser.status = :suspended', {
+        suspended: UserStatus.SUSPENDED,
+      })
+      .andWhere('booking.status IN (:...open)', {
+        open: [
+          BookingStatus.REQUESTED,
+          BookingStatus.ACCEPTED,
+          BookingStatus.CONFIRMED,
+        ],
+      })
+      .andWhere(`${bookingStartsSql('booking')} > :now`, { now })
       .orderBy('booking.tourDate', 'ASC')
       .limit(limit)
       .getRawMany<{ id: string }>()

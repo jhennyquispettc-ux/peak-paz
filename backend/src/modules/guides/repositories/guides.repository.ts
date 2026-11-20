@@ -32,6 +32,9 @@ export const BLOCKING_BOOKING_STATUSES = [
   BookingStatus.IN_PROGRESS,
 ];
 
+export const VISIBLE_GUIDE_SQL =
+  '(guide.hidden_until IS NULL OR guide.hidden_until <= now())';
+
 export function bookingStartsSql(alias: string): string {
   return `((${alias}.tour_date + ${alias}.start_time) AT TIME ZONE 'America/La_Paz')`;
 }
@@ -88,6 +91,7 @@ export class GuidesRepository {
         approved: VerificationStatus.APPROVED,
       })
       .andWhere('user.status = :active', { active: UserStatus.ACTIVE })
+      .andWhere(VISIBLE_GUIDE_SQL)
       .getOne();
   }
 
@@ -106,6 +110,7 @@ export class GuidesRepository {
       )
       .where('guide.verificationStatus = :guideApproved')
       .andWhere('user.status = :active')
+      .andWhere(VISIBLE_GUIDE_SQL)
       .setParameters({
         routeId: filters.routeId,
         guideApproved: VerificationStatus.APPROVED,
@@ -197,6 +202,24 @@ export class GuidesRepository {
 
   findIdByUserId(userId: string): Promise<GuideProfile | null> {
     return this.repository.findOne({ where: { userId } });
+  }
+
+  findPlainById(
+    id: string,
+    manager?: EntityManager,
+  ): Promise<GuideProfile | null> {
+    const repository = manager?.getRepository(GuideProfile) ?? this.repository;
+    return repository.findOne({ where: { id } });
+  }
+
+  async hideUntil(
+    id: string,
+    until: Date,
+    manager: EntityManager,
+  ): Promise<void> {
+    await manager
+      .getRepository(GuideProfile)
+      .update({ id }, { hiddenUntil: until });
   }
 
   create(data: Partial<GuideProfile>, manager?: EntityManager): GuideProfile {

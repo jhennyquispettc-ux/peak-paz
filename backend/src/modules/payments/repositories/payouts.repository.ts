@@ -31,6 +31,13 @@ export class PayoutsRepository {
       .execute();
   }
 
+  existsForBooking(
+    bookingId: string,
+    manager: EntityManager,
+  ): Promise<boolean> {
+    return manager.getRepository(Payout).exists({ where: { bookingId } });
+  }
+
   findById(id: string): Promise<Payout | null> {
     return this.payouts.findOne({
       where: { id },
