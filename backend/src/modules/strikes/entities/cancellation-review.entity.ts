@@ -12,6 +12,7 @@ import {
 } from 'typeorm';
 import { numericTransformer } from '../../../common/transformers/numeric.transformer.js';
 import { Booking } from '../../bookings/entities/booking.entity.js';
+import { GroupDeparture } from '../../group-departures/entities/group-departure.entity.js';
 import { User } from '../../users/entities/user.entity.js';
 import {
   CancellationDecision,
@@ -20,17 +21,38 @@ import {
 
 @Entity('cancellation_reviews')
 @Unique('UQ_cancellation_reviews_booking', ['bookingId'])
+@Unique('UQ_cancellation_reviews_departure', ['groupDepartureId'])
 @Index('IDX_cancellation_reviews_status', ['status', 'createdAt'])
 export class CancellationReview {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'booking_id', type: 'uuid' })
-  bookingId: string;
+  @Column({ name: 'booking_id', type: 'uuid', nullable: true })
+  bookingId: string | null;
 
   @OneToOne(() => Booking, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'booking_id' })
-  booking: Relation<Booking>;
+  booking: Relation<Booking> | null;
+
+  @Column({ name: 'group_departure_id', type: 'uuid', nullable: true })
+  groupDepartureId: string | null;
+
+  @OneToOne(() => GroupDeparture, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'group_departure_id' })
+  groupDeparture: Relation<GroupDeparture> | null;
+
+  @Column({ type: 'text', nullable: true })
+  reason: string | null;
+
+  @Column({
+    name: 'fine_base_amount',
+    type: 'numeric',
+    precision: 10,
+    scale: 2,
+    default: 0,
+    transformer: numericTransformer,
+  })
+  fineBaseAmount: number;
 
   @Column({
     name: 'evidence_url',

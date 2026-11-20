@@ -21,6 +21,7 @@ import {
 import { BookingsRepository } from '../../bookings/repositories/bookings.repository.js';
 import { DisputesRepository } from '../../bookings/repositories/disputes.repository.js';
 import { StrikeIssuerService } from '../../strikes/services/strike-issuer.service.js';
+import { ProviderKind } from '../../strikes/sanctions.js';
 import { StrikeReason } from '../../strikes/strikes.enums.js';
 import {
   DisputeResolutionDto,
@@ -108,8 +109,11 @@ export class DisputeResolutionService {
         );
         const issued = await this.issuer.issue(
           {
-            bookingId: detail.id,
-            guideProfileId: detail.guideProfileId!,
+            provider: {
+              kind: ProviderKind.GUIDE,
+              id: detail.guideProfileId!,
+            },
+            subjectId: detail.id,
             reason: StrikeReason.NO_SHOW,
             weight: NO_SHOW_STRIKE_WEIGHT,
             adminId,

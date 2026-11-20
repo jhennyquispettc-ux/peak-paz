@@ -62,3 +62,19 @@ export function allocateFines(
   }
   return settlements;
 }
+
+export enum ProviderKind {
+  GUIDE = 'GUIDE',
+  AGENCY = 'AGENCY',
+}
+
+export interface SanctionedProvider {
+  kind: ProviderKind;
+  id: string;
+}
+
+export function providerFilterSql(kind: ProviderKind): string {
+  return kind === ProviderKind.GUIDE
+    ? 'booking.guideProfileId = :providerId'
+    : 'departure.agencyId = :providerId';
+}

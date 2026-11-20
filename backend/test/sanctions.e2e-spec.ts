@@ -323,7 +323,7 @@ describe('Guide cancellations, strikes and fines (e2e)', () => {
       status: 'PENDING',
       guideName: 'Rosa Quispe',
       cancellationReason: 'Tengo fiebre alta y no puedo subir',
-      guideActiveStrikes: 0,
+      activeStrikes: 0,
     });
     expect(detail.body.hoursBeforeStart).toBeGreaterThan(24 * 6);
 
@@ -457,7 +457,7 @@ describe('Guide cancellations, strikes and fines (e2e)', () => {
       .expect(200);
     expect(detail.body).toMatchObject({
       hasEvidence: false,
-      guideActiveStrikes: 1,
+      activeStrikes: 1,
     });
     const noEvidence = await request(server)
       .get(

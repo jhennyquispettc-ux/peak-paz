@@ -33,6 +33,19 @@ export class AgenciesRepository {
     });
   }
 
+  findPlainById(id: string, manager?: EntityManager): Promise<Agency | null> {
+    const repository = manager?.getRepository(Agency) ?? this.repository;
+    return repository.findOne({ where: { id } });
+  }
+
+  async hideUntil(
+    id: string,
+    until: Date,
+    manager: EntityManager,
+  ): Promise<void> {
+    await manager.getRepository(Agency).update({ id }, { hiddenUntil: until });
+  }
+
   findIdByUserId(userId: string): Promise<Agency | null> {
     return this.repository.findOne({ where: { userId } });
   }

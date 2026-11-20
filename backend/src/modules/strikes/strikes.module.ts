@@ -1,3 +1,5 @@
+import { AgenciesModule } from '../agencies/agencies.module.js';
+import { AgencySanctionsController } from './controllers/agency-sanctions.controller.js';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { GuidesModule } from '../guides/guides.module.js';
@@ -20,10 +22,15 @@ import { StrikesService } from './services/strikes.service.js';
   imports: [
     TypeOrmModule.forFeature([Strike, CancellationReview]),
     GuidesModule,
+    AgenciesModule,
     UsersModule,
     SettingsModule,
   ],
-  controllers: [AdminSanctionsController, GuideSanctionsController],
+  controllers: [
+    AdminSanctionsController,
+    GuideSanctionsController,
+    AgencySanctionsController,
+  ],
   providers: [
     StrikesRepository,
     CancellationReviewsRepository,

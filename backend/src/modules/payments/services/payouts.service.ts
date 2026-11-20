@@ -8,6 +8,8 @@ import { GuideNotFoundException } from '../../guides/exceptions/guides.exception
 import { GuidesRepository } from '../../guides/repositories/guides.repository.js';
 import { SettingsService } from '../../settings/services/settings.service.js';
 import { SettingKey } from '../../settings/setting-keys.js';
+import { GroupDeparturesRepository } from '../../group-departures/repositories/group-departures.repository.js';
+import { ProviderKind, SanctionedProvider } from '../../strikes/sanctions.js';
 import { FinesService } from '../../strikes/services/fines.service.js';
 import { PayoutDto, PayoutPageDto, PayoutQueryDto } from '../dto/payout.dto.js';
 import {
@@ -26,6 +28,7 @@ export class PayoutsService {
     private readonly agencies: AgenciesRepository,
     private readonly settings: SettingsService,
     private readonly fines: FinesService,
+    private readonly departures: GroupDeparturesRepository,
   ) {}
 
   async createForBooking(
@@ -37,12 +40,9 @@ export class PayoutsService {
       SettingKey.COMMISSION_RATE,
     );
     const beforeFines = splitPayout(booking.totalAmount, commissionRate);
-    const penaltyDeduction = booking.guideProfileId
-      ? await this.fines.settle(
-          booking.guideProfileId,
-          beforeFines.netAmount,
-          manager,
-        )
+    const provider = await this.providerOf(booking, manager);
+    const penaltyDeduction = provider
+      ? await this.fines.settle(provider, beforeFines.netAmount, manager)
       : 0;
     const { commissionAmount, netAmount } = splitPayout(
       booking.totalAmount,
@@ -61,6 +61,23 @@ export class PayoutsService {
       },
       manager,
     );
+  }
+
+  private async providerOf(
+    booking: Booking,
+    manager: EntityManager,
+  ): Promise<SanctionedProvider | null> {
+    if (booking.guideProfileId) {
+      return { kind: ProviderKind.GUIDE, id: booking.guideProfileId };
+    }
+    if (!booking.groupDepartureId) return null;
+    const departure = await this.departures.findById(
+      booking.groupDepartureId,
+      manager,
+    );
+    return departure
+      ? { kind: ProviderKind.AGENCY, id: departure.agencyId }
+      : null;
   }
 
   listAll(query: PayoutQueryDto): Promise<PayoutPageDto> {

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import { CancellationReview } from '../entities/cancellation-review.entity.js';
+import { providerFilterSql, SanctionedProvider } from '../sanctions.js';
 import { CancellationReviewStatus } from '../strikes.enums.js';
 
 export interface CancellationReviewPageFilters {
@@ -60,29 +61,31 @@ export class CancellationReviewsRepository {
   }
 
   findUnsettledFinesForUpdate(
-    guideProfileId: string,
+    provider: SanctionedProvider,
     manager: EntityManager,
   ): Promise<CancellationReview[]> {
     return manager
       .getRepository(CancellationReview)
       .createQueryBuilder('review')
-      .innerJoin('review.booking', 'booking')
-      .where('booking.guideProfileId = :guideProfileId', { guideProfileId })
+      .leftJoin('review.booking', 'booking')
+      .leftJoin('review.groupDeparture', 'departure')
+      .where(providerFilterSql(provider.kind), { providerId: provider.id })
       .andWhere('review.fineAmount > review.fineSettled')
       .orderBy('review.createdAt', 'ASC')
       .setLock('pessimistic_write', undefined, ['review'])
       .getMany();
   }
 
-  async sumPendingFines(guideProfileId: string): Promise<number> {
+  async sumPendingFines(provider: SanctionedProvider): Promise<number> {
     const row = await this.reviews
       .createQueryBuilder('review')
-      .innerJoin('review.booking', 'booking')
+      .leftJoin('review.booking', 'booking')
+      .leftJoin('review.groupDeparture', 'departure')
       .select(
         'COALESCE(SUM(review.fineAmount - review.fineSettled), 0)',
         'total',
       )
-      .where('booking.guideProfileId = :guideProfileId', { guideProfileId })
+      .where(providerFilterSql(provider.kind), { providerId: provider.id })
       .getRawOne<{ total: string }>();
     return Number(row?.total ?? 0);
   }
@@ -92,10 +95,13 @@ export class CancellationReviewsRepository {
       manager?.getRepository(CancellationReview) ?? this.reviews;
     return repository
       .createQueryBuilder('review')
-      .innerJoinAndSelect('review.booking', 'booking')
+      .leftJoinAndSelect('review.booking', 'booking')
       .leftJoinAndSelect('booking.route', 'route')
       .leftJoinAndSelect('booking.guideProfile', 'guide')
       .leftJoinAndSelect('guide.user', 'guideUser')
+      .leftJoinAndSelect('review.groupDeparture', 'departure')
+      .leftJoinAndSelect('departure.route', 'departureRoute')
+      .leftJoinAndSelect('departure.agency', 'agency')
       .orderBy('review.createdAt', 'ASC');
   }
 }

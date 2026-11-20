@@ -4,7 +4,10 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, EntityManager } from 'typeorm';
 import { laPazInstant } from '../../../common/time/la-paz-time.js';
 import { todayInLaPaz } from '../../../common/verification/verification-documents.js';
-import { BookingStatus } from '../../bookings/bookings.enums.js';
+import type { UploadedFileData } from '../../../common/types/uploaded-file.js';
+import { BookingSource, BookingStatus } from '../../bookings/bookings.enums.js';
+import { CancellationReviewsService } from '../../strikes/services/cancellation-reviews.service.js';
+import { round2 } from '../money.js';
 import { InvalidBookingStatusException } from '../../bookings/exceptions/bookings.exceptions.js';
 import { BookingsRepository } from '../../bookings/repositories/bookings.repository.js';
 import { AgencyDepartureDto } from '../../group-departures/dto/departure.dto.js';
@@ -18,6 +21,7 @@ import { RefundReason } from '../payments.enums.js';
 import { BookingCancellationService } from './booking-cancellation.service.js';
 
 const EVERY_FIVE_MINUTES = 5 * 60_000;
+const SUSPENDED_REASON = 'La agencia fue suspendida por la plataforma';
 const MINIMUM_REASON =
   'The departure did not reach the minimum number of people.';
 const OPEN_BOOKING_STATUSES = new Set([
@@ -39,6 +43,7 @@ export class DepartureLifecycleService {
     private readonly agencyDepartures: AgencyDeparturesService,
     private readonly bookings: BookingsRepository,
     private readonly cancellations: BookingCancellationService,
+    private readonly reviews: CancellationReviewsService,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
@@ -46,6 +51,7 @@ export class DepartureLifecycleService {
   async run(): Promise<void> {
     try {
       await this.closeDue(new Date());
+      await this.cancelForSuspendedAgencies(new Date());
       await this.departures.completeFinished(todayInLaPaz());
     } catch (error) {
       this.logger.error(
@@ -99,15 +105,54 @@ export class DepartureLifecycleService {
     return summary;
   }
 
+  async cancelForSuspendedAgencies(now: Date): Promise<number> {
+    let cancelled = 0;
+    for (const { id } of await this.departures.findOpenOfSuspendedAgencies(
+      now,
+    )) {
+      await this.dataSource.transaction(async (manager) => {
+        const departure = await this.departures.lockById(id, manager);
+        if (
+          !departure ||
+          (departure.status !== GroupDepartureStatus.PUBLISHED &&
+            departure.status !== GroupDepartureStatus.CONFIRMED)
+        ) {
+          return;
+        }
+        await this.cancelAll(
+          departure,
+          GroupDepartureStatus.CANCELLED_BY_AGENCY,
+          BookingStatus.CANCELLED_BY_PROVIDER,
+          RefundReason.PROVIDER_CANCELLATION,
+          SUSPENDED_REASON,
+          now,
+          manager,
+        );
+        cancelled++;
+      });
+    }
+    if (cancelled > 0) {
+      this.logger.log(
+        `${cancelled} departures of suspended agencies cancelled`,
+      );
+    }
+    return cancelled;
+  }
+
   async cancelByAgency(
     userId: string,
     id: string,
     reason: string,
     weather: boolean,
+    evidence?: UploadedFileData,
   ): Promise<AgencyDepartureDto> {
     const owned = await this.agencyDepartures.findMine(userId, id);
+    const stored = await this.reviews.storeEvidence(
+      `agencies/${owned.agency.id}`,
+      evidence,
+    );
 
-    await this.dataSource.transaction(async (manager) => {
+    const work = this.dataSource.transaction(async (manager) => {
       const departure = await this.departures.lockById(owned.id, manager);
       if (!departure) throw new DepartureNotFoundException();
       const cancellable = [
@@ -121,6 +166,15 @@ export class DepartureLifecycleService {
       if (laPazInstant(departure.departureDate, departure.meetingTime) <= now) {
         throw new TourAlreadyStartedException();
       }
+      const fineBaseAmount = round2(
+        (await this.departures.findBookings(departure.id, manager))
+          .filter(
+            (booking) =>
+              booking.status === BookingStatus.CONFIRMED &&
+              booking.source === BookingSource.WEB,
+          )
+          .reduce((total, booking) => total + booking.totalAmount, 0),
+      );
       await this.cancelAll(
         departure,
         weather
@@ -134,7 +188,18 @@ export class DepartureLifecycleService {
         now,
         manager,
       );
+      await this.reviews.openForDeparture(
+        { groupDepartureId: departure.id, reason, fineBaseAmount },
+        stored,
+        manager,
+      );
     });
+    try {
+      await work;
+    } catch (error) {
+      await this.reviews.discardEvidence(stored);
+      throw error;
+    }
     return this.agencyDepartures.getMine(userId, id);
   }
 

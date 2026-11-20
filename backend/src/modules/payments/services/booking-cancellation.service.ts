@@ -157,7 +157,7 @@ export class BookingCancellationService {
       }
       await this.close(booking, status, reason, now, manager);
       const review = await this.reviews.openForBooking(
-        booking.id,
+        booking,
         stored,
         manager,
       );
