@@ -7,6 +7,7 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const compose = ['compose', '-f', 'docker-compose.test.yml'];
 function run(command, args, env = process.env, quiet = false) {
   const result = spawnSync(command, args, {
+    shell: command === 'npm' && process.platform === 'win32',
     cwd: root,
     env,
     stdio: quiet ? 'pipe' : 'inherit',
@@ -105,6 +106,7 @@ try {
   ]) {
     await new Promise((resolve, reject) => {
       const child = spawn('npm', ['run', script], {
+        shell: process.platform === 'win32',
         cwd: `${root}/${directory}`,
         env,
         stdio: 'inherit',

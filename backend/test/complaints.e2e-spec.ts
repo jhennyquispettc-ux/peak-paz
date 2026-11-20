@@ -1,3 +1,4 @@
+import { confirmTestEmail } from './helpers/confirm-email.js';
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { rm } from 'node:fs/promises';
@@ -164,6 +165,7 @@ describe('Complaints after the tour (e2e)', () => {
         yearsExperience: 6,
       })
       .expect(201);
+    await confirmTestEmail(server, guide.body);
     guideToken = guide.body.accessToken;
     for (const type of ['NATIONAL_ID', 'GUIDE_CREDENTIAL', 'FIRST_AID']) {
       await request(server)
@@ -216,6 +218,7 @@ describe('Complaints after the tour (e2e)', () => {
         country: 'DE',
       })
       .expect(201);
+    await confirmTestEmail(server, tourist.body);
     touristToken = tourist.body.accessToken;
 
     booking.accepted = await paidBooking(8);

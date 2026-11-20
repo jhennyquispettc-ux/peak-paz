@@ -1,3 +1,4 @@
+import { confirmTestEmail } from './helpers/confirm-email.js';
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { rm } from 'node:fs/promises';
@@ -202,6 +203,7 @@ describe('Reconfirmation, tour start and disputes (e2e)', () => {
         yearsExperience: 6,
       })
       .expect(201);
+    await confirmTestEmail(server, guide.body);
     guideToken = guide.body.accessToken;
     for (const type of ['NATIONAL_ID', 'GUIDE_CREDENTIAL', 'FIRST_AID']) {
       await request(server)
@@ -254,6 +256,7 @@ describe('Reconfirmation, tour start and disputes (e2e)', () => {
         country: 'DE',
       })
       .expect(201);
+    await confirmTestEmail(server, tourist.body);
     touristToken = tourist.body.accessToken;
 
     booking.reconfirm = await paidBooking(8);
