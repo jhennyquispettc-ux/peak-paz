@@ -1,3 +1,4 @@
+import { AccountVerificationService } from '../../verification/verification.service.js';
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { DataSource } from 'typeorm';
@@ -27,6 +28,7 @@ export class AuthService {
   private readonly dummyHash: Promise<string>;
 
   constructor(
+    private readonly verification: AccountVerificationService,
     private readonly users: UsersRepository,
     private readonly passwords: PasswordService,
     private readonly jwt: JwtService,
@@ -41,7 +43,12 @@ export class AuthService {
   async registerTourist(dto: RegisterDto): Promise<AuthResponseDto> {
     await this.assertEmailAvailable(dto.email);
     const user = await this.buildUser(dto, UserRole.TOURIST);
-    return this.buildSession(await this.users.save(user));
+    const saved = await this.dataSource.transaction(async (manager) => {
+      const created = await manager.getRepository(User).save(user);
+      await this.verification.enqueue(manager, created);
+      return created;
+    });
+    return this.buildSession(saved);
   }
 
   async registerGuide(dto: RegisterGuideDto): Promise<AuthResponseDto> {
@@ -51,6 +58,7 @@ export class AuthService {
     const saved = await this.dataSource.transaction(async (manager) => {
       const created = await manager.getRepository(User).save(user);
       await this.guideProfiles.createForUser(manager, created, dto);
+      await this.verification.enqueue(manager, created);
       return created;
     });
     return this.buildSession(saved);
@@ -104,6 +112,7 @@ export class AuthService {
       language: dto.language,
       role,
       status: UserStatus.ACTIVE,
+      emailVerifiedAt: role === UserRole.AGENCY ? new Date() : null,
     });
   }
 

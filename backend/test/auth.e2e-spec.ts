@@ -1,3 +1,4 @@
+import { confirmTestEmail } from './helpers/confirm-email.js';
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
@@ -47,6 +48,7 @@ describe('Auth and users (e2e)', () => {
       .post('/api/auth/register')
       .send(tourist)
       .expect(201);
+    await confirmTestEmail(server, response.body);
 
     expect(response.body.tokenType).toBe('Bearer');
     expect(response.body.user.role).toBe('TOURIST');

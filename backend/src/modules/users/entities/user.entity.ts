@@ -24,6 +24,9 @@ export class User {
   })
   passwordHash: string;
 
+  @Column({ name: 'email_verified_at', type: 'timestamptz', nullable: true })
+  emailVerifiedAt: Date | null;
+
   @Column({ name: 'first_name', type: 'varchar', length: 80 })
   firstName: string;
 

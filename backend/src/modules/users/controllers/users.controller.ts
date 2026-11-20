@@ -1,3 +1,4 @@
+import { AllowUnverifiedEmail } from '../../auth/decorators/allow-unverified-email.decorator.js';
 import {
   Body,
   Controller,
@@ -31,6 +32,7 @@ import { UserRole } from '../users.enums.js';
 @ApiTags('Users')
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({ type: ErrorResponseDto })
+@AllowUnverifiedEmail()
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}

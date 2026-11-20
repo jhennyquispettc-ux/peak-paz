@@ -1,3 +1,4 @@
+import { VerificationModule } from './modules/verification/verification.module.js';
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AppConfigModule } from './config/config.module.js';
@@ -20,6 +21,7 @@ import { UsersModule } from './modules/users/users.module.js';
   imports: [
     AppConfigModule,
     DatabaseModule,
+    VerificationModule,
     StorageModule,
     ScheduleModule.forRoot(),
     HealthModule,

@@ -1,3 +1,5 @@
+import { DataSource } from 'typeorm';
+import { AccountVerificationService } from '../../verification/verification.service.js';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -35,6 +37,8 @@ import { GuidesRepository } from '../repositories/guides.repository.js';
 @Injectable()
 export class GuideVerificationService {
   constructor(
+    private readonly db: DataSource,
+    private readonly accountVerification: AccountVerificationService,
     private readonly guides: GuidesRepository,
     @InjectRepository(GuideDocument)
     private readonly documents: Repository<GuideDocument>,
@@ -65,23 +69,39 @@ export class GuideVerificationService {
     dto: VerificationDecisionDto,
     adminId: string,
   ): Promise<GuideProfileDto> {
-    const profile = await this.findOrFail(id);
-    if (dto.status === VerificationStatus.APPROVED) {
-      const missing = missingDocumentTypes(
-        REQUIRED_GUIDE_DOCUMENTS,
-        profile.documents,
+    await this.db.transaction(async (manager) => {
+      const locked = await manager
+        .getRepository(GuideProfile)
+        .findOne({ where: { id }, lock: { mode: 'pessimistic_write' } });
+      if (!locked) throw new GuideNotFoundException();
+      const profile = await manager
+        .getRepository(GuideProfile)
+        .findOneOrFail({
+          where: { id },
+          relations: { user: true, documents: true },
+        });
+      if (dto.status === VerificationStatus.APPROVED) {
+        const missing = missingDocumentTypes(
+          REQUIRED_GUIDE_DOCUMENTS,
+          profile.documents,
+        );
+        if (missing.length) throw new DocumentsIncompleteException(missing);
+      }
+      await this.accountVerification.decideGuide(
+        profile,
+        dto.status,
+        adminId,
+        dto.rejectionReason,
       );
-      if (missing.length > 0) throw new DocumentsIncompleteException(missing);
-    }
-
-    profile.verificationStatus = dto.status;
-    profile.rejectionReason =
-      dto.status === VerificationStatus.REJECTED
-        ? (dto.rejectionReason ?? null)
-        : null;
-    profile.verifiedById = adminId;
-    profile.verifiedAt = new Date();
-    await this.guides.save(profile);
+      profile.verificationStatus = dto.status;
+      profile.rejectionReason =
+        dto.status === VerificationStatus.REJECTED
+          ? (dto.rejectionReason ?? null)
+          : null;
+      profile.verifiedById = adminId;
+      profile.verifiedAt = new Date();
+      await manager.getRepository(GuideProfile).save(profile);
+    });
     return this.getById(id);
   }
 

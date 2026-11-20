@@ -5,6 +5,15 @@ export const envValidation = Joi.object({
   NODE_ENV: Joi.string()
     .valid(...Object.values(Environment))
     .default(Environment.DEVELOPMENT),
+  VERIFICATION_SERVICE_URL: Joi.string()
+    .uri({ scheme: ['http', 'https'] })
+    .default('http://localhost:3020'),
+  VERIFICATION_SERVICE_KEY: Joi.string().min(32).required(),
+  VERIFICATION_TIMEOUT_MS: Joi.number()
+    .integer()
+    .min(500)
+    .max(30000)
+    .default(5000),
   PORT: Joi.number().port().default(3010),
   API_PREFIX: Joi.string().default('api'),
 

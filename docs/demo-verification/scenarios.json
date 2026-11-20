@@ -1,0 +1,62 @@
+[
+  {
+    "slug": "correo",
+    "firstName": "Ana",
+    "lastName": "Demo Correo",
+    "nationalId": "91000001",
+    "yearsExperience": 2,
+    "languages": ["es"],
+    "confirmEmail": false,
+    "documents": [],
+    "decision": null,
+    "description": "Correo pendiente. Abre Mailpit y confirma el enlace durante la exposición."
+  },
+  {
+    "slug": "documentos",
+    "firstName": "Bruno",
+    "lastName": "Demo Documentos",
+    "nationalId": "91000002",
+    "yearsExperience": 3,
+    "languages": ["es", "en"],
+    "confirmEmail": true,
+    "documents": ["NATIONAL_ID"],
+    "decision": null,
+    "description": "Correo confirmado. Faltan credencial de guía y primeros auxilios; carga los PDF y solicita revisión."
+  },
+  {
+    "slug": "revision",
+    "firstName": "Carla",
+    "lastName": "Demo Revision",
+    "nationalId": "91000003",
+    "yearsExperience": 5,
+    "languages": ["es", "ay"],
+    "confirmEmail": true,
+    "documents": ["NATIONAL_ID", "GUIDE_CREDENTIAL", "FIRST_AID"],
+    "decision": null,
+    "description": "Documentos completos y revisión solicitada. El administrador puede aprobar o rechazar."
+  },
+  {
+    "slug": "correccion",
+    "firstName": "Diego",
+    "lastName": "Demo Correccion",
+    "nationalId": "91000004",
+    "yearsExperience": 4,
+    "languages": ["es"],
+    "confirmEmail": true,
+    "documents": ["NATIONAL_ID", "GUIDE_CREDENTIAL", "FIRST_AID"],
+    "decision": "REJECTED",
+    "description": "Rechazado porque la credencial de prueba no identifica al titular. Carga credencial-corregida.pdf y solicita otra revisión."
+  },
+  {
+    "slug": "aprobada",
+    "firstName": "Elena",
+    "lastName": "Demo Aprobada",
+    "nationalId": "91000005",
+    "yearsExperience": 7,
+    "languages": ["es", "en"],
+    "confirmEmail": true,
+    "documents": ["NATIONAL_ID", "GUIDE_CREDENTIAL", "FIRST_AID"],
+    "decision": "APPROVED",
+    "description": "Correo y documentos aprobados. Reemplaza un documento para mostrar que la aprobación vuelve a pendiente."
+  }
+]

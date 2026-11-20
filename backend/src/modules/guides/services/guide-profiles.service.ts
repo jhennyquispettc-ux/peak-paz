@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { AccountVerificationService } from '../../verification/verification.service.js';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { VerificationDocumentDto } from '../../../common/dto/verification-document.dto.js';
 import { VerificationStatus } from '../../../common/enums/verification-status.enum.js';
 import {
@@ -41,6 +42,8 @@ import { GuidesRepository } from '../repositories/guides.repository.js';
 @Injectable()
 export class GuideProfilesService {
   constructor(
+    private readonly db: DataSource,
+    private readonly accountVerification: AccountVerificationService,
     private readonly guides: GuidesRepository,
     @InjectRepository(GuideDocument)
     private readonly documents: Repository<GuideDocument>,
@@ -78,17 +81,21 @@ export class GuideProfilesService {
     userId: string,
     dto: UpdateGuideProfileDto,
   ): Promise<GuideProfileDto> {
-    const profile = await this.findMine(userId);
-    const changesIdentity =
-      dto.nationalId !== undefined && dto.nationalId !== profile.nationalId;
-    if (
-      changesIdentity &&
-      profile.verificationStatus === VerificationStatus.APPROVED
-    ) {
-      throw new ProfileLockedException();
-    }
-    Object.assign(profile, dto);
-    await this.guides.save(profile);
+    await this.db.transaction(async (manager) => {
+      const profile = await manager
+        .getRepository(GuideProfile)
+        .findOne({ where: { userId }, lock: { mode: 'pessimistic_write' } });
+      if (!profile) throw new GuideNotFoundException();
+      const changesIdentity =
+        dto.nationalId !== undefined && dto.nationalId !== profile.nationalId;
+      if (
+        changesIdentity &&
+        profile.verificationStatus === VerificationStatus.APPROVED
+      )
+        throw new ProfileLockedException();
+      Object.assign(profile, dto);
+      await manager.getRepository(GuideProfile).save(profile);
+    });
     return this.getMine(userId);
   }
 
@@ -106,22 +113,51 @@ export class GuideProfilesService {
     const stored = await this.storage.save(`guides/${profile.id}`, prepared);
     let saved: GuideDocument;
     try {
-      saved = await this.documents.save(
-        this.documents.create({
-          guideProfileId: profile.id,
-          type: dto.type,
-          expiresAt: dto.expiresAt ?? null,
-          url: stored.url,
-          publicId: stored.publicId,
-        }),
-      );
+      saved = await this.db.transaction(async (manager) => {
+        await manager
+          .getRepository(GuideProfile)
+          .findOne({
+            where: { id: profile.id },
+            lock: { mode: 'pessimistic_write' },
+          });
+        const current = await manager
+          .getRepository(GuideDocument)
+          .findBy({ guideProfileId: profile.id, type: dto.type });
+        previous.splice(0, previous.length, ...current);
+        await manager
+          .getRepository(GuideDocument)
+          .delete({ guideProfileId: profile.id, type: dto.type });
+        await manager
+          .getRepository(GuideProfile)
+          .createQueryBuilder()
+          .update()
+          .set({
+            verificationStatus: VerificationStatus.PENDING,
+            verifiedAt: null,
+            verifiedById: null,
+            rejectionReason: null,
+          })
+          .where('id = :id AND verification_status = :status', {
+            id: profile.id,
+            status: VerificationStatus.APPROVED,
+          })
+          .execute();
+        return manager.getRepository(GuideDocument).save(
+          manager.getRepository(GuideDocument).create({
+            guideProfileId: profile.id,
+            type: dto.type,
+            expiresAt: dto.expiresAt ?? null,
+            url: stored.url,
+            publicId: stored.publicId,
+          }),
+        );
+      });
     } catch (error) {
       await this.storage.remove(stored);
       throw error;
     }
 
     for (const document of previous) {
-      await this.documents.delete({ id: document.id });
       await this.storage.remove(document);
     }
     return VerificationDocumentDto.fromEntity(saved);
@@ -129,7 +165,30 @@ export class GuideProfilesService {
 
   async removeDocument(userId: string, documentId: string): Promise<void> {
     const document = await this.findMyDocument(userId, documentId);
-    await this.documents.delete({ id: document.id });
+    await this.db.transaction(async (manager) => {
+      await manager
+        .getRepository(GuideProfile)
+        .findOne({
+          where: { id: document.guideProfileId },
+          lock: { mode: 'pessimistic_write' },
+        });
+      await manager.getRepository(GuideDocument).delete({ id: document.id });
+      await manager
+        .getRepository(GuideProfile)
+        .createQueryBuilder()
+        .update()
+        .set({
+          verificationStatus: VerificationStatus.PENDING,
+          verifiedAt: null,
+          verifiedById: null,
+          rejectionReason: null,
+        })
+        .where('id = :id AND verification_status = :status', {
+          id: document.guideProfileId,
+          status: VerificationStatus.APPROVED,
+        })
+        .execute();
+    });
     await this.storage.remove(document);
   }
 
@@ -138,25 +197,48 @@ export class GuideProfilesService {
   }
 
   async requestReview(userId: string): Promise<GuideProfileDto> {
-    const profile = await this.findMine(userId);
-    if (profile.verificationStatus !== VerificationStatus.REJECTED) {
-      throw new ReviewNotAvailableException();
-    }
-    const missing = missingDocumentTypes(
-      REQUIRED_GUIDE_DOCUMENTS,
-      profile.documents,
-    );
-    if (missing.length > 0) throw new DocumentsIncompleteException(missing);
-
-    profile.verificationStatus = VerificationStatus.PENDING;
-    profile.rejectionReason = null;
-    await this.guides.save(profile);
+    await this.db.transaction(async (manager) => {
+      const locked = await manager
+        .getRepository(GuideProfile)
+        .findOne({ where: { userId }, lock: { mode: 'pessimistic_write' } });
+      if (!locked) throw new GuideNotFoundException();
+      const profile = await manager
+        .getRepository(GuideProfile)
+        .findOneOrFail({
+          where: { userId },
+          relations: { user: true, documents: true },
+        });
+      if (profile.verificationStatus === VerificationStatus.APPROVED)
+        throw new ReviewNotAvailableException();
+      if (!profile.user.emailVerifiedAt)
+        throw new ForbiddenException({
+          error: 'EMAIL_NOT_VERIFIED',
+          message: 'Confirma tu correo antes de solicitar una revisión.',
+        });
+      const missing = missingDocumentTypes(
+        REQUIRED_GUIDE_DOCUMENTS,
+        profile.documents,
+      );
+      if (missing.length) throw new DocumentsIncompleteException(missing);
+      await this.accountVerification.submitGuide(
+        profile,
+        profile.verificationStatus === VerificationStatus.REJECTED,
+      );
+      profile.verificationStatus = VerificationStatus.PENDING;
+      profile.rejectionReason = null;
+      await manager.getRepository(GuideProfile).save(profile);
+    });
     return this.getMine(userId);
   }
 
   async requestRoute(userId: string, routeId: string): Promise<GuideRouteDto> {
     const profile = await this.findMine(userId);
-    if (profile.verificationStatus !== VerificationStatus.APPROVED) {
+    if (
+      !profile.user.emailVerifiedAt ||
+      profile.verificationStatus !== VerificationStatus.APPROVED ||
+      missingDocumentTypes(REQUIRED_GUIDE_DOCUMENTS, profile.documents).length >
+        0
+    ) {
       throw new ProviderNotApprovedException();
     }
     const route = await this.routes.findById(routeId);

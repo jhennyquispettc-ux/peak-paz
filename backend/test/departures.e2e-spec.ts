@@ -1,3 +1,4 @@
+import { confirmTestEmail } from './helpers/confirm-email.js';
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { rm } from 'node:fs/promises';
@@ -230,6 +231,7 @@ describe('Group departures (e2e)', () => {
           phone: '+591 70000000',
         })
         .expect(201);
+      await confirmTestEmail(server, registered.body);
       tokens[name] = registered.body.accessToken;
     }
   });

@@ -3,6 +3,7 @@ export type Difficulty = 'EASY' | 'MODERATE' | 'HARD';
 export interface User {
   id: string;
   email: string;
+  emailVerifiedAt: string | null;
   firstName: string;
   lastName: string;
   role: 'TOURIST' | 'GUIDE' | 'AGENCY' | 'ADMIN';
