@@ -10,6 +10,17 @@ export enum StrikeStatus {
   EXPIRED = 'EXPIRED',
 }
 
+export enum CancellationReviewStatus {
+  PENDING = 'PENDING',
+  RESOLVED = 'RESOLVED',
+}
+
+export enum CancellationDecision {
+  NO_SANCTION = 'NO_SANCTION',
+  STRIKE = 'STRIKE',
+  STRIKE_AND_FINE = 'STRIKE_AND_FINE',
+}
+
 export enum ComplaintStatus {
   OPEN = 'OPEN',
   ACCEPTED = 'ACCEPTED',

@@ -93,6 +93,9 @@ export class GuideProfile {
   @Column({ name: 'reviews_count', type: 'int', default: 0 })
   reviewsCount: number;
 
+  @Column({ name: 'hidden_until', type: 'timestamptz', nullable: true })
+  hiddenUntil: Date | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 

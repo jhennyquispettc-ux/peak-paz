@@ -1,3 +1,10 @@
+import { ReschedulesController } from './controllers/reschedules.controller.js';
+import { ReschedulesRepository } from './repositories/reschedules.repository.js';
+import { ReschedulesService } from './services/reschedules.service.js';
+import { TourChecksController } from './controllers/tour-checks.controller.js';
+import { Dispute } from './entities/dispute.entity.js';
+import { DisputesRepository } from './repositories/disputes.repository.js';
+import { TourChecksService } from './services/tour-checks.service.js';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { GroupDeparture } from '../group-departures/entities/group-departure.entity.js';
@@ -19,7 +26,7 @@ import { GuideBookingsService } from './services/guide-bookings.service.js';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Booking, Reschedule, GroupDeparture]),
+    TypeOrmModule.forFeature([Booking, Reschedule, GroupDeparture, Dispute]),
     GuidesModule,
     RoutesModule,
     SettingsModule,
@@ -29,6 +36,8 @@ import { GuideBookingsService } from './services/guide-bookings.service.js';
     GuideBookingsController,
     GuideAgendaController,
     AdminBookingsController,
+    TourChecksController,
+    ReschedulesController,
   ],
   providers: [
     BookingsRepository,
@@ -37,7 +46,11 @@ import { GuideBookingsService } from './services/guide-bookings.service.js';
     GuideBookingsService,
     BookingExpirationService,
     GuideAgendaService,
+    DisputesRepository,
+    TourChecksService,
+    ReschedulesRepository,
+    ReschedulesService,
   ],
-  exports: [BookingsRepository],
+  exports: [BookingsRepository, DisputesRepository, ReschedulesService],
 })
 export class BookingsModule {}

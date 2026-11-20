@@ -7,6 +7,7 @@ import {
   bookingEndsSql,
   bookingStartsSql,
 } from '../../guides/repositories/guides.repository.js';
+import { UserStatus } from '../../users/users.enums.js';
 import { BookingStatus, BookingType } from '../bookings.enums.js';
 import { Booking } from '../entities/booking.entity.js';
 
@@ -144,14 +145,48 @@ export class BookingsRepository {
       .getMany();
   }
 
-  findFinishedConfirmedIds(now: Date, limit: number): Promise<string[]> {
+  findFinishedIds(
+    now: Date,
+    guideCutoff: Date,
+    limit: number,
+  ): Promise<string[]> {
     return this.repository
       .createQueryBuilder('booking')
       .select('booking.id', 'id')
-      .where('booking.status = :confirmed', {
-        confirmed: BookingStatus.CONFIRMED,
+      .where('booking.status IN (:...running)', {
+        running: [BookingStatus.CONFIRMED, BookingStatus.IN_PROGRESS],
       })
-      .andWhere(`${bookingEndsSql('booking')} < :now`, { now })
+      .andWhere(
+        `((booking.guide_profile_id IS NULL AND ${bookingEndsSql('booking')} < :now)
+          OR (booking.guide_profile_id IS NOT NULL AND ${bookingEndsSql('booking')} < :guideCutoff))`,
+        { now, guideCutoff },
+      )
+      .andWhere(
+        'NOT EXISTS (SELECT 1 FROM disputes dispute WHERE dispute.booking_id = booking.id)',
+      )
+      .orderBy('booking.tourDate', 'ASC')
+      .limit(limit)
+      .getRawMany<{ id: string }>()
+      .then((rows) => rows.map((row) => row.id));
+  }
+
+  findOpenOfSuspendedGuidesIds(now: Date, limit: number): Promise<string[]> {
+    return this.repository
+      .createQueryBuilder('booking')
+      .innerJoin('booking.guideProfile', 'guide')
+      .innerJoin('guide.user', 'guideUser')
+      .select('booking.id', 'id')
+      .where('guideUser.status = :suspended', {
+        suspended: UserStatus.SUSPENDED,
+      })
+      .andWhere('booking.status IN (:...open)', {
+        open: [
+          BookingStatus.REQUESTED,
+          BookingStatus.ACCEPTED,
+          BookingStatus.CONFIRMED,
+        ],
+      })
+      .andWhere(`${bookingStartsSql('booking')} > :now`, { now })
       .orderBy('booking.tourDate', 'ASC')
       .limit(limit)
       .getRawMany<{ id: string }>()

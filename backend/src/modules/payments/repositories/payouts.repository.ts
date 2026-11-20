@@ -31,6 +31,30 @@ export class PayoutsRepository {
       .execute();
   }
 
+  existsForBooking(
+    bookingId: string,
+    manager: EntityManager,
+  ): Promise<boolean> {
+    return manager.getRepository(Payout).exists({ where: { bookingId } });
+  }
+
+  findPendingForBookingForUpdate(
+    bookingId: string,
+    manager: EntityManager,
+  ): Promise<Payout | null> {
+    return manager
+      .getRepository(Payout)
+      .createQueryBuilder('payout')
+      .where('payout.bookingId = :bookingId', { bookingId })
+      .andWhere('payout.status = :pending', { pending: PayoutStatus.PENDING })
+      .setLock('pessimistic_write')
+      .getOne();
+  }
+
+  saveWith(payout: Payout, manager: EntityManager): Promise<Payout> {
+    return manager.getRepository(Payout).save(payout);
+  }
+
   findById(id: string): Promise<Payout | null> {
     return this.payouts.findOne({
       where: { id },

@@ -167,6 +167,38 @@ export class Booking {
   })
   termsAcceptedIp: string | null;
 
+  @Column({ name: 'reconfirmed_at', type: 'timestamptz', nullable: true })
+  reconfirmedAt: Date | null;
+
+  @Column({ name: 'guide_started_at', type: 'timestamptz', nullable: true })
+  guideStartedAt: Date | null;
+
+  @Column({
+    name: 'guide_start_latitude',
+    type: 'numeric',
+    precision: 9,
+    scale: 6,
+    nullable: true,
+    transformer: numericTransformer,
+  })
+  guideStartLatitude: number | null;
+
+  @Column({
+    name: 'guide_start_longitude',
+    type: 'numeric',
+    precision: 9,
+    scale: 6,
+    nullable: true,
+    transformer: numericTransformer,
+  })
+  guideStartLongitude: number | null;
+
+  @Column({ name: 'guide_start_distance_m', type: 'int', nullable: true })
+  guideStartDistanceM: number | null;
+
+  @Column({ name: 'tourist_started_at', type: 'timestamptz', nullable: true })
+  touristStartedAt: Date | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 

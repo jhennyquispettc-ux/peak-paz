@@ -73,3 +73,120 @@ export class ResponseWindowClosedException extends ConflictException {
     });
   }
 }
+
+export class ReconfirmationNotOpenException extends ConflictException {
+  constructor() {
+    super({
+      error: 'RECONFIRMATION_NOT_OPEN',
+      message:
+        'The booking can only be reconfirmed during the 72 hours before the start.',
+    });
+  }
+}
+
+export class AlreadyReconfirmedException extends ConflictException {
+  constructor() {
+    super({
+      error: 'ALREADY_RECONFIRMED',
+      message: 'This booking was already reconfirmed.',
+    });
+  }
+}
+
+export class StartWindowClosedException extends ConflictException {
+  constructor() {
+    super({
+      error: 'START_WINDOW_CLOSED',
+      message:
+        'The start can only be marked from one hour before the tour until it ends.',
+    });
+  }
+}
+
+export class AlreadyStartedException extends ConflictException {
+  constructor() {
+    super({
+      error: 'ALREADY_STARTED',
+      message: 'The start of this tour was already confirmed.',
+    });
+  }
+}
+
+export class NoShowReportTooEarlyException extends ConflictException {
+  constructor() {
+    super({
+      error: 'NO_SHOW_REPORT_NOT_ALLOWED',
+      message:
+        'A no show can be reported only after the waiting time and while the guide has not started the tour.',
+    });
+  }
+}
+
+export class DisputeAlreadyOpenException extends ConflictException {
+  constructor() {
+    super({
+      error: 'DISPUTE_ALREADY_OPEN',
+      message: 'This booking already has a dispute.',
+    });
+  }
+}
+
+export class DisputeNotFoundException extends NotFoundException {
+  constructor() {
+    super({ error: 'DISPUTE_NOT_FOUND', message: 'Dispute not found.' });
+  }
+}
+
+export class DisputeResolvedException extends ConflictException {
+  constructor() {
+    super({
+      error: 'DISPUTE_RESOLVED',
+      message: 'This dispute was already resolved.',
+    });
+  }
+}
+
+export class RescheduleNotFoundException extends NotFoundException {
+  constructor() {
+    super({
+      error: 'RESCHEDULE_NOT_FOUND',
+      message: 'Date change proposal not found.',
+    });
+  }
+}
+
+export class RescheduleAlreadyPendingException extends ConflictException {
+  constructor() {
+    super({
+      error: 'RESCHEDULE_ALREADY_PENDING',
+      message: 'This booking already has a date change waiting for an answer.',
+    });
+  }
+}
+
+export class RescheduleTooLateException extends ConflictException {
+  constructor(hours: number) {
+    super({
+      error: 'RESCHEDULE_TOO_LATE',
+      message: `A new date can only be proposed when the tourist still has time to answer, up to ${hours} hours before the tour. Cancel the booking instead.`,
+    });
+  }
+}
+
+export class SameDateException extends BadRequestException {
+  constructor() {
+    super({
+      error: 'SAME_DATE',
+      message: 'The new date must be different from the current one.',
+    });
+  }
+}
+
+export class RescheduleClosedException extends ConflictException {
+  constructor() {
+    super({
+      error: 'RESCHEDULE_CLOSED',
+      message: 'This date change was already answered or has expired.',
+    });
+  }
+}

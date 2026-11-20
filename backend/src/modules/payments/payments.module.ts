@@ -1,3 +1,9 @@
+import { ComplaintsController } from './controllers/complaints.controller.js';
+import { ComplaintsService } from './services/complaints.service.js';
+import { RescheduleRejectionController } from './controllers/reschedule-rejection.controller.js';
+import { RescheduleRejectionService } from './services/reschedule-rejection.service.js';
+import { AdminDisputesController } from './controllers/admin-disputes.controller.js';
+import { DisputeResolutionService } from './services/dispute-resolution.service.js';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppConfig } from '../../config/app.config.js';
@@ -6,6 +12,7 @@ import { BookingsModule } from '../bookings/bookings.module.js';
 import { GroupDeparturesModule } from '../group-departures/group-departures.module.js';
 import { GuidesModule } from '../guides/guides.module.js';
 import { SettingsModule } from '../settings/settings.module.js';
+import { StrikesModule } from '../strikes/strikes.module.js';
 import { BookingCancellationController } from './controllers/booking-cancellation.controller.js';
 import { BookingPaymentsController } from './controllers/booking-payments.controller.js';
 import { DepartureCancellationController } from './controllers/departure-cancellation.controller.js';
@@ -23,6 +30,7 @@ import { BookingCompletionService } from './services/booking-completion.service.
 import { BookingPaymentsService } from './services/booking-payments.service.js';
 import { DepartureLifecycleService } from './services/departure-lifecycle.service.js';
 import { PayoutsService } from './services/payouts.service.js';
+import { SuspendedGuideBookingsService } from './services/suspended-guide-bookings.service.js';
 
 @Module({
   imports: [
@@ -32,12 +40,16 @@ import { PayoutsService } from './services/payouts.service.js';
     AgenciesModule,
     GroupDeparturesModule,
     SettingsModule,
+    StrikesModule,
   ],
   controllers: [
     BookingPaymentsController,
     BookingCancellationController,
     DepartureCancellationController,
     PayoutsController,
+    AdminDisputesController,
+    RescheduleRejectionController,
+    ComplaintsController,
   ],
   providers: [
     {
@@ -59,6 +71,10 @@ import { PayoutsService } from './services/payouts.service.js';
     BookingCancellationService,
     BookingCompletionService,
     DepartureLifecycleService,
+    SuspendedGuideBookingsService,
+    DisputeResolutionService,
+    RescheduleRejectionService,
+    ComplaintsService,
   ],
 })
 export class PaymentsModule {}

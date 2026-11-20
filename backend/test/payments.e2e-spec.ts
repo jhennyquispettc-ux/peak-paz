@@ -9,6 +9,7 @@ import { AppModule } from './../src/app.module.js';
 import { configureApp } from './../src/app.setup.js';
 import { addDays } from './../src/common/time/la-paz-time.js';
 import { todayInLaPaz } from './../src/common/verification/verification-documents.js';
+import { BookingStatus } from './../src/modules/bookings/bookings.enums.js';
 import { Booking } from './../src/modules/bookings/entities/booking.entity.js';
 import { GuideProfile } from './../src/modules/guides/entities/guide-profile.entity.js';
 import { Payment } from './../src/modules/payments/entities/payment.entity.js';
@@ -16,6 +17,7 @@ import { Payout } from './../src/modules/payments/entities/payout.entity.js';
 import { Refund } from './../src/modules/payments/entities/refund.entity.js';
 import { BookingCompletionService } from './../src/modules/payments/services/booking-completion.service.js';
 import { Route } from './../src/modules/routes/entities/route.entity.js';
+import { CancellationReview } from './../src/modules/strikes/entities/cancellation-review.entity.js';
 import { User } from './../src/modules/users/entities/user.entity.js';
 
 const PDF = Buffer.from('%PDF-1.4\n%%EOF');
@@ -220,6 +222,12 @@ describe('Payments, refunds and payouts (e2e)', () => {
 
   afterAll(async () => {
     if (bookingIds.length > 0) {
+      await dataSource
+        .createQueryBuilder()
+        .delete()
+        .from(CancellationReview)
+        .where('booking_id IN (:...ids)', { ids: bookingIds })
+        .execute();
       const payments = await dataSource
         .getRepository(Payment)
         .createQueryBuilder('payment')
@@ -381,6 +389,7 @@ describe('Payments, refunds and payouts (e2e)', () => {
       reason: 'WEATHER',
       status: 'COMPLETED',
     });
+    expect(cancelled.body.reviewId).toEqual(expect.any(String));
     expect(cancelled.body.booking.tourist.email).toBeNull();
   });
 
@@ -390,14 +399,20 @@ describe('Payments, refunds and payouts (e2e)', () => {
       { id: bookingId },
       {
         tourDate: addDays(today, -3),
-        endsAt: new Date(Date.now() - 60 * 60_000),
+        endsAt: new Date(Date.now() - 25 * 60 * 60_000),
+        status: BookingStatus.IN_PROGRESS,
+        guideStartedAt: new Date(Date.now() - 30 * 60 * 60_000),
+        guideStartLatitude: -16.3,
+        guideStartLongitude: -68.04,
+        guideStartDistanceM: 0,
+        touristStartedAt: new Date(Date.now() - 30 * 60 * 60_000),
       },
     );
 
-    const completed = await app
+    const summary = await app
       .get(BookingCompletionService)
       .completeFinished(new Date());
-    expect(completed).toBeGreaterThanOrEqual(1);
+    expect(summary.completed).toBeGreaterThanOrEqual(1);
 
     const booking = await request(server)
       .get(`/api/bookings/${bookingId}`)

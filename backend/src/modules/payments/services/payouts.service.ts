@@ -8,12 +8,17 @@ import { GuideNotFoundException } from '../../guides/exceptions/guides.exception
 import { GuidesRepository } from '../../guides/repositories/guides.repository.js';
 import { SettingsService } from '../../settings/services/settings.service.js';
 import { SettingKey } from '../../settings/setting-keys.js';
+import { GroupDeparturesRepository } from '../../group-departures/repositories/group-departures.repository.js';
+import { ProviderKind, SanctionedProvider } from '../../strikes/sanctions.js';
+import { ComplaintsRepository } from '../../strikes/repositories/complaints.repository.js';
+import { FinesService } from '../../strikes/services/fines.service.js';
 import { PayoutDto, PayoutPageDto, PayoutQueryDto } from '../dto/payout.dto.js';
 import {
   PayoutAlreadyPaidException,
   PayoutNotFoundException,
+  PayoutOnHoldException,
 } from '../exceptions/payments.exceptions.js';
-import { splitPayout } from '../money.js';
+import { round2, splitPayout } from '../money.js';
 import { PayoutStatus } from '../payments.enums.js';
 import { PayoutsRepository } from '../repositories/payouts.repository.js';
 
@@ -24,18 +29,28 @@ export class PayoutsService {
     private readonly guides: GuidesRepository,
     private readonly agencies: AgenciesRepository,
     private readonly settings: SettingsService,
+    private readonly fines: FinesService,
+    private readonly departures: GroupDeparturesRepository,
+    private readonly complaints: ComplaintsRepository,
   ) {}
 
   async createForBooking(
     booking: Booking,
     manager: EntityManager,
   ): Promise<void> {
+    if (await this.payouts.existsForBooking(booking.id, manager)) return;
     const commissionRate = await this.settings.getNumber(
       SettingKey.COMMISSION_RATE,
     );
+    const beforeFines = splitPayout(booking.totalAmount, commissionRate);
+    const provider = await this.providerOf(booking, manager);
+    const penaltyDeduction = provider
+      ? await this.fines.settle(provider, beforeFines.netAmount, manager)
+      : 0;
     const { commissionAmount, netAmount } = splitPayout(
       booking.totalAmount,
       commissionRate,
+      penaltyDeduction,
     );
     await this.payouts.insertIfMissing(
       {
@@ -43,12 +58,29 @@ export class PayoutsService {
         grossAmount: booking.totalAmount,
         commissionRate,
         commissionAmount,
-        penaltyDeduction: 0,
+        penaltyDeduction,
         netAmount,
         status: PayoutStatus.PENDING,
       },
       manager,
     );
+  }
+
+  private async providerOf(
+    booking: Booking,
+    manager: EntityManager,
+  ): Promise<SanctionedProvider | null> {
+    if (booking.guideProfileId) {
+      return { kind: ProviderKind.GUIDE, id: booking.guideProfileId };
+    }
+    if (!booking.groupDepartureId) return null;
+    const departure = await this.departures.findById(
+      booking.groupDepartureId,
+      manager,
+    );
+    return departure
+      ? { kind: ProviderKind.AGENCY, id: departure.agencyId }
+      : null;
   }
 
   listAll(query: PayoutQueryDto): Promise<PayoutPageDto> {
@@ -73,9 +105,29 @@ export class PayoutsService {
     return this.page(query, undefined, agency.id);
   }
 
+  async deductFromPending(
+    bookingId: string,
+    amount: number,
+    manager: EntityManager,
+  ): Promise<number> {
+    const payout = await this.payouts.findPendingForBookingForUpdate(
+      bookingId,
+      manager,
+    );
+    if (!payout || amount <= 0) return 0;
+    const applied = round2(Math.min(amount, payout.netAmount));
+    payout.penaltyDeduction = round2(payout.penaltyDeduction + applied);
+    payout.netAmount = round2(payout.netAmount - applied);
+    await this.payouts.saveWith(payout, manager);
+    return applied;
+  }
+
   async markPaid(id: string): Promise<PayoutDto> {
     const payout = await this.payouts.findById(id);
     if (!payout) throw new PayoutNotFoundException();
+    if (await this.complaints.hasOpenForBooking(payout.bookingId)) {
+      throw new PayoutOnHoldException();
+    }
     if (payout.status === PayoutStatus.PAID) {
       throw new PayoutAlreadyPaidException();
     }

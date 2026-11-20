@@ -12,13 +12,16 @@ import {
 import { BookingsRepository } from '../../bookings/repositories/bookings.repository.js';
 import { GuideNotFoundException } from '../../guides/exceptions/guides.exceptions.js';
 import { GuidesRepository } from '../../guides/repositories/guides.repository.js';
+import type { UploadedFileData } from '../../../common/types/uploaded-file.js';
+import { CancellationReviewsService } from '../../strikes/services/cancellation-reviews.service.js';
 import { SettingsService } from '../../settings/services/settings.service.js';
 import { SettingKey } from '../../settings/setting-keys.js';
 import { CancellationResultDto } from '../dto/cancellation.dto.js';
 import { RefundDto } from '../dto/payment.dto.js';
 import { Refund } from '../entities/refund.entity.js';
 import { TourAlreadyStartedException } from '../exceptions/payments.exceptions.js';
-import { isRefundable } from '../money.js';
+import { reconfirmationMissed } from '../../bookings/tour-checks.js';
+import { isRefundable, round2 } from '../money.js';
 import {
   PaymentStatus,
   RefundReason,
@@ -47,6 +50,7 @@ export class BookingCancellationService {
     private readonly payouts: PayoutsService,
     private readonly provider: PaymentProvider,
     private readonly settings: SettingsService,
+    private readonly reviews: CancellationReviewsService,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
@@ -55,7 +59,10 @@ export class BookingCancellationService {
     bookingId: string,
     reason: string | undefined,
   ): Promise<CancellationResultDto> {
-    const minDays = await this.settings.getNumber(SettingKey.REFUND_MIN_DAYS);
+    const [minDays, deadlineHours] = await Promise.all([
+      this.settings.getNumber(SettingKey.REFUND_MIN_DAYS),
+      this.settings.getNumber(SettingKey.RECONFIRM_DEADLINE_HOURS),
+    ]);
 
     const outcome = await this.dataSource.transaction(async (manager) => {
       await this.bookings.findForUpdate(bookingId, manager);
@@ -78,7 +85,15 @@ export class BookingCancellationService {
       this.assertConfirmedAndNotStarted(booking, now);
 
       const startsAt = bookingStartsAt(booking);
-      if (isRefundable(startsAt, now, minDays)) {
+      const guideMissedReconfirmation =
+        booking.guideProfileId !== null &&
+        reconfirmationMissed(
+          now,
+          startsAt,
+          deadlineHours,
+          booking.reconfirmedAt,
+        );
+      if (isRefundable(startsAt, now, minDays) || guideMissedReconfirmation) {
         const refund = await this.refundCapture(
           booking,
           RefundReason.TOURIST_CANCELLATION,
@@ -105,7 +120,7 @@ export class BookingCancellationService {
       return null;
     });
 
-    return this.result(bookingId, outcome, false);
+    return this.result(bookingId, outcome, false, null);
   }
 
   async cancelByGuide(
@@ -113,6 +128,7 @@ export class BookingCancellationService {
     bookingId: string,
     reason: string,
     weather: boolean,
+    evidence?: UploadedFileData,
   ): Promise<CancellationResultDto> {
     const profile = await this.guides.findIdByUserId(userId);
     if (!profile) throw new GuideNotFoundException();
@@ -120,7 +136,9 @@ export class BookingCancellationService {
       ? BookingStatus.CANCELLED_WEATHER
       : BookingStatus.CANCELLED_BY_PROVIDER;
 
-    const outcome = await this.dataSource.transaction(async (manager) => {
+    const stored = await this.reviews.storeEvidence(profile.id, evidence);
+    let reviewId: string | null = null;
+    const work = this.dataSource.transaction(async (manager) => {
       await this.bookings.findForUpdate(bookingId, manager);
       const booking = await this.bookings.findDetailById(bookingId, manager);
       if (!booking || booking.guideProfileId !== profile.id) {
@@ -128,22 +146,33 @@ export class BookingCancellationService {
       }
       const now = new Date();
 
-      if (booking.status === BookingStatus.ACCEPTED) {
-        await this.close(booking, status, reason, now, manager);
-        return null;
+      let refund: RefundOutcome | null = null;
+      if (booking.status !== BookingStatus.ACCEPTED) {
+        this.assertConfirmedAndNotStarted(booking, now);
+        refund = await this.refundCapture(
+          booking,
+          weather ? RefundReason.WEATHER : RefundReason.PROVIDER_CANCELLATION,
+          manager,
+        );
       }
-      this.assertConfirmedAndNotStarted(booking, now);
-
-      const refund = await this.refundCapture(
+      await this.close(booking, status, reason, now, manager);
+      const review = await this.reviews.openForBooking(
         booking,
-        weather ? RefundReason.WEATHER : RefundReason.PROVIDER_CANCELLATION,
+        stored,
         manager,
       );
-      await this.close(booking, status, reason, now, manager);
+      reviewId = review.id;
       return refund;
     });
 
-    return this.result(bookingId, outcome, true);
+    let outcome: RefundOutcome | null;
+    try {
+      outcome = await work;
+    } catch (error) {
+      await this.reviews.discardEvidence(stored);
+      throw error;
+    }
+    return this.result(bookingId, outcome, true, reviewId);
   }
 
   async cancelForProvider(
@@ -155,11 +184,35 @@ export class BookingCancellationService {
     manager: EntityManager,
   ): Promise<boolean> {
     const refunded =
-      booking.status === BookingStatus.CONFIRMED &&
+      (booking.status === BookingStatus.CONFIRMED ||
+        booking.status === BookingStatus.IN_PROGRESS) &&
       booking.source === BookingSource.WEB;
     if (refunded) await this.refundCapture(booking, refundReason, manager);
     await this.close(booking, status, reason, now, manager);
     return refunded;
+  }
+
+  async cancelByProviderWithRefund(
+    booking: Booking,
+    refundReason: RefundReason,
+    reason: string,
+    now: Date,
+    manager: EntityManager,
+  ): Promise<RefundDto | null> {
+    const outcome =
+      booking.source === BookingSource.WEB
+        ? await this.refundCapture(booking, refundReason, manager)
+        : null;
+    await this.close(
+      booking,
+      BookingStatus.CANCELLED_BY_PROVIDER,
+      reason,
+      now,
+      manager,
+    );
+    return outcome
+      ? RefundDto.fromEntity(outcome.refund, outcome.currency)
+      : null;
   }
 
   private assertConfirmedAndNotStarted(booking: Booking, now: Date): void {
@@ -171,19 +224,32 @@ export class BookingCancellationService {
     }
   }
 
+  async refundShare(
+    booking: Booking,
+    percent: number,
+    reason: RefundReason,
+    manager: EntityManager,
+  ): Promise<RefundDto | null> {
+    if (percent <= 0 || booking.source !== BookingSource.WEB) return null;
+    const outcome = await this.refundCapture(booking, reason, manager, percent);
+    return RefundDto.fromEntity(outcome.refund, outcome.currency);
+  }
+
   private async refundCapture(
     booking: Booking,
     reason: RefundReason,
     manager: EntityManager,
+    percent = 100,
   ): Promise<RefundOutcome> {
     const payment = await this.payments.findCaptured(booking.id, manager);
     if (!payment?.externalCaptureId || payment.chargedAmount === null) {
       throw new InvalidBookingStatusException(booking.status);
     }
+    const amount = round2((payment.chargedAmount * percent) / 100);
     const refund = await this.payments.saveRefund(
       {
         paymentId: payment.id,
-        amount: payment.chargedAmount,
+        amount,
         reason,
         status: RefundStatus.PENDING,
       },
@@ -192,7 +258,7 @@ export class BookingCancellationService {
 
     const result = await this.provider.refund({
       captureId: payment.externalCaptureId,
-      amount: payment.chargedAmount,
+      amount,
       currency: payment.chargeCurrency,
       requestId: refund.id,
     });
@@ -202,8 +268,10 @@ export class BookingCancellationService {
       : RefundStatus.PENDING;
     await manager.getRepository(Refund).save(refund);
 
-    payment.status = PaymentStatus.REFUNDED;
-    await this.payments.savePayment(payment, manager);
+    if (percent >= 100) {
+      payment.status = PaymentStatus.REFUNDED;
+      await this.payments.savePayment(payment, manager);
+    }
     return { refund, currency: payment.chargeCurrency };
   }
 
@@ -225,6 +293,7 @@ export class BookingCancellationService {
     bookingId: string,
     outcome: RefundOutcome | null,
     viewedByGuide: boolean,
+    reviewId: string | null,
   ): Promise<CancellationResultDto> {
     const booking = await this.bookings.findDetailById(bookingId);
     return {
@@ -232,6 +301,7 @@ export class BookingCancellationService {
       refund: outcome
         ? RefundDto.fromEntity(outcome.refund, outcome.currency)
         : null,
+      reviewId,
     };
   }
 }

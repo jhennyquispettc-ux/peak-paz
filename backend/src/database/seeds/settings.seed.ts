@@ -53,6 +53,70 @@ const DEFAULT_SETTINGS: Pick<Setting, 'key' | 'value' | 'description'>[] = [
     description: 'Días que un proveedor queda oculto con 2 strikes',
   },
   {
+    key: 'MAX_FINE_PERCENT',
+    value: '20',
+    description:
+      'Multa máxima por cancelación del guía, en porcentaje de la reserva',
+  },
+  {
+    key: 'STRIKES_TO_HIDE',
+    value: '2',
+    description: 'Strikes activos con los que el guía queda oculto',
+  },
+  {
+    key: 'STRIKES_TO_SUSPEND',
+    value: '3',
+    description:
+      'Strikes activos con los que el guía queda suspendido de forma permanente',
+  },
+  {
+    key: 'RECONFIRM_OPEN_HOURS',
+    value: '72',
+    description:
+      'Horas antes del inicio desde las que el guía puede reconfirmar',
+  },
+  {
+    key: 'RECONFIRM_DEADLINE_HOURS',
+    value: '24',
+    description:
+      'Horas antes del inicio en que vence la reconfirmación del guía',
+  },
+  {
+    key: 'START_EARLY_MIN',
+    value: '60',
+    description:
+      'Minutos antes del inicio desde los que se puede marcar el tour como iniciado',
+  },
+  {
+    key: 'NO_SHOW_TOLERANCE_MIN',
+    value: '30',
+    description: 'Minutos de espera antes de reportar que el guía no llegó',
+  },
+  {
+    key: 'START_CONFIRM_GRACE_HOURS',
+    value: '24',
+    description:
+      'Horas después del fin del tour que tiene el turista para confirmar el inicio',
+  },
+  {
+    key: 'RESCHEDULE_DEADLINE_HOURS',
+    value: '24',
+    description:
+      'Horas antes del inicio en que vence la respuesta a un cambio de fecha',
+  },
+  {
+    key: 'REVIEW_WINDOW_DAYS',
+    value: '30',
+    description:
+      'Días después del tour en que el turista puede dejar su reseña',
+  },
+  {
+    key: 'COMPLAINT_WINDOW_HOURS',
+    value: '72',
+    description:
+      'Horas después del fin del tour en que el turista puede reclamar',
+  },
+  {
     key: 'SCHEDULE_BUFFER_MIN',
     value: '120',
     description:
