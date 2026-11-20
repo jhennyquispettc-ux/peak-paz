@@ -12,6 +12,7 @@ import { StrikesRepository } from './repositories/strikes.repository.js';
 import { CancellationReviewsService } from './services/cancellation-reviews.service.js';
 import { FinesService } from './services/fines.service.js';
 import { StrikeExpiryService } from './services/strike-expiry.service.js';
+import { StrikeIssuerService } from './services/strike-issuer.service.js';
 import { StrikePenaltiesService } from './services/strike-penalties.service.js';
 import { StrikesService } from './services/strikes.service.js';
 
@@ -31,7 +32,8 @@ import { StrikesService } from './services/strikes.service.js';
     CancellationReviewsService,
     StrikesService,
     StrikeExpiryService,
+    StrikeIssuerService,
   ],
-  exports: [CancellationReviewsService, FinesService],
+  exports: [CancellationReviewsService, FinesService, StrikeIssuerService],
 })
 export class StrikesModule {}

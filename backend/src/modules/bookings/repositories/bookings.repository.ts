@@ -145,14 +145,25 @@ export class BookingsRepository {
       .getMany();
   }
 
-  findFinishedConfirmedIds(now: Date, limit: number): Promise<string[]> {
+  findFinishedIds(
+    now: Date,
+    guideCutoff: Date,
+    limit: number,
+  ): Promise<string[]> {
     return this.repository
       .createQueryBuilder('booking')
       .select('booking.id', 'id')
-      .where('booking.status = :confirmed', {
-        confirmed: BookingStatus.CONFIRMED,
+      .where('booking.status IN (:...running)', {
+        running: [BookingStatus.CONFIRMED, BookingStatus.IN_PROGRESS],
       })
-      .andWhere(`${bookingEndsSql('booking')} < :now`, { now })
+      .andWhere(
+        `((booking.guide_profile_id IS NULL AND ${bookingEndsSql('booking')} < :now)
+          OR (booking.guide_profile_id IS NOT NULL AND ${bookingEndsSql('booking')} < :guideCutoff))`,
+        { now, guideCutoff },
+      )
+      .andWhere(
+        'NOT EXISTS (SELECT 1 FROM disputes dispute WHERE dispute.booking_id = booking.id)',
+      )
       .orderBy('booking.tourDate', 'ASC')
       .limit(limit)
       .getRawMany<{ id: string }>()

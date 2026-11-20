@@ -20,6 +20,7 @@ import { CancellationResultDto } from '../dto/cancellation.dto.js';
 import { RefundDto } from '../dto/payment.dto.js';
 import { Refund } from '../entities/refund.entity.js';
 import { TourAlreadyStartedException } from '../exceptions/payments.exceptions.js';
+import { reconfirmationMissed } from '../../bookings/tour-checks.js';
 import { isRefundable } from '../money.js';
 import {
   PaymentStatus,
@@ -58,7 +59,10 @@ export class BookingCancellationService {
     bookingId: string,
     reason: string | undefined,
   ): Promise<CancellationResultDto> {
-    const minDays = await this.settings.getNumber(SettingKey.REFUND_MIN_DAYS);
+    const [minDays, deadlineHours] = await Promise.all([
+      this.settings.getNumber(SettingKey.REFUND_MIN_DAYS),
+      this.settings.getNumber(SettingKey.RECONFIRM_DEADLINE_HOURS),
+    ]);
 
     const outcome = await this.dataSource.transaction(async (manager) => {
       await this.bookings.findForUpdate(bookingId, manager);
@@ -81,7 +85,15 @@ export class BookingCancellationService {
       this.assertConfirmedAndNotStarted(booking, now);
 
       const startsAt = bookingStartsAt(booking);
-      if (isRefundable(startsAt, now, minDays)) {
+      const guideMissedReconfirmation =
+        booking.guideProfileId !== null &&
+        reconfirmationMissed(
+          now,
+          startsAt,
+          deadlineHours,
+          booking.reconfirmedAt,
+        );
+      if (isRefundable(startsAt, now, minDays) || guideMissedReconfirmation) {
         const refund = await this.refundCapture(
           booking,
           RefundReason.TOURIST_CANCELLATION,
@@ -172,11 +184,38 @@ export class BookingCancellationService {
     manager: EntityManager,
   ): Promise<boolean> {
     const refunded =
-      booking.status === BookingStatus.CONFIRMED &&
+      (booking.status === BookingStatus.CONFIRMED ||
+        booking.status === BookingStatus.IN_PROGRESS) &&
       booking.source === BookingSource.WEB;
     if (refunded) await this.refundCapture(booking, refundReason, manager);
     await this.close(booking, status, reason, now, manager);
     return refunded;
+  }
+
+  async cancelForGuideNoShow(
+    booking: Booking,
+    reason: string,
+    now: Date,
+    manager: EntityManager,
+  ): Promise<RefundDto | null> {
+    const outcome =
+      booking.source === BookingSource.WEB
+        ? await this.refundCapture(
+            booking,
+            RefundReason.PROVIDER_CANCELLATION,
+            manager,
+          )
+        : null;
+    await this.close(
+      booking,
+      BookingStatus.CANCELLED_BY_PROVIDER,
+      reason,
+      now,
+      manager,
+    );
+    return outcome
+      ? RefundDto.fromEntity(outcome.refund, outcome.currency)
+      : null;
   }
 
   private assertConfirmedAndNotStarted(booking: Booking, now: Date): void {

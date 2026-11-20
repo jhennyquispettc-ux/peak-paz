@@ -19,7 +19,6 @@ import {
   CancellationReviewQueryDto,
   ResolveCancellationDto,
 } from '../dto/cancellation-review.dto.js';
-import { StrikeDto } from '../dto/strike.dto.js';
 import { CancellationReview } from '../entities/cancellation-review.entity.js';
 import {
   CancellationReviewNotFoundException,
@@ -30,21 +29,19 @@ import {
   FineTooHighException,
 } from '../exceptions/strikes.exceptions.js';
 import { CancellationReviewsRepository } from '../repositories/cancellation-reviews.repository.js';
-import { StrikesRepository } from '../repositories/strikes.repository.js';
-import { addMonths, fineFor, SanctionLevel } from '../sanctions.js';
+import { fineFor, SanctionLevel } from '../sanctions.js';
 import {
   CancellationDecision,
   CancellationReviewStatus,
   StrikeReason,
 } from '../strikes.enums.js';
-import { StrikePenaltiesService } from './strike-penalties.service.js';
+import { StrikeIssuerService } from './strike-issuer.service.js';
 
 @Injectable()
 export class CancellationReviewsService {
   constructor(
     private readonly reviews: CancellationReviewsRepository,
-    private readonly strikes: StrikesRepository,
-    private readonly penalties: StrikePenaltiesService,
+    private readonly issuer: StrikeIssuerService,
     private readonly settings: SettingsService,
     private readonly storage: StorageService,
     @InjectDataSource() private readonly dataSource: DataSource,
@@ -95,10 +92,7 @@ export class CancellationReviewsService {
   async get(id: string): Promise<CancellationReviewDetailDto> {
     const review = await this.findOrFail(id);
     const guideActiveStrikes = review.booking.guideProfileId
-      ? await this.strikes.countActiveForGuide(
-          review.booking.guideProfileId,
-          new Date(),
-        )
+      ? await this.issuer.countActive(review.booking.guideProfileId, new Date())
       : 0;
     return Object.assign(CancellationReviewDto.fromEntity(review), {
       guideActiveStrikes,
@@ -128,10 +122,9 @@ export class CancellationReviewsService {
     if (!withFine && dto.finePercent !== undefined) {
       throw new FineNotAllowedException();
     }
-    const [maxFinePercent, validityMonths] = await Promise.all([
-      this.settings.getNumber(SettingKey.MAX_FINE_PERCENT),
-      this.settings.getNumber(SettingKey.STRIKE_VALIDITY_MONTHS),
-    ]);
+    const maxFinePercent = await this.settings.getNumber(
+      SettingKey.MAX_FINE_PERCENT,
+    );
     if (withFine && dto.finePercent! > maxFinePercent) {
       throw new FineTooHighException(maxFinePercent);
     }
@@ -155,43 +148,40 @@ export class CancellationReviewsService {
       review.resolvedAt = now;
       await this.reviews.save(review, manager);
 
+      const guideProfileId = review.booking.guideProfileId!;
       if (dto.decision === CancellationDecision.NO_SANCTION) {
-        const activeStrikes = await this.strikes.countActiveForGuide(
-          review.booking.guideProfileId!,
+        const activeStrikes = await this.issuer.countActive(
+          guideProfileId,
           now,
           manager,
         );
         return { review, strikeId: null, activeStrikes, sanction: null };
       }
 
-      const strike = await this.strikes.create(
+      const issued = await this.issuer.issue(
         {
           bookingId: review.bookingId,
+          guideProfileId,
           reason: StrikeReason.CANCELLED_WITHOUT_WEATHER,
-          expiresAt: addMonths(now, validityMonths),
-          assignedById: adminId,
+          weight: 1,
+          adminId,
         },
-        manager,
-      );
-      const sanction = await this.penalties.apply(
-        review.booking.guideProfileId!,
         now,
         manager,
       );
       return {
         review,
-        strikeId: strike.id,
-        activeStrikes: sanction.activeStrikes,
-        sanction,
+        strikeId: issued.strikeId,
+        activeStrikes: issued.sanction.activeStrikes,
+        sanction: issued.sanction,
       };
     });
 
-    const strike = outcome.strikeId
-      ? await this.strikes.findById(outcome.strikeId)
-      : null;
     return {
       review: CancellationReviewDto.fromEntity(outcome.review),
-      strike: strike ? StrikeDto.fromEntity(strike) : null,
+      strike: outcome.strikeId
+        ? await this.issuer.findDto(outcome.strikeId)
+        : null,
       activeStrikes: outcome.activeStrikes,
       sanction: outcome.sanction?.level ?? SanctionLevel.NONE,
       hiddenUntil: outcome.sanction?.hiddenUntil ?? null,

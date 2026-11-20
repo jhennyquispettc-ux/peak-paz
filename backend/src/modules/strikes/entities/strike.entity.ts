@@ -36,6 +36,9 @@ export class Strike {
   })
   status: StrikeStatus;
 
+  @Column({ type: 'smallint', default: 1 })
+  weight: number;
+
   @Column({ name: 'expires_at', type: 'timestamptz' })
   expiresAt: Date;
 

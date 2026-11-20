@@ -26,3 +26,23 @@ export enum RescheduleResponse {
   ACCEPTED = 'ACCEPTED',
   REJECTED = 'REJECTED',
 }
+
+export enum DisputeReason {
+  GUIDE_NO_SHOW = 'GUIDE_NO_SHOW',
+  START_MISMATCH = 'START_MISMATCH',
+}
+
+export enum DisputeParty {
+  TOURIST = 'TOURIST',
+  SYSTEM = 'SYSTEM',
+}
+
+export enum DisputeStatus {
+  OPEN = 'OPEN',
+  RESOLVED = 'RESOLVED',
+}
+
+export enum DisputeDecision {
+  TOUR_HAPPENED = 'TOUR_HAPPENED',
+  GUIDE_NO_SHOW = 'GUIDE_NO_SHOW',
+}

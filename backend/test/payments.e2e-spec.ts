@@ -9,6 +9,7 @@ import { AppModule } from './../src/app.module.js';
 import { configureApp } from './../src/app.setup.js';
 import { addDays } from './../src/common/time/la-paz-time.js';
 import { todayInLaPaz } from './../src/common/verification/verification-documents.js';
+import { BookingStatus } from './../src/modules/bookings/bookings.enums.js';
 import { Booking } from './../src/modules/bookings/entities/booking.entity.js';
 import { GuideProfile } from './../src/modules/guides/entities/guide-profile.entity.js';
 import { Payment } from './../src/modules/payments/entities/payment.entity.js';
@@ -398,14 +399,20 @@ describe('Payments, refunds and payouts (e2e)', () => {
       { id: bookingId },
       {
         tourDate: addDays(today, -3),
-        endsAt: new Date(Date.now() - 60 * 60_000),
+        endsAt: new Date(Date.now() - 25 * 60 * 60_000),
+        status: BookingStatus.IN_PROGRESS,
+        guideStartedAt: new Date(Date.now() - 30 * 60 * 60_000),
+        guideStartLatitude: -16.3,
+        guideStartLongitude: -68.04,
+        guideStartDistanceM: 0,
+        touristStartedAt: new Date(Date.now() - 30 * 60 * 60_000),
       },
     );
 
-    const completed = await app
+    const summary = await app
       .get(BookingCompletionService)
       .completeFinished(new Date());
-    expect(completed).toBeGreaterThanOrEqual(1);
+    expect(summary.completed).toBeGreaterThanOrEqual(1);
 
     const booking = await request(server)
       .get(`/api/bookings/${bookingId}`)

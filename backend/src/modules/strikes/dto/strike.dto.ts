@@ -51,6 +51,9 @@ export class StrikeDto {
   @ApiProperty({ enum: StrikeStatus })
   status: StrikeStatus;
 
+  @ApiProperty({ example: 1, description: 'Una no presentación cuenta como 2' })
+  weight: number;
+
   @ApiProperty()
   expiresAt: Date;
 
@@ -68,6 +71,7 @@ export class StrikeDto {
       guideName: guideNameOf(strike.booking),
       reason: strike.reason,
       status: strike.status,
+      weight: strike.weight,
       expiresAt: strike.expiresAt,
       createdAt: strike.createdAt,
     };

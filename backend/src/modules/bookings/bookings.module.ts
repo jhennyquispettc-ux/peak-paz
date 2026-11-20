@@ -1,3 +1,7 @@
+import { TourChecksController } from './controllers/tour-checks.controller.js';
+import { Dispute } from './entities/dispute.entity.js';
+import { DisputesRepository } from './repositories/disputes.repository.js';
+import { TourChecksService } from './services/tour-checks.service.js';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { GroupDeparture } from '../group-departures/entities/group-departure.entity.js';
@@ -19,7 +23,7 @@ import { GuideBookingsService } from './services/guide-bookings.service.js';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Booking, Reschedule, GroupDeparture]),
+    TypeOrmModule.forFeature([Booking, Reschedule, GroupDeparture, Dispute]),
     GuidesModule,
     RoutesModule,
     SettingsModule,
@@ -29,6 +33,7 @@ import { GuideBookingsService } from './services/guide-bookings.service.js';
     GuideBookingsController,
     GuideAgendaController,
     AdminBookingsController,
+    TourChecksController,
   ],
   providers: [
     BookingsRepository,
@@ -37,7 +42,9 @@ import { GuideBookingsService } from './services/guide-bookings.service.js';
     GuideBookingsService,
     BookingExpirationService,
     GuideAgendaService,
+    DisputesRepository,
+    TourChecksService,
   ],
-  exports: [BookingsRepository],
+  exports: [BookingsRepository, DisputesRepository],
 })
 export class BookingsModule {}

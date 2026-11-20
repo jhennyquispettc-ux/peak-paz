@@ -142,6 +142,18 @@ export class BookingDto {
   @ApiProperty({ nullable: true })
   cancellationReason: string | null;
 
+  @ApiProperty({ nullable: true, description: 'Reconfirmación del guía' })
+  reconfirmedAt: Date | null;
+
+  @ApiProperty({ nullable: true, description: 'Inicio marcado por el guía' })
+  guideStartedAt: Date | null;
+
+  @ApiProperty({
+    nullable: true,
+    description: 'Inicio confirmado por el turista',
+  })
+  touristStartedAt: Date | null;
+
   @ApiProperty()
   createdAt: Date;
 
@@ -198,6 +210,9 @@ export class BookingDto {
       confirmedAt: booking.confirmedAt,
       cancelledAt: booking.cancelledAt,
       cancellationReason: booking.cancellationReason,
+      reconfirmedAt: booking.reconfirmedAt,
+      guideStartedAt: booking.guideStartedAt,
+      touristStartedAt: booking.touristStartedAt,
       createdAt: booking.createdAt,
     };
   }

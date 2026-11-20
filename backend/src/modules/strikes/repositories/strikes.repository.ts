@@ -36,13 +36,15 @@ export class StrikesRepository {
     manager?: EntityManager,
   ): Promise<number> {
     const repository = manager?.getRepository(Strike) ?? this.strikes;
-    return repository
+    const row = await repository
       .createQueryBuilder('strike')
       .innerJoin('strike.booking', 'booking')
+      .select('COALESCE(SUM(strike.weight), 0)', 'total')
       .where('booking.guideProfileId = :guideProfileId', { guideProfileId })
       .andWhere('strike.status = :active', { active: StrikeStatus.ACTIVE })
       .andWhere('strike.expiresAt > :now', { now })
-      .getCount();
+      .getRawOne<{ total: string }>();
+    return Number(row?.total ?? 0);
   }
 
   findForGuide(guideProfileId: string): Promise<Strike[]> {
