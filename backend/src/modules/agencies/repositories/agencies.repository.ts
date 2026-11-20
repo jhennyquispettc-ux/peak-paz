@@ -38,6 +38,17 @@ export class AgenciesRepository {
     return repository.findOne({ where: { id } });
   }
 
+  async updateRating(
+    id: string,
+    ratingAverage: number,
+    reviewsCount: number,
+    manager: EntityManager,
+  ): Promise<void> {
+    await manager
+      .getRepository(Agency)
+      .update({ id }, { ratingAverage, reviewsCount });
+  }
+
   async hideUntil(
     id: string,
     until: Date,

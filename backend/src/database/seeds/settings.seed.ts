@@ -105,6 +105,12 @@ const DEFAULT_SETTINGS: Pick<Setting, 'key' | 'value' | 'description'>[] = [
       'Horas antes del inicio en que vence la respuesta a un cambio de fecha',
   },
   {
+    key: 'REVIEW_WINDOW_DAYS',
+    value: '30',
+    description:
+      'Días después del tour en que el turista puede dejar su reseña',
+  },
+  {
     key: 'SCHEDULE_BUFFER_MIN',
     value: '120',
     description:
