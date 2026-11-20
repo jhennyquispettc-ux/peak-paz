@@ -1,3 +1,5 @@
+import { AdminDisputesController } from './controllers/admin-disputes.controller.js';
+import { DisputeResolutionService } from './services/dispute-resolution.service.js';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppConfig } from '../../config/app.config.js';
@@ -41,6 +43,7 @@ import { SuspendedGuideBookingsService } from './services/suspended-guide-bookin
     BookingCancellationController,
     DepartureCancellationController,
     PayoutsController,
+    AdminDisputesController,
   ],
   providers: [
     {
@@ -63,6 +66,7 @@ import { SuspendedGuideBookingsService } from './services/suspended-guide-bookin
     BookingCompletionService,
     DepartureLifecycleService,
     SuspendedGuideBookingsService,
+    DisputeResolutionService,
   ],
 })
 export class PaymentsModule {}

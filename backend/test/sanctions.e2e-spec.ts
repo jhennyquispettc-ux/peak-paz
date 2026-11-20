@@ -9,6 +9,7 @@ import { AppModule } from './../src/app.module.js';
 import { configureApp } from './../src/app.setup.js';
 import { addDays } from './../src/common/time/la-paz-time.js';
 import { todayInLaPaz } from './../src/common/verification/verification-documents.js';
+import { BookingStatus } from './../src/modules/bookings/bookings.enums.js';
 import { Booking } from './../src/modules/bookings/entities/booking.entity.js';
 import { GuideProfile } from './../src/modules/guides/entities/guide-profile.entity.js';
 import { Payment } from './../src/modules/payments/entities/payment.entity.js';
@@ -409,7 +410,13 @@ describe('Guide cancellations, strikes and fines (e2e)', () => {
       { id: booking.finished },
       {
         tourDate: addDays(today, -2),
-        endsAt: new Date(Date.now() - 60 * 60_000),
+        endsAt: new Date(Date.now() - 25 * 60 * 60_000),
+        status: BookingStatus.IN_PROGRESS,
+        guideStartedAt: new Date(Date.now() - 30 * 60 * 60_000),
+        guideStartLatitude: -16.35,
+        guideStartLongitude: -67.92,
+        guideStartDistanceM: 0,
+        touristStartedAt: new Date(Date.now() - 30 * 60 * 60_000),
       },
     );
     await app.get(BookingCompletionService).completeFinished(new Date());
