@@ -1,3 +1,5 @@
+import { NotificationsService } from '../../notifications/services/notifications.service.js';
+import { NotificationType } from '../../notifications/notifications.enums.js';
 import { Injectable } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
 import { SettingsService } from '../../settings/services/settings.service.js';
@@ -30,6 +32,7 @@ export class StrikeIssuerService {
     private readonly strikes: StrikesRepository,
     private readonly penalties: StrikePenaltiesService,
     private readonly settings: SettingsService,
+    private readonly notices: NotificationsService,
   ) {}
 
   async issue(
@@ -53,6 +56,16 @@ export class StrikeIssuerService {
       manager,
     );
     const sanction = await this.penalties.apply(strike.provider, now, manager);
+    await this.notices.notify(
+      manager,
+      sanction.userId,
+      NotificationType.SANCTION_APPLIED,
+      {
+        reason: strike.reason,
+        activeStrikes: sanction.activeStrikes,
+        consequence: sanction.level,
+      },
+    );
     return { strikeId: created.id, sanction };
   }
 

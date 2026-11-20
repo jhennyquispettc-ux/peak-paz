@@ -1,3 +1,6 @@
+import { NotificationsService } from '../../notifications/services/notifications.service.js';
+import { NotificationType } from '../../notifications/notifications.enums.js';
+import { bookingNotice } from '../../notifications/booking-notice.js';
 import { Injectable, Logger } from '@nestjs/common';
 import { Interval } from '@nestjs/schedule';
 import { InjectDataSource } from '@nestjs/typeorm';
@@ -44,6 +47,7 @@ export class DepartureLifecycleService {
     private readonly bookings: BookingsRepository,
     private readonly cancellations: BookingCancellationService,
     private readonly reviews: CancellationReviewsService,
+    private readonly notices: NotificationsService,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
@@ -82,6 +86,16 @@ export class DepartureLifecycleService {
         if (confirmedSeats >= departure.minPeople) {
           departure.status = GroupDepartureStatus.CONFIRMED;
           await this.departures.save(departure, manager);
+          for (const booking of bookings) {
+            if (booking.status !== BookingStatus.CONFIRMED) continue;
+            booking.groupDeparture = departure;
+            await this.notices.notify(
+              manager,
+              booking.touristId,
+              NotificationType.DEPARTURE_CONFIRMED,
+              bookingNotice(booking),
+            );
+          }
           summary.confirmed++;
           return;
         }
@@ -215,6 +229,7 @@ export class DepartureLifecycleService {
     const bookings = await this.departures.findBookings(departure.id, manager);
     for (const booking of bookings) {
       if (!OPEN_BOOKING_STATUSES.has(booking.status)) continue;
+      booking.groupDeparture = departure;
       await this.cancellations.cancelForProvider(
         booking,
         bookingStatus,

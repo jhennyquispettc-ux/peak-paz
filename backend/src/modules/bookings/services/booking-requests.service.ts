@@ -1,3 +1,8 @@
+import { NotificationsService } from '../../notifications/services/notifications.service.js';
+import { NotificationType } from '../../notifications/notifications.enums.js';
+import { bookingNotice } from '../../notifications/booking-notice.js';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { PaginationMetaDto } from '../../../common/dto/pagination-meta.dto.js';
 import {
@@ -51,6 +56,8 @@ export class BookingRequestsService {
     private readonly guides: GuidesRepository,
     private readonly settings: SettingsService,
     private readonly tourIntervals: TourIntervalService,
+    private readonly notices: NotificationsService,
+    @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
   async create(touristId: string, dto: CreateBookingDto): Promise<BookingDto> {
@@ -90,7 +97,17 @@ export class BookingRequestsService {
       status: BookingStatus.REQUESTED,
       respondBy: addMinutes(new Date(), responseMinutes),
     });
-    const saved = await this.bookings.save(booking);
+    const guide = await this.guides.findPlainById(dto.guideProfileId);
+    const saved = await this.dataSource.transaction(async (manager) => {
+      const created = await this.bookings.save(booking, manager);
+      await this.notices.notify(
+        manager,
+        guide?.userId,
+        NotificationType.BOOKING_REQUESTED,
+        bookingNotice(created, { route: route.nameEs }),
+      );
+      return created;
+    });
     return this.getForTourist(touristId, saved.id);
   }
 

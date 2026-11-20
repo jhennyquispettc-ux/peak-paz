@@ -34,6 +34,13 @@ export class AppConfig {
       apiSecret: string;
     };
   };
+  readonly mail: {
+    transport: 'smtp' | 'file';
+    smtpUrl: string;
+    from: string;
+    directory: string;
+    publicWebUrl: string;
+  };
   readonly payments: {
     driver: 'fake' | 'paypal';
     returnUrl: string;
@@ -76,6 +83,13 @@ export class AppConfig {
         apiKey: config.get<string>('CLOUDINARY_API_KEY') ?? '',
         apiSecret: config.get<string>('CLOUDINARY_API_SECRET') ?? '',
       },
+    };
+    this.mail = {
+      transport: config.getOrThrow<'smtp' | 'file'>('MAIL_TRANSPORT'),
+      smtpUrl: config.getOrThrow<string>('SMTP_URL'),
+      from: config.getOrThrow<string>('MAIL_FROM'),
+      directory: config.getOrThrow<string>('MAIL_DIRECTORY'),
+      publicWebUrl: config.getOrThrow<string>('PUBLIC_WEB_URL'),
     };
     this.payments = {
       driver: config.getOrThrow<'fake' | 'paypal'>('PAYMENT_DRIVER'),

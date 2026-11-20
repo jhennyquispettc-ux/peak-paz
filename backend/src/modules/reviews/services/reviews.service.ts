@@ -1,3 +1,9 @@
+import { NotificationsService } from '../../notifications/services/notifications.service.js';
+import { NotificationType } from '../../notifications/notifications.enums.js';
+import {
+  bookingNotice,
+  providerUserIdOf,
+} from '../../notifications/booking-notice.js';
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, EntityManager } from 'typeorm';
@@ -42,6 +48,7 @@ export class ReviewsService {
     private readonly guides: GuidesRepository,
     private readonly agencies: AgenciesRepository,
     private readonly settings: SettingsService,
+    private readonly notices: NotificationsService,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
@@ -77,6 +84,12 @@ export class ReviewsService {
         manager,
       );
       await this.refreshRating(this.providerOf(booking), manager);
+      await this.notices.notify(
+        manager,
+        providerUserIdOf(booking),
+        NotificationType.REVIEW_RECEIVED,
+        bookingNotice(booking, { rating: dto.rating }),
+      );
     });
     return this.getForTourist(touristId, bookingId);
   }

@@ -193,6 +193,30 @@ export class BookingsRepository {
       .then((rows) => rows.map((row) => row.id));
   }
 
+  findMissedReconfirmationIds(
+    now: Date,
+    deadlineHours: number,
+    limit: number,
+  ): Promise<string[]> {
+    return this.repository
+      .createQueryBuilder('booking')
+      .select('booking.id', 'id')
+      .where('booking.status = :confirmed', {
+        confirmed: BookingStatus.CONFIRMED,
+      })
+      .andWhere('booking.guide_profile_id IS NOT NULL')
+      .andWhere('booking.reconfirmed_at IS NULL')
+      .andWhere('booking.reconfirmation_alerted_at IS NULL')
+      .andWhere(
+        `${bookingStartsSql('booking')} - make_interval(hours => :deadlineHours) <= :now`,
+        { deadlineHours, now },
+      )
+      .andWhere(`${bookingStartsSql('booking')} > :now`, { now })
+      .limit(limit)
+      .getRawMany<{ id: string }>()
+      .then((rows) => rows.map((row) => row.id));
+  }
+
   async expireOverdue(now: Date): Promise<number> {
     const result = await this.repository
       .createQueryBuilder()

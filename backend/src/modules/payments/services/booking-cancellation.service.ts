@@ -1,3 +1,9 @@
+import { NotificationsService } from '../../notifications/services/notifications.service.js';
+import { NotificationType } from '../../notifications/notifications.enums.js';
+import {
+  bookingNotice,
+  providerUserIdOf,
+} from '../../notifications/booking-notice.js';
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, EntityManager } from 'typeorm';
@@ -51,6 +57,7 @@ export class BookingCancellationService {
     private readonly provider: PaymentProvider,
     private readonly settings: SettingsService,
     private readonly reviews: CancellationReviewsService,
+    private readonly notices: NotificationsService,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
@@ -79,6 +86,7 @@ export class BookingCancellationService {
           reason,
           now,
           manager,
+          { userId: providerUserIdOf(booking), refunded: false },
         );
         return null;
       }
@@ -105,6 +113,7 @@ export class BookingCancellationService {
           reason,
           now,
           manager,
+          { userId: providerUserIdOf(booking), refunded: true },
         );
         return refund;
       }
@@ -115,6 +124,7 @@ export class BookingCancellationService {
         reason,
         now,
         manager,
+        { userId: providerUserIdOf(booking), refunded: false },
       );
       await this.payouts.createForBooking(booking, manager);
       return null;
@@ -155,7 +165,10 @@ export class BookingCancellationService {
           manager,
         );
       }
-      await this.close(booking, status, reason, now, manager);
+      await this.close(booking, status, reason, now, manager, {
+        userId: booking.touristId,
+        refunded: refund !== null,
+      });
       const review = await this.reviews.openForBooking(
         booking,
         stored,
@@ -188,7 +201,10 @@ export class BookingCancellationService {
         booking.status === BookingStatus.IN_PROGRESS) &&
       booking.source === BookingSource.WEB;
     if (refunded) await this.refundCapture(booking, refundReason, manager);
-    await this.close(booking, status, reason, now, manager);
+    await this.close(booking, status, reason, now, manager, {
+      userId: booking.touristId,
+      refunded,
+    });
     return refunded;
   }
 
@@ -281,7 +297,19 @@ export class BookingCancellationService {
     reason: string | undefined,
     now: Date,
     manager: EntityManager,
+    notice?: { userId: string | null; refunded: boolean },
   ): Promise<void> {
+    if (notice) {
+      await this.notices.notify(
+        manager,
+        notice.userId,
+        NotificationType.BOOKING_CANCELLED,
+        bookingNotice(booking, {
+          reason: reason ?? '',
+          refund: notice.refunded ? 'FULL_REFUND' : 'NO_REFUND',
+        }),
+      );
+    }
     booking.status = status;
     booking.cancelledAt = now;
     booking.cancellationReason = reason ?? null;

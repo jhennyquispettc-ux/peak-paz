@@ -1,3 +1,9 @@
+import { NotificationsService } from '../../notifications/services/notifications.service.js';
+import { NotificationType } from '../../notifications/notifications.enums.js';
+import {
+  bookingNotice,
+  providerUserIdOf,
+} from '../../notifications/booking-notice.js';
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -33,6 +39,7 @@ export class BookingPaymentsService {
     private readonly provider: PaymentProvider,
     private readonly settings: SettingsService,
     private readonly config: AppConfig,
+    private readonly notices: NotificationsService,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
@@ -123,6 +130,19 @@ export class BookingPaymentsService {
       booking.status = BookingStatus.CONFIRMED;
       booking.confirmedAt = now;
       await this.bookings.save(booking, manager);
+      const detail = await this.bookings.findDetailById(booking.id, manager);
+      await this.notices.notify(
+        manager,
+        detail!.touristId,
+        NotificationType.BOOKING_CONFIRMED,
+        bookingNotice(detail!),
+      );
+      await this.notices.notify(
+        manager,
+        providerUserIdOf(detail!),
+        NotificationType.NEW_PAID_BOOKING,
+        bookingNotice(detail!),
+      );
       return payment;
     });
     return PaymentDto.fromEntity(captured);

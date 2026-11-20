@@ -8,6 +8,7 @@ import { StorageModule } from './storage/storage.module.js';
 import { AgenciesModule } from './modules/agencies/agencies.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { PaymentsModule } from './modules/payments/payments.module.js';
+import { NotificationsModule } from './modules/notifications/notifications.module.js';
 import { ReviewsModule } from './modules/reviews/reviews.module.js';
 import { StrikesModule } from './modules/strikes/strikes.module.js';
 import { BookingsModule } from './modules/bookings/bookings.module.js';
@@ -36,6 +37,7 @@ import { UsersModule } from './modules/users/users.module.js';
     PaymentsModule,
     StrikesModule,
     ReviewsModule,
+    NotificationsModule,
   ],
 })
 export class AppModule {}

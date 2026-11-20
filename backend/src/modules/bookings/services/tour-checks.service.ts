@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { NotificationsService } from '../../notifications/services/notifications.service.js';
+import { NotificationType } from '../../notifications/notifications.enums.js';
+import { bookingNotice } from '../../notifications/booking-notice.js';
+import { Injectable, Logger } from '@nestjs/common';
+import { Interval } from '@nestjs/schedule';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, EntityManager } from 'typeorm';
 import { GuideNotFoundException } from '../../guides/exceptions/guides.exceptions.js';
@@ -35,15 +39,69 @@ import {
 
 const STARTABLE = new Set([BookingStatus.CONFIRMED, BookingStatus.IN_PROGRESS]);
 
+const TEN_MINUTES = 10 * 60_000;
+const BATCH_SIZE = 100;
+
 @Injectable()
 export class TourChecksService {
+  private readonly logger = new Logger(TourChecksService.name);
+
   constructor(
     private readonly bookings: BookingsRepository,
     private readonly disputes: DisputesRepository,
     private readonly guides: GuidesRepository,
     private readonly settings: SettingsService,
+    private readonly notices: NotificationsService,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
+
+  @Interval('reconfirmation-alerts', TEN_MINUTES)
+  async runReconfirmationAlerts(): Promise<void> {
+    try {
+      await this.alertMissedReconfirmations(new Date());
+    } catch (error) {
+      this.logger.error(
+        'Reconfirmation alerts failed',
+        error instanceof Error ? error.stack : undefined,
+      );
+    }
+  }
+
+  async alertMissedReconfirmations(now: Date): Promise<number> {
+    const deadlineHours = await this.settings.getNumber(
+      SettingKey.RECONFIRM_DEADLINE_HOURS,
+    );
+    const ids = await this.bookings.findMissedReconfirmationIds(
+      now,
+      deadlineHours,
+      BATCH_SIZE,
+    );
+    let alerted = 0;
+    for (const id of ids) {
+      await this.dataSource.transaction(async (manager) => {
+        await this.bookings.findForUpdate(id, manager);
+        const booking = await this.bookings.findDetailById(id, manager);
+        if (
+          !booking ||
+          booking.status !== BookingStatus.CONFIRMED ||
+          booking.reconfirmedAt ||
+          booking.reconfirmationAlertedAt
+        ) {
+          return;
+        }
+        booking.reconfirmationAlertedAt = now;
+        await this.bookings.save(booking, manager);
+        await this.notices.notify(
+          manager,
+          booking.touristId,
+          NotificationType.RECONFIRMATION_MISSED,
+          bookingNotice(booking),
+        );
+        alerted++;
+      });
+    }
+    return alerted;
+  }
 
   async reconfirm(userId: string, bookingId: string): Promise<BookingDto> {
     const guideProfileId = await this.profileIdOf(userId);
@@ -186,6 +244,11 @@ export class TourChecksService {
         },
         manager,
       );
+      await this.notices.notifyAdmins(manager, NotificationType.CASE_OPENED, {
+        kind: 'NO_SHOW_CASE',
+        code: booking.code,
+        section: 'disputas',
+      });
       return dispute.id;
     });
     const dispute = await this.disputes.findById(disputeId);
