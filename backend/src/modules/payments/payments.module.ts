@@ -1,3 +1,5 @@
+import { ComplaintsController } from './controllers/complaints.controller.js';
+import { ComplaintsService } from './services/complaints.service.js';
 import { RescheduleRejectionController } from './controllers/reschedule-rejection.controller.js';
 import { RescheduleRejectionService } from './services/reschedule-rejection.service.js';
 import { AdminDisputesController } from './controllers/admin-disputes.controller.js';
@@ -47,6 +49,7 @@ import { SuspendedGuideBookingsService } from './services/suspended-guide-bookin
     PayoutsController,
     AdminDisputesController,
     RescheduleRejectionController,
+    ComplaintsController,
   ],
   providers: [
     {
@@ -71,6 +74,7 @@ import { SuspendedGuideBookingsService } from './services/suspended-guide-bookin
     SuspendedGuideBookingsService,
     DisputeResolutionService,
     RescheduleRejectionService,
+    ComplaintsService,
   ],
 })
 export class PaymentsModule {}

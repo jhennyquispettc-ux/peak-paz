@@ -6,14 +6,18 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  Unique,
   type Relation,
 } from 'typeorm';
+import { numericTransformer } from '../../../common/transformers/numeric.transformer.js';
 import { Booking } from '../../bookings/entities/booking.entity.js';
 import { User } from '../../users/entities/user.entity.js';
 import { ComplaintStatus } from '../strikes.enums.js';
 
 @Entity('complaints')
 @Index('IDX_complaints_booking', ['bookingId'])
+@Index('IDX_complaints_status', ['status', 'createdAt'])
+@Unique('UQ_complaints_booking', ['bookingId'])
 export class Complaint {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -45,6 +49,29 @@ export class Complaint {
 
   @Column({ type: 'text', nullable: true })
   resolution: string | null;
+
+  @Column({ name: 'refund_percent', type: 'smallint', nullable: true })
+  refundPercent: number | null;
+
+  @Column({
+    name: 'deduction_amount',
+    type: 'numeric',
+    precision: 10,
+    scale: 2,
+    default: 0,
+    transformer: numericTransformer,
+  })
+  deductionAmount: number;
+
+  @Column({
+    name: 'deduction_settled',
+    type: 'numeric',
+    precision: 10,
+    scale: 2,
+    default: 0,
+    transformer: numericTransformer,
+  })
+  deductionSettled: number;
 
   @Column({ name: 'resolved_at', type: 'timestamptz', nullable: true })
   resolvedAt: Date | null;
