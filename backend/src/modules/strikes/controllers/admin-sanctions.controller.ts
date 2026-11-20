@@ -1,3 +1,4 @@
+import { ApiFileResponse } from '../../../common/swagger/api-file-response.decorator.js';
 import {
   Body,
   Controller,
@@ -18,7 +19,6 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
-  ApiProduces,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -76,7 +76,7 @@ export class AdminSanctionsController {
 
   @Get('cancellation-reviews/:id/evidence')
   @ApiOperation({ summary: 'Ver el justificante que adjuntó el guía' })
-  @ApiProduces('application/pdf', 'image/jpeg', 'image/png')
+  @ApiFileResponse()
   @ApiNotFoundResponse({ type: ErrorResponseDto })
   async downloadEvidence(
     @Param('id', ParseUUIDPipe) id: string,

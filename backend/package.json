@@ -1,6 +1,6 @@
 {
   "name": "peak-paz-backend",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "API REST de Peak Paz",
   "author": "",
   "private": true,
@@ -28,6 +28,7 @@
     "seed": "tsx src/database/seeds/run-seeds.ts",
     "db:up": "docker compose -f ../docker-compose.yml up -d",
     "db:down": "docker compose -f ../docker-compose.yml down",
+    "openapi:export": "nest build && node dist/openapi-export.js",
     "seed:demo": "tsx src/database/seeds/run-demo-seed.ts"
   },
   "dependencies": {

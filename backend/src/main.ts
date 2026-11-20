@@ -1,9 +1,10 @@
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module.js';
 import { configureApp } from './app.setup.js';
 import { AppConfig } from './config/app.config.js';
+import { buildOpenApiDocument } from './openapi.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,15 +14,7 @@ async function bootstrap() {
 
   const docsPath = `${config.apiPrefix}/docs`;
   if (!config.isProduction) {
-    const document = SwaggerModule.createDocument(
-      app,
-      new DocumentBuilder()
-        .setTitle('Peak Paz API')
-        .setDescription('Rutas, reservas de guías y salidas grupales en La Paz')
-        .setVersion('0.7.0')
-        .addBearerAuth()
-        .build(),
-    );
+    const document = buildOpenApiDocument(app);
     SwaggerModule.setup(docsPath, app, document);
   }
 
