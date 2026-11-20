@@ -1,3 +1,9 @@
+import { NotificationsService } from '../../notifications/services/notifications.service.js';
+import { NotificationType } from '../../notifications/notifications.enums.js';
+import {
+  bookingNotice,
+  providerUserIdOf,
+} from '../../notifications/booking-notice.js';
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -51,6 +57,7 @@ export class ComplaintsService {
     private readonly payouts: PayoutsService,
     private readonly issuer: StrikeIssuerService,
     private readonly settings: SettingsService,
+    private readonly notices: NotificationsService,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
@@ -80,6 +87,17 @@ export class ComplaintsService {
       await this.complaints.create(
         { bookingId: booking.id, description },
         manager,
+      );
+      await this.notices.notifyAdmins(manager, NotificationType.CASE_OPENED, {
+        kind: 'COMPLAINT_CASE',
+        code: booking.code,
+        section: 'reclamos',
+      });
+      await this.notices.notify(
+        manager,
+        providerUserIdOf(booking),
+        NotificationType.COMPLAINT_RECEIVED,
+        bookingNotice(booking),
       );
     });
     return this.getForTourist(touristId, bookingId);
@@ -189,6 +207,19 @@ export class ComplaintsService {
       complaint.resolvedAt = now;
       complaint.deductionSettled = round2(complaint.deductionSettled);
       await this.complaints.save(complaint, manager);
+      const notice = bookingNotice(booking, {
+        decision: dto.decision,
+        refundPercent: complaint.refundPercent ?? 0,
+        resolution: dto.resolution,
+      });
+      for (const userId of [booking.touristId, providerUserIdOf(booking)]) {
+        await this.notices.notify(
+          manager,
+          userId,
+          NotificationType.COMPLAINT_RESOLVED,
+          notice,
+        );
+      }
       return { refund, strikeId, activeStrikes, sanction };
     });
 

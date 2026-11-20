@@ -18,6 +18,7 @@ import {
 } from '../sanctions.js';
 
 export interface SanctionOutcome {
+  userId: string;
   activeStrikes: number;
   level: SanctionLevel;
   hiddenUntil: Date | null;
@@ -71,6 +72,7 @@ export class StrikePenaltiesService {
     }
 
     return {
+      userId: account.userId,
       activeStrikes,
       level,
       hiddenUntil: hidden && hidden > now ? hidden : null,

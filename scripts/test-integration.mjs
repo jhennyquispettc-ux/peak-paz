@@ -68,6 +68,7 @@ try {
     PAYMENT_DRIVER: 'fake',
     VERIFICATION_SERVICE_URL: `http://127.0.0.1:${freePort}`,
     MAILPIT_TEST_URL: `http://127.0.0.1:${port('mailpit', 8025)}`,
+    SMTP_URL: `smtp://127.0.0.1:${port('mailpit', 1025)}`,
   };
   run('npm', ['run', 'build', '--prefix', 'verification-service']);
   service = spawn('node', ['dist/main.js'], {

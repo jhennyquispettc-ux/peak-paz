@@ -1,3 +1,5 @@
+import { NotificationsService } from '../../notifications/services/notifications.service.js';
+import { NotificationType } from '../../notifications/notifications.enums.js';
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, EntityManager } from 'typeorm';
@@ -55,6 +57,7 @@ export class CancellationReviewsService {
     private readonly issuer: StrikeIssuerService,
     private readonly settings: SettingsService,
     private readonly storage: StorageService,
+    private readonly notices: NotificationsService,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
@@ -71,11 +74,16 @@ export class CancellationReviewsService {
     if (stored) await this.storage.remove(stored);
   }
 
-  openForBooking(
-    booking: { id: string; totalAmount: number },
+  async openForBooking(
+    booking: { id: string; code: string; totalAmount: number },
     evidence: StoredFile | null,
     manager: EntityManager,
   ): Promise<CancellationReview> {
+    await this.notices.notifyAdmins(manager, NotificationType.CASE_OPENED, {
+      kind: 'CANCELLATION_CASE',
+      code: booking.code,
+      section: 'cancelaciones',
+    });
     return this.reviews.create(
       {
         bookingId: booking.id,
@@ -86,11 +94,16 @@ export class CancellationReviewsService {
     );
   }
 
-  openForDeparture(
+  async openForDeparture(
     data: DepartureReviewData,
     evidence: StoredFile | null,
     manager: EntityManager,
   ): Promise<CancellationReview> {
+    await this.notices.notifyAdmins(manager, NotificationType.CASE_OPENED, {
+      kind: 'CANCELLATION_CASE',
+      code: data.groupDepartureId.slice(0, 8),
+      section: 'cancelaciones',
+    });
     return this.reviews.create(
       {
         groupDepartureId: data.groupDepartureId,

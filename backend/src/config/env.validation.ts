@@ -14,6 +14,15 @@ export const envValidation = Joi.object({
     .min(500)
     .max(30000)
     .default(5000),
+  MAIL_TRANSPORT: Joi.string().valid('smtp', 'file').default('smtp'),
+  SMTP_URL: Joi.string()
+    .uri({ scheme: ['smtp', 'smtps'] })
+    .default('smtp://localhost:1025'),
+  MAIL_FROM: Joi.string().default('Peak Paz <avisos@peakpaz.local>'),
+  MAIL_DIRECTORY: Joi.string().default('var/mail'),
+  PUBLIC_WEB_URL: Joi.string()
+    .uri({ scheme: ['http', 'https'] })
+    .default('http://localhost:5173'),
   PORT: Joi.number().port().default(3010),
   API_PREFIX: Joi.string().default('api'),
 
