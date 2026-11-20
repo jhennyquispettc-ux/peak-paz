@@ -1,3 +1,4 @@
+import { ApiFileResponse } from '../../../common/swagger/api-file-response.decorator.js';
 import { AllowUnverifiedEmail } from '../../auth/decorators/allow-unverified-email.decorator.js';
 import {
   Body,
@@ -27,7 +28,6 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
-  ApiProduces,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -99,7 +99,7 @@ export class GuideProfileController {
 
   @Get('documents/:documentId/file')
   @ApiOperation({ summary: 'Descargar un documento propio' })
-  @ApiProduces('application/pdf', 'image/jpeg', 'image/png')
+  @ApiFileResponse()
   @ApiNotFoundResponse({ type: ErrorResponseDto })
   async downloadDocument(
     @CurrentUser() user: AuthenticatedUser,

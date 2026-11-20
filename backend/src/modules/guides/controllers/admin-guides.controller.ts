@@ -1,3 +1,4 @@
+import { ApiFileResponse } from '../../../common/swagger/api-file-response.decorator.js';
 import {
   Body,
   Controller,
@@ -15,7 +16,6 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
-  ApiProduces,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -62,7 +62,7 @@ export class AdminGuidesController {
 
   @Get('guides/:id/documents/:documentId/file')
   @ApiOperation({ summary: 'Ver un documento del guía' })
-  @ApiProduces('application/pdf', 'image/jpeg', 'image/png')
+  @ApiFileResponse()
   @ApiNotFoundResponse({ type: ErrorResponseDto })
   async downloadDocument(
     @Param('id', ParseUUIDPipe) id: string,
