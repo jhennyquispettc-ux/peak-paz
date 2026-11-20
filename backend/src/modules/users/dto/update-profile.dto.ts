@@ -14,12 +14,14 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   @Length(1, 80)
+  @Matches(/\S/, { message: 'firstName must not be blank' })
   firstName?: string;
 
   @ApiPropertyOptional({ example: 'Müller' })
   @IsOptional()
   @IsString()
   @Length(1, 80)
+  @Matches(/\S/, { message: 'lastName must not be blank' })
   lastName?: string;
 
   @ApiPropertyOptional({ example: '+41 79 123 45 67' })

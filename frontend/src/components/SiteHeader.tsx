@@ -8,10 +8,20 @@ export default function SiteHeader() {
   return (
     <header className="site-header">
       <Link to="/rutas" aria-label="Peak Paz, inicio" className="site-logo">
-        <img src="/brand/peakpaz-logo-negativo.svg" alt="Peak Paz" height="30" />
+        <img
+          src="/brand/peakpaz-logo-negativo.svg"
+          alt="Peak Paz"
+          height="30"
+        />
       </Link>
       <nav className="site-nav" aria-label="Principal">
         <NavLink to="/rutas">Explorar rutas</NavLink>
+        {user && ['TOURIST', 'GUIDE'].includes(user.role) && (
+          <NavLink to="/mi-verificacion">Mi verificación</NavLink>
+        )}
+        {user?.role === 'ADMIN' && (
+          <NavLink to="/admin/verificaciones">Revisar guías</NavLink>
+        )}
       </nav>
       <div className="site-user">
         {user ? (

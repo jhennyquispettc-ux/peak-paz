@@ -103,6 +103,10 @@ export default function RouteDetailPage() {
       navigate('/ingresar', { state: { from: `/rutas/${route.slug}` } });
       return;
     }
+    if (!user.emailVerifiedAt && ['TOURIST', 'GUIDE'].includes(user.role)) {
+      navigate('/mi-verificacion');
+      return;
+    }
     document.getElementById('guias')?.scrollIntoView({ behavior: 'smooth' });
   };
 
@@ -124,9 +128,15 @@ export default function RouteDetailPage() {
             </div>
           </div>
           <div className="detail-cta card">
-            <p className="caption muted">Tour particular hasta {route.privateMaxPeople} personas</p>
+            <p className="caption muted">
+              Tour particular hasta {route.privateMaxPeople} personas
+            </p>
             <p className="h2">{formatPrice(route.privatePrice)}</p>
-            <button type="button" className="btn btn-primary wide" onClick={reserve}>
+            <button
+              type="button"
+              className="btn btn-primary wide"
+              onClick={reserve}
+            >
               Reservar guía
             </button>
           </div>
@@ -193,7 +203,9 @@ export default function RouteDetailPage() {
                 <ol className="timeline">
                   {itinerary.stops.map((stop) => (
                     <li key={stop.stageOrder}>
-                      <span className="timeline-time body-strong">{stop.arrivalTime}</span>
+                      <span className="timeline-time body-strong">
+                        {stop.arrivalTime}
+                      </span>
                       <span className="timeline-dot" aria-hidden="true" />
                       <span>
                         <span className="body-strong">{stop.nameEs}</span>
@@ -209,7 +221,9 @@ export default function RouteDetailPage() {
                   ))}
                 </ol>
               ) : (
-                <p className="muted">El itinerario de esta ruta todavía no está cargado.</p>
+                <p className="muted">
+                  El itinerario de esta ruta todavía no está cargado.
+                </p>
               )}
             </section>
           </div>
@@ -227,9 +241,12 @@ export default function RouteDetailPage() {
                   {weather.days.map((day) => (
                     <li key={day.date}>
                       <span className="small">{formatDate(day.date)}</span>
-                      <span className="small muted">{weatherLabel(day.weatherCode)}</span>
+                      <span className="small muted">
+                        {weatherLabel(day.weatherCode)}
+                      </span>
                       <span className="small body-strong">
-                        {Math.round(day.temperatureMinC)}° / {Math.round(day.temperatureMaxC)}°
+                        {Math.round(day.temperatureMinC)}° /{' '}
+                        {Math.round(day.temperatureMaxC)}°
                       </span>
                     </li>
                   ))}
@@ -274,7 +291,9 @@ export default function RouteDetailPage() {
                   {route.gearRecommendations.map((gear) => (
                     <li key={gear.id}>
                       {gear.descriptionEs}
-                      {gear.isRequired && <span className="badge badge-warning">Obligatorio</span>}
+                      {gear.isRequired && (
+                        <span className="badge badge-warning">Obligatorio</span>
+                      )}
                     </li>
                   ))}
                 </ul>

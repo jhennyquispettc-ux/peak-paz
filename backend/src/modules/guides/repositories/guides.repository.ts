@@ -1,3 +1,4 @@
+import { todayInLaPaz } from '../../../common/verification/verification-documents.js';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
@@ -87,6 +88,15 @@ export class GuidesRepository {
       .andWhere('guide.verificationStatus = :approved', {
         approved: VerificationStatus.APPROVED,
       })
+      .andWhere('user.email_verified_at IS NOT NULL')
+      .andWhere(
+        `NOT EXISTS (
+        SELECT 1 FROM unnest(ARRAY['NATIONAL_ID','GUIDE_CREDENTIAL','FIRST_AID']) AS required(type)
+        WHERE NOT EXISTS (SELECT 1 FROM guide_documents document
+          WHERE document.guide_profile_id = guide.id AND document.type::text = required.type
+          AND (document.expires_at IS NULL OR document.expires_at >= :verificationToday)))`,
+        { verificationToday: todayInLaPaz() },
+      )
       .andWhere('user.status = :active', { active: UserStatus.ACTIVE })
       .getOne();
   }
@@ -105,6 +115,15 @@ export class GuidesRepository {
         'guideRoute.routeId = :routeId AND guideRoute.status = :routeApproved',
       )
       .where('guide.verificationStatus = :guideApproved')
+      .andWhere('user.email_verified_at IS NOT NULL')
+      .andWhere(
+        `NOT EXISTS (
+        SELECT 1 FROM unnest(ARRAY['NATIONAL_ID','GUIDE_CREDENTIAL','FIRST_AID']) AS required(type)
+        WHERE NOT EXISTS (SELECT 1 FROM guide_documents document
+          WHERE document.guide_profile_id = guide.id AND document.type::text = required.type
+          AND (document.expires_at IS NULL OR document.expires_at >= :verificationToday)))`,
+        { verificationToday: todayInLaPaz() },
+      )
       .andWhere('user.status = :active')
       .setParameters({
         routeId: filters.routeId,

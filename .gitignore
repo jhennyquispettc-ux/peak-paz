@@ -5,3 +5,7 @@ dist/
 coverage/
 *.tsbuildinfo
 uploads/
+
+var/
+.env.*
+!.env.example

@@ -10,6 +10,14 @@ export default function LoginPage({ mode }: { mode: Mode }) {
   const { login, register } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [accountRole, setAccountRole] = useState<'TOURIST' | 'GUIDE'>(
+    'TOURIST',
+  );
+  const [guide, setGuide] = useState({
+    nationalId: '',
+    languages: 'es',
+    yearsExperience: '0',
+  });
   const [replay, setReplay] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
@@ -20,8 +28,7 @@ export default function LoginPage({ mode }: { mode: Mode }) {
     password: '',
   });
 
-  const target =
-    (location.state as { from?: string } | null)?.from ?? '/rutas';
+  const target = (location.state as { from?: string } | null)?.from ?? '/rutas';
   const isLogin = mode === 'login';
 
   const update = (field: keyof typeof form) => (value: string) =>
@@ -32,9 +39,31 @@ export default function LoginPage({ mode }: { mode: Mode }) {
     setError(null);
     setSending(true);
     try {
-      if (isLogin) await login(form.email, form.password);
-      else await register(form);
-      navigate(target, { replace: true });
+      const sessionUser = isLogin
+        ? await login(form.email, form.password)
+        : await register({
+            ...form,
+            role: accountRole,
+            ...(accountRole === 'GUIDE'
+              ? {
+                  nationalId: guide.nationalId.trim().toUpperCase(),
+                  languages: guide.languages
+                    .split(',')
+                    .map((value) => value.trim().toLowerCase())
+                    .filter(Boolean),
+                  yearsExperience: Number(guide.yearsExperience),
+                }
+              : {}),
+          });
+      navigate(
+        ['TOURIST', 'GUIDE'].includes(sessionUser.role) &&
+          (!isLogin || !sessionUser.emailVerifiedAt)
+          ? '/mi-verificacion'
+          : sessionUser.role === 'ADMIN' && target === '/rutas'
+            ? '/admin/verificaciones'
+            : target,
+        { replace: true },
+      );
     } catch (caught) {
       setError(
         caught instanceof ApiError
@@ -60,8 +89,11 @@ export default function LoginPage({ mode }: { mode: Mode }) {
         </button>
       </section>
 
-      <section className="login-form" aria-label={isLogin ? 'Iniciar sesión' : 'Crear cuenta'}>
-        <form className="login-panel" onSubmit={submit} noValidate>
+      <section
+        className="login-form"
+        aria-label={isLogin ? 'Iniciar sesión' : 'Crear cuenta'}
+      >
+        <form className="login-panel" onSubmit={submit}>
           <p className="eyebrow">
             {isLogin ? 'BIENVENIDO DE VUELTA' : 'TU PRIMERA CUMBRE'}
           </p>
@@ -70,6 +102,26 @@ export default function LoginPage({ mode }: { mode: Mode }) {
             Ingresa para reservar tu guía o unirte a una salida grupal
           </p>
 
+          {!isLogin && (
+            <div className="chips" role="group" aria-label="Tipo de cuenta">
+              <button
+                type="button"
+                className="chip"
+                aria-pressed={accountRole === 'TOURIST'}
+                onClick={() => setAccountRole('TOURIST')}
+              >
+                Soy turista
+              </button>
+              <button
+                type="button"
+                className="chip"
+                aria-pressed={accountRole === 'GUIDE'}
+                onClick={() => setAccountRole('GUIDE')}
+              >
+                Soy guía
+              </button>
+            </div>
+          )}
           {!isLogin && (
             <div className="field-row">
               <div className="field">
@@ -93,6 +145,62 @@ export default function LoginPage({ mode }: { mode: Mode }) {
                 />
               </div>
             </div>
+          )}
+
+          {!isLogin && accountRole === 'GUIDE' && (
+            <>
+              <div className="field">
+                <label htmlFor="nationalId">Cédula de identidad</label>
+                <input
+                  id="nationalId"
+                  value={guide.nationalId}
+                  onChange={(event) =>
+                    setGuide({ ...guide, nationalId: event.target.value })
+                  }
+                  placeholder="6123456-1B"
+                  required
+                  maxLength={20}
+                />
+              </div>
+              <div className="field-row">
+                <div className="field">
+                  <label htmlFor="languages">
+                    Idiomas, separados por comas
+                  </label>
+                  <input
+                    id="languages"
+                    value={guide.languages}
+                    onChange={(event) =>
+                      setGuide({ ...guide, languages: event.target.value })
+                    }
+                    placeholder="es, en, ay"
+                    required
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor="yearsExperience">Años de experiencia</label>
+                  <input
+                    id="yearsExperience"
+                    type="number"
+                    min="0"
+                    max="60"
+                    step="1"
+                    value={guide.yearsExperience}
+                    onChange={(event) =>
+                      setGuide({
+                        ...guide,
+                        yearsExperience: event.target.value,
+                      })
+                    }
+                    required
+                  />
+                </div>
+              </div>
+              <p className="field-hint">
+                Después del registro confirmarás tu correo y cargarás tus tres
+                documentos de guía.
+              </p>
+            </>
           )}
 
           <div className="field">
@@ -134,14 +242,19 @@ export default function LoginPage({ mode }: { mode: Mode }) {
             </p>
           )}
 
-          <button className="btn btn-primary wide" type="submit" disabled={sending}>
+          <button
+            className="btn btn-primary wide"
+            type="submit"
+            disabled={sending}
+          >
             {sending ? 'Un momento...' : isLogin ? 'Ingresar' : 'Crear cuenta'}
           </button>
 
           <p className="login-foot">
             {isLogin ? (
               <>
-                ¿Primera vez en Peak Paz? <Link to="/registro">Crear cuenta</Link>
+                ¿Primera vez en Peak Paz?{' '}
+                <Link to="/registro">Crear cuenta</Link>
               </>
             ) : (
               <>

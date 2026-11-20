@@ -1,3 +1,4 @@
+import { confirmTestEmail } from './helpers/confirm-email.js';
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
@@ -76,6 +77,7 @@ describe('Routes (e2e)', () => {
         lastName: 'Müller',
       })
       .expect(201);
+    await confirmTestEmail(server, register.body);
     touristToken = register.body.accessToken;
   });
 

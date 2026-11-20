@@ -9,6 +9,9 @@ export class UserDto {
   @ApiProperty({ example: 'ana.muller@example.com' })
   email: string;
 
+  @ApiProperty({ nullable: true })
+  emailVerifiedAt: Date | null;
+
   @ApiProperty({ example: 'Ana' })
   firstName: string;
 
@@ -37,6 +40,7 @@ export class UserDto {
     return {
       id: user.id,
       email: user.email,
+      emailVerifiedAt: user.emailVerifiedAt ?? null,
       firstName: user.firstName,
       lastName: user.lastName,
       phone: user.phone,

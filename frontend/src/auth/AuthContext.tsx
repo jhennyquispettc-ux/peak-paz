@@ -11,6 +11,10 @@ import { api, readToken, writeToken } from '../api/client';
 import type { AuthResponse, User } from '../api/types';
 
 interface RegisterData {
+  role?: 'TOURIST' | 'GUIDE';
+  nationalId?: string;
+  languages?: string[];
+  yearsExperience?: number;
   firstName: string;
   lastName: string;
   email: string;
@@ -20,8 +24,9 @@ interface RegisterData {
 interface AuthState {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (data: RegisterData) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
+  register: (data: RegisterData) => Promise<User>;
+  refresh: () => Promise<User>;
   logout: () => void;
 }
 
@@ -42,11 +47,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const startSession = useCallback((session: AuthResponse) => {
     writeToken(session.accessToken);
     setUser(session.user);
+    return session.user;
   }, []);
 
   const login = useCallback(
     async (email: string, password: string) => {
-      startSession(
+      return startSession(
         await api<AuthResponse>('/auth/login', {
           method: 'POST',
           body: JSON.stringify({ email, password }),
@@ -58,15 +64,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback(
     async (data: RegisterData) => {
-      startSession(
-        await api<AuthResponse>('/auth/register', {
-          method: 'POST',
-          body: JSON.stringify(data),
-        }),
+      return startSession(
+        await api<AuthResponse>(
+          data.role === 'GUIDE' ? '/auth/register/guide' : '/auth/register',
+          {
+            method: 'POST',
+            body: JSON.stringify(
+              Object.fromEntries(
+                Object.entries(data).filter(([key]) => key !== 'role'),
+              ),
+            ),
+          },
+        ),
       );
     },
     [startSession],
   );
+
+  const refresh = useCallback(async () => {
+    const current = await api<User>('/users/me');
+    setUser(current);
+    return current;
+  }, []);
 
   const logout = useCallback(() => {
     writeToken(null);
@@ -74,8 +93,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, login, register, logout }),
-    [user, loading, login, register, logout],
+    () => ({ user, loading, login, register, logout, refresh }),
+    [user, loading, login, register, logout, refresh],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

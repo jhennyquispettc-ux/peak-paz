@@ -35,11 +35,13 @@ export class RegisterDto {
   @ApiProperty({ example: 'Ana' })
   @IsString()
   @Length(1, 80)
+  @Matches(/\S/, { message: 'firstName must not be blank' })
   firstName: string;
 
   @ApiProperty({ example: 'Müller' })
   @IsString()
   @Length(1, 80)
+  @Matches(/\S/, { message: 'lastName must not be blank' })
   lastName: string;
 
   @ApiPropertyOptional({ example: '+41 79 123 45 67' })

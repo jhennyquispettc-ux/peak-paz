@@ -32,6 +32,7 @@ export async function seedAdmin(
       lastName: admin.lastName,
       role: UserRole.ADMIN,
       status: UserStatus.ACTIVE,
+      emailVerifiedAt: new Date(),
     }),
   );
   return 'created';

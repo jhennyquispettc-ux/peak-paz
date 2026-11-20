@@ -1,3 +1,4 @@
+import { AllowUnverifiedEmail } from '../../auth/decorators/allow-unverified-email.decorator.js';
 import {
   Body,
   Controller,
@@ -54,6 +55,7 @@ import { GuideProfilesService } from '../services/guide-profiles.service.js';
 @ApiUnauthorizedResponse({ type: ErrorResponseDto })
 @ApiForbiddenResponse({ type: ErrorResponseDto })
 @Roles(UserRole.GUIDE)
+@AllowUnverifiedEmail()
 @Controller('guides/me')
 export class GuideProfileController {
   constructor(private readonly profiles: GuideProfilesService) {}

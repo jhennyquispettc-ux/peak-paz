@@ -1,4 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { DataSource } from 'typeorm';
+import { GuideProfile } from '../../guides/entities/guide-profile.entity.js';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PaginationMetaDto } from '../../../common/dto/pagination-meta.dto.js';
 import { UpdateProfileDto } from '../dto/update-profile.dto.js';
 import { UserPageDto } from '../dto/user-page.dto.js';
@@ -14,16 +16,40 @@ import { UserStatus } from '../users.enums.js';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly users: UsersRepository) {}
+  constructor(
+    private readonly users: UsersRepository,
+    private readonly db: DataSource,
+  ) {}
 
   async getById(id: string): Promise<UserDto> {
     return UserDto.fromEntity(await this.findOrFail(id));
   }
 
   async updateProfile(id: string, dto: UpdateProfileDto): Promise<UserDto> {
-    const user = await this.findOrFail(id);
-    Object.assign(user, dto);
-    return UserDto.fromEntity(await this.users.save(user));
+    return this.db.transaction(async (manager) => {
+      const guide = await manager
+        .getRepository(GuideProfile)
+        .findOne({
+          where: { userId: id },
+          lock: { mode: 'pessimistic_write' },
+        });
+      const user = await manager.getRepository(User).findOneBy({ id });
+      if (!user) throw new UserNotFoundException();
+      const changesIdentity =
+        (dto.firstName !== undefined && dto.firstName !== user.firstName) ||
+        (dto.lastName !== undefined && dto.lastName !== user.lastName);
+      if (changesIdentity && guide?.verificationStatus === 'APPROVED') {
+        throw new BadRequestException({
+          error: 'PROFILE_LOCKED',
+          message:
+            'Los datos de identidad aprobados requieren una nueva revisión.',
+        });
+      }
+      await manager.getRepository(User).update(id, dto);
+      return UserDto.fromEntity(
+        await manager.getRepository(User).findOneByOrFail({ id }),
+      );
+    });
   }
 
   async list(query: UserQueryDto): Promise<UserPageDto> {
@@ -47,8 +73,8 @@ export class UsersService {
   ): Promise<UserDto> {
     if (targetId === adminId) throw new CannotChangeOwnStatusException();
     const user = await this.findOrFail(targetId);
-    user.status = status;
-    return UserDto.fromEntity(await this.users.save(user));
+    await this.db.getRepository(User).update(user.id, { status });
+    return this.getById(user.id);
   }
 
   private async findOrFail(id: string): Promise<User> {

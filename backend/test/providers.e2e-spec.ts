@@ -1,3 +1,4 @@
+import { confirmTestEmail } from './helpers/confirm-email.js';
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { rm } from 'node:fs/promises';
@@ -157,6 +158,7 @@ describe('Provider verification (e2e)', () => {
           yearsExperience: 6,
         })
         .expect(201);
+      await confirmTestEmail(server, register.body);
       expect(register.body.user.role).toBe('GUIDE');
       guideToken = register.body.accessToken;
 
