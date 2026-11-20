@@ -17,6 +17,7 @@ import { Payout } from './../src/modules/payments/entities/payout.entity.js';
 import { Refund } from './../src/modules/payments/entities/refund.entity.js';
 import { BookingCompletionService } from './../src/modules/payments/services/booking-completion.service.js';
 import { DepartureLifecycleService } from './../src/modules/payments/services/departure-lifecycle.service.js';
+import { Review } from './../src/modules/reviews/entities/review.entity.js';
 import { Route } from './../src/modules/routes/entities/route.entity.js';
 import { CancellationReview } from './../src/modules/strikes/entities/cancellation-review.entity.js';
 import { Strike } from './../src/modules/strikes/entities/strike.entity.js';
@@ -248,6 +249,9 @@ describe('Group departures (e2e)', () => {
             .getRepository(Refund)
             .delete({ paymentId: In(payments.map((payment) => payment.id)) });
         }
+        await dataSource
+          .getRepository(Review)
+          .delete({ bookingId: In(bookingIds) });
         await dataSource
           .getRepository(Payment)
           .delete({ bookingId: In(bookingIds) });
@@ -618,5 +622,29 @@ describe('Group departures (e2e)', () => {
       .set(auth(adminToken))
       .expect(200);
     expect(strikes.body.meta.total).toBe(3);
+  });
+  it('lets the tourist review the agency after a completed departure', async () => {
+    const mine = await request(server)
+      .get('/api/bookings/me')
+      .query({ status: 'COMPLETED' })
+      .set(auth(tokens.c))
+      .expect(200);
+    const completed = mine.body.data[0];
+    expect(completed).toBeDefined();
+
+    await request(server)
+      .post(`/api/bookings/${completed.id}/review`)
+      .set(auth(tokens.c))
+      .send({ rating: 4, comment: 'Buena organización y puntuales.' })
+      .expect(201);
+
+    const reviews = await request(server)
+      .get(`/api/agencies/${agencyId}/reviews`)
+      .expect(200);
+    expect(reviews.body.meta.total).toBe(1);
+    const agency = await dataSource
+      .getRepository(Agency)
+      .findOneByOrFail({ id: agencyId });
+    expect(agency).toMatchObject({ ratingAverage: 4, reviewsCount: 1 });
   });
 });

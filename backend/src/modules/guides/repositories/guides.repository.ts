@@ -247,6 +247,17 @@ export class GuidesRepository {
     return repository.findOne({ where: { id } });
   }
 
+  async updateRating(
+    id: string,
+    ratingAverage: number,
+    reviewsCount: number,
+    manager: EntityManager,
+  ): Promise<void> {
+    await manager
+      .getRepository(GuideProfile)
+      .update({ id }, { ratingAverage, reviewsCount });
+  }
+
   async hideUntil(
     id: string,
     until: Date,
