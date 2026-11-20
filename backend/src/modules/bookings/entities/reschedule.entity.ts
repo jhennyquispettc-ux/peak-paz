@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -13,6 +14,11 @@ import { Booking } from './booking.entity.js';
 
 @Entity('reschedules')
 @Check('CHK_reschedules_dates', '"previous_date" <> "new_date"')
+@Index('UQ_reschedules_pending', ['bookingId'], {
+  unique: true,
+  where: `"response" = 'PENDING'`,
+})
+@Index('IDX_reschedules_respond_by', ['respondBy'])
 export class Reschedule {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -40,6 +46,9 @@ export class Reschedule {
     default: RescheduleResponse.PENDING,
   })
   response: RescheduleResponse;
+
+  @Column({ name: 'respond_by', type: 'timestamptz' })
+  respondBy: Date;
 
   @Column({ name: 'responded_at', type: 'timestamptz', nullable: true })
   respondedAt: Date | null;

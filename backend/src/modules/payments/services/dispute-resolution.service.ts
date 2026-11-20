@@ -28,6 +28,7 @@ import {
   ResolveDisputeDto,
 } from '../dto/dispute-resolution.dto.js';
 import { RefundDto } from '../dto/payment.dto.js';
+import { RefundReason } from '../payments.enums.js';
 import { BookingCancellationService } from './booking-cancellation.service.js';
 import { PayoutsService } from './payouts.service.js';
 
@@ -101,8 +102,9 @@ export class DisputeResolutionService {
           await this.payouts.createForBooking(detail, manager);
         }
       } else {
-        refund = await this.cancellations.cancelForGuideNoShow(
+        refund = await this.cancellations.cancelByProviderWithRefund(
           detail,
+          RefundReason.PROVIDER_CANCELLATION,
           NO_SHOW_REASON,
           now,
           manager,

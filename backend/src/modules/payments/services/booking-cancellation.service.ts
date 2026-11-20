@@ -192,19 +192,16 @@ export class BookingCancellationService {
     return refunded;
   }
 
-  async cancelForGuideNoShow(
+  async cancelByProviderWithRefund(
     booking: Booking,
+    refundReason: RefundReason,
     reason: string,
     now: Date,
     manager: EntityManager,
   ): Promise<RefundDto | null> {
     const outcome =
       booking.source === BookingSource.WEB
-        ? await this.refundCapture(
-            booking,
-            RefundReason.PROVIDER_CANCELLATION,
-            manager,
-          )
+        ? await this.refundCapture(booking, refundReason, manager)
         : null;
     await this.close(
       booking,
