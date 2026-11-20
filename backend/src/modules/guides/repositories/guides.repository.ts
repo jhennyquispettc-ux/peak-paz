@@ -190,6 +190,41 @@ export class GuidesRepository {
     return rows.length > 0;
   }
 
+  async isBusy(
+    guideProfileId: string,
+    busyFrom: Date,
+    busyUntil: Date,
+    excludeBookingId: string,
+    manager: EntityManager,
+  ): Promise<boolean> {
+    const rows: unknown[] = await manager
+      .createQueryBuilder()
+      .select('1')
+      .from('bookings', 'booking')
+      .where('booking.guide_profile_id = :guideProfileId', { guideProfileId })
+      .andWhere('booking.id <> :excludeBookingId', { excludeBookingId })
+      .andWhere('booking.status IN (:...statuses)', {
+        statuses: BLOCKING_BOOKING_STATUSES,
+      })
+      .andWhere(`${bookingStartsSql('booking')} < :busyUntil`, { busyUntil })
+      .andWhere(`${bookingEndsSql('booking')} > :busyFrom`, { busyFrom })
+      .limit(1)
+      .getRawMany();
+    if (rows.length > 0) return true;
+    const commitments: unknown[] = await manager
+      .createQueryBuilder()
+      .select('1')
+      .from('guide_commitments', 'commitment')
+      .where('commitment.guide_profile_id = :guideProfileId', {
+        guideProfileId,
+      })
+      .andWhere('commitment.starts_at < :busyUntil', { busyUntil })
+      .andWhere('commitment.ends_at > :busyFrom', { busyFrom })
+      .limit(1)
+      .getRawMany();
+    return commitments.length > 0;
+  }
+
   async lockById(id: string, manager: EntityManager): Promise<void> {
     await manager
       .getRepository(GuideProfile)

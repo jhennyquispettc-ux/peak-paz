@@ -99,6 +99,12 @@ const DEFAULT_SETTINGS: Pick<Setting, 'key' | 'value' | 'description'>[] = [
       'Horas después del fin del tour que tiene el turista para confirmar el inicio',
   },
   {
+    key: 'RESCHEDULE_DEADLINE_HOURS',
+    value: '24',
+    description:
+      'Horas antes del inicio en que vence la respuesta a un cambio de fecha',
+  },
+  {
     key: 'SCHEDULE_BUFFER_MIN',
     value: '120',
     description:

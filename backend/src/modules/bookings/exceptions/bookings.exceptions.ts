@@ -145,3 +145,48 @@ export class DisputeResolvedException extends ConflictException {
     });
   }
 }
+
+export class RescheduleNotFoundException extends NotFoundException {
+  constructor() {
+    super({
+      error: 'RESCHEDULE_NOT_FOUND',
+      message: 'Date change proposal not found.',
+    });
+  }
+}
+
+export class RescheduleAlreadyPendingException extends ConflictException {
+  constructor() {
+    super({
+      error: 'RESCHEDULE_ALREADY_PENDING',
+      message: 'This booking already has a date change waiting for an answer.',
+    });
+  }
+}
+
+export class RescheduleTooLateException extends ConflictException {
+  constructor(hours: number) {
+    super({
+      error: 'RESCHEDULE_TOO_LATE',
+      message: `A new date can only be proposed when the tourist still has time to answer, up to ${hours} hours before the tour. Cancel the booking instead.`,
+    });
+  }
+}
+
+export class SameDateException extends BadRequestException {
+  constructor() {
+    super({
+      error: 'SAME_DATE',
+      message: 'The new date must be different from the current one.',
+    });
+  }
+}
+
+export class RescheduleClosedException extends ConflictException {
+  constructor() {
+    super({
+      error: 'RESCHEDULE_CLOSED',
+      message: 'This date change was already answered or has expired.',
+    });
+  }
+}

@@ -25,6 +25,7 @@ export enum RescheduleResponse {
   PENDING = 'PENDING',
   ACCEPTED = 'ACCEPTED',
   REJECTED = 'REJECTED',
+  EXPIRED = 'EXPIRED',
 }
 
 export enum DisputeReason {

@@ -1,3 +1,6 @@
+import { ReschedulesController } from './controllers/reschedules.controller.js';
+import { ReschedulesRepository } from './repositories/reschedules.repository.js';
+import { ReschedulesService } from './services/reschedules.service.js';
 import { TourChecksController } from './controllers/tour-checks.controller.js';
 import { Dispute } from './entities/dispute.entity.js';
 import { DisputesRepository } from './repositories/disputes.repository.js';
@@ -34,6 +37,7 @@ import { GuideBookingsService } from './services/guide-bookings.service.js';
     GuideAgendaController,
     AdminBookingsController,
     TourChecksController,
+    ReschedulesController,
   ],
   providers: [
     BookingsRepository,
@@ -44,7 +48,9 @@ import { GuideBookingsService } from './services/guide-bookings.service.js';
     GuideAgendaService,
     DisputesRepository,
     TourChecksService,
+    ReschedulesRepository,
+    ReschedulesService,
   ],
-  exports: [BookingsRepository, DisputesRepository],
+  exports: [BookingsRepository, DisputesRepository, ReschedulesService],
 })
 export class BookingsModule {}
