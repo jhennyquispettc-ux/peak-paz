@@ -3,7 +3,8 @@ import { AuthProvider } from './auth/AuthContext';
 import RequireApprovedGuide from './auth/RequireApprovedGuide';
 import RequireRole from './auth/RequireRole';
 import { I18nProvider } from './i18n/I18nContext';
-import { PROVIDER_PATHS } from './layout/navigation';
+import { getGuideSanctions, listGuidePayouts } from './api/guide';
+import ByRole from './layout/ByRole';
 import PanelLayout from './layout/PanelLayout';
 import TouristLayout from './layout/TouristLayout';
 import NotificationsPage from './notifications/NotificationsPage';
@@ -12,6 +13,7 @@ import AdminCancellationsPage from './pages/admin/AdminCancellationsPage';
 import AdminComplaintsPage from './pages/admin/AdminComplaintsPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminDisputesPage from './pages/admin/AdminDisputesPage';
+import AdminHelpPage from './pages/admin/AdminHelpPage';
 import AdminPayoutsPage from './pages/admin/AdminPayoutsPage';
 import AdminReviewsPage from './pages/admin/AdminReviewsPage';
 import AdminSettingsPage from './pages/admin/AdminSettingsPage';
@@ -21,7 +23,16 @@ import AdminVerificationsPage from './pages/admin/AdminVerificationsPage';
 import AdminRouteEditorPage from './pages/admin/routes/AdminRouteEditorPage';
 import AdminRoutesPage from './pages/admin/routes/AdminRoutesPage';
 import ConfirmEmailPage from './pages/ConfirmEmailPage';
+import GuideAgendaPage from './pages/guide/GuideAgendaPage';
+import GuideBookingDetailPage from './pages/guide/GuideBookingDetailPage';
+import GuideBookingsPage from './pages/guide/GuideBookingsPage';
+import GuideHomePage from './pages/guide/GuideHomePage';
+import GuideProfilePage from './pages/guide/GuideProfilePage';
+import GuideReviewsPage from './pages/guide/GuideReviewsPage';
+import GuideRoutesPage from './pages/guide/GuideRoutesPage';
 import LoginPage from './pages/LoginPage';
+import ProviderPayoutsPage from './pages/provider/ProviderPayoutsPage';
+import ProviderSanctionsPage from './pages/provider/ProviderSanctionsPage';
 import RouteDetailPage from './pages/RouteDetailPage';
 import RoutesPage from './pages/RoutesPage';
 import ComingSoonPage from './pages/shared/ComingSoonPage';
@@ -71,6 +82,7 @@ export default function App() {
                     element={<AdminCancellationsPage />}
                   />
                   <Route path="disputas" element={<AdminDisputesPage />} />
+                  <Route path="ayuda" element={<AdminHelpPage />} />
                   <Route path="reclamos" element={<AdminComplaintsPage />} />
                   <Route path="strikes" element={<AdminStrikesPage />} />
                   <Route path="rutas" element={<AdminRoutesPage />} />
@@ -92,14 +104,63 @@ export default function App() {
               <Route element={<RequireRole roles={['GUIDE', 'AGENCY']} />}>
                 <Route element={<RequireApprovedGuide />}>
                   <Route path="/panel" element={<PanelLayout />}>
-                    <Route index element={<ComingSoonPage />} />
-                    {PROVIDER_PATHS.map((path) => (
-                      <Route
-                        key={path}
-                        path={`${path}/*`}
-                        element={<ComingSoonPage />}
-                      />
-                    ))}
+                    <Route
+                      index
+                      element={
+                        <ByRole
+                          guide={<GuideHomePage />}
+                          agency={<ComingSoonPage />}
+                        />
+                      }
+                    />
+                    <Route path="reservas" element={<GuideBookingsPage />} />
+                    <Route
+                      path="reservas/:id"
+                      element={<GuideBookingDetailPage />}
+                    />
+                    <Route path="agenda" element={<GuideAgendaPage />} />
+                    <Route path="mis-rutas" element={<GuideRoutesPage />} />
+                    <Route path="salidas/*" element={<ComingSoonPage />} />
+                    <Route
+                      path="liquidaciones"
+                      element={
+                        <ByRole
+                          guide={
+                            <ProviderPayoutsPage load={listGuidePayouts} />
+                          }
+                          agency={<ComingSoonPage />}
+                        />
+                      }
+                    />
+                    <Route
+                      path="resenas"
+                      element={
+                        <ByRole
+                          guide={<GuideReviewsPage />}
+                          agency={<ComingSoonPage />}
+                        />
+                      }
+                    />
+                    <Route
+                      path="sanciones"
+                      element={
+                        <ByRole
+                          guide={
+                            <ProviderSanctionsPage load={getGuideSanctions} />
+                          }
+                          agency={<ComingSoonPage />}
+                        />
+                      }
+                    />
+                    <Route
+                      path="perfil"
+                      element={
+                        <ByRole
+                          guide={<GuideProfilePage />}
+                          agency={<ComingSoonPage />}
+                        />
+                      }
+                    />
                     <Route path="avisos" element={<NotificationsPage />} />
                     <Route
                       path="*"

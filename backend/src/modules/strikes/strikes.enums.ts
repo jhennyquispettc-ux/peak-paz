@@ -21,6 +21,11 @@ export enum CancellationDecision {
   STRIKE_AND_FINE = 'STRIKE_AND_FINE',
 }
 
+export enum ComplaintReason {
+  GENERAL = 'GENERAL',
+  NO_SHOW = 'NO_SHOW',
+}
+
 export enum ComplaintStatus {
   OPEN = 'OPEN',
   ACCEPTED = 'ACCEPTED',

@@ -3,25 +3,18 @@ import {
   listPayouts,
   markPayoutPaid,
   type AdminPayout,
-  type PayoutStage,
 } from '../../api/adminManage';
 import { useCaseList } from '../../hooks/useCaseList';
 import { dateOnly, dateTime, money, tourDay } from '../../lib/format';
+import { PAYOUT_STAGES } from '../../lib/payoutStage';
 import ConfirmDialog from '../../ui/ConfirmDialog';
 import type { Column } from '../../ui/DataTable';
 import Facts from '../../ui/Facts';
 import FilterChips from '../../ui/FilterChips';
 import PageHeader from '../../ui/PageHeader';
-import StatusBadge, { type StatusTone } from '../../ui/StatusBadge';
+import StatusBadge from '../../ui/StatusBadge';
 import { useToast } from '../../ui/Toast';
 import CaseTable from './CaseTable';
-
-const STAGES: Record<PayoutStage, { label: string; tone: StatusTone }> = {
-  WAITING: { label: 'En espera', tone: 'info' },
-  READY: { label: 'Lista para pagar', tone: 'success' },
-  ON_HOLD: { label: 'Retenida por reclamo', tone: 'warning' },
-  PAID: { label: 'Pagada', tone: 'muted' },
-};
 
 export default function AdminPayoutsPage() {
   const toast = useToast();
@@ -61,8 +54,8 @@ export default function AdminPayoutsPage() {
         header: 'Estado',
         render: (row) => (
           <span className="stage-cell">
-            <StatusBadge tone={STAGES[row.stage].tone}>
-              {STAGES[row.stage].label}
+            <StatusBadge tone={PAYOUT_STAGES[row.stage].tone}>
+              {PAYOUT_STAGES[row.stage].label}
             </StatusBadge>
             {row.stage === 'WAITING' && (
               <small>Desde {dateOnly(row.payableAt)}</small>

@@ -50,7 +50,7 @@ export class ComplaintsController {
   @Roles(UserRole.TOURIST)
   @ApiOperation({
     summary:
-      'Reclamar por un tour completado, una vez y hasta 72 horas después. La liquidación del proveedor queda retenida',
+      'Reclamar desde el inicio del tour hasta 72 horas después del final, una vez. La liquidación del proveedor queda retenida',
   })
   @ApiCreatedResponse({ type: ComplaintDto })
   @ApiBadRequestResponse({ type: ErrorResponseDto })
@@ -60,7 +60,7 @@ export class ComplaintsController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: CreateComplaintDto,
   ): Promise<ComplaintDto> {
-    return this.complaints.open(user.id, id, dto.description);
+    return this.complaints.open(user.id, id, dto.description, dto.reason);
   }
 
   @Get('bookings/:id/complaints')

@@ -100,6 +100,9 @@ export class GuideVerificationService {
           : null;
       profile.verifiedById = adminId;
       profile.verifiedAt = new Date();
+      if (dto.status === VerificationStatus.APPROVED) {
+        profile.firstApprovedAt ??= profile.verifiedAt;
+      }
       await manager.getRepository(GuideProfile).save(profile);
     });
     return this.getById(id);

@@ -14,11 +14,15 @@ export default function RequireApprovedGuide() {
   useEffect(() => {
     if (!isGuide) return;
     let active = true;
-    api<{ verificationStatus: string }>('/guides/me')
+    api<{ verificationStatus: string; firstApprovedAt: string | null }>(
+      '/guides/me',
+    )
       .then((profile) => {
         if (active) {
           setState(
-            profile.verificationStatus === 'APPROVED' ? 'allowed' : 'blocked',
+            profile.verificationStatus === 'APPROVED' || profile.firstApprovedAt
+              ? 'allowed'
+              : 'blocked',
           );
         }
       })

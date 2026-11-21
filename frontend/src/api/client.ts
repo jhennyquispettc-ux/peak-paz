@@ -25,6 +25,35 @@ const MESSAGES: Record<string, string> = {
   START_TIME_OUTSIDE_WINDOW:
     'Esa hora está fuera del horario sugerido de la ruta.',
   BAD_REQUEST: 'Revisa los datos del formulario.',
+  DOCUMENTS_IN_REVIEW:
+    'Espera la revisión de tus documentos para aceptar solicitudes.',
+  DOCUMENTS_EXPIRED: 'Renueva tus documentos para aceptar nuevas solicitudes.',
+  PROVIDER_NOT_APPROVED:
+    'Completa la revisión de tus documentos antes de ofrecer servicios.',
+  ALREADY_RECONFIRMED: 'Ya reconfirmaste esta reserva.',
+  ALREADY_STARTED: 'Ya confirmaste este tour.',
+  RECONFIRMATION_NOT_OPEN:
+    'La reconfirmación se abre 72 horas antes del tour y termina al inicio.',
+  START_WINDOW_CLOSED:
+    'Puedes confirmar desde una hora antes hasta 24 horas después del final.',
+  INVALID_BOOKING_STATUS: 'La reserva ya no permite esta acción.',
+  RESPONSE_WINDOW_CLOSED: 'El plazo para responder esta solicitud ya venció.',
+  RESCHEDULE_ALREADY_PENDING: 'Ya hay un cambio de fecha esperando respuesta.',
+  RESCHEDULE_TOO_LATE: 'Ya no se puede proponer otra fecha para este tour.',
+  SAME_DATE: 'Elige una fecha distinta a la actual.',
+  GUIDE_NOT_AVAILABLE: 'No tienes disponibilidad en esa fecha.',
+  GUIDE_ROUTE_ALREADY_REQUESTED: 'Ya pediste autorización para esta ruta.',
+  BOOKING_NOT_FOUND: 'No encontramos esa reserva.',
+  HELP_WINDOW_CLOSED: 'Solo puedes pedir ayuda mientras el tour está en curso.',
+  HELP_ALREADY_OPEN: 'Ya tienes un pedido de ayuda abierto para este tour.',
+  HELP_ALREADY_ATTENDED: 'Este pedido de ayuda ya fue atendido.',
+  COMPLAINT_TOUR_RUNNING:
+    'Podrás decidir este reclamo cuando el tour se cierre.',
+  COMPLAINT_WINDOW_CLOSED:
+    'Puedes reclamar desde el inicio del tour hasta 72 horas después del final.',
+  COMPLAINT_ALREADY_EXISTS: 'Ya presentaste un reclamo para este tour.',
+  NO_SHOW_REPORT_NOT_ALLOWED:
+    'Puedes reportarlo después de 30 minutos de espera.',
   PAYOUT_NOT_READY: 'Esta liquidación aún está en el plazo de reclamos.',
   PAYOUT_ON_HOLD: 'Esta liquidación espera la resolución de un reclamo.',
   PAYOUT_ALREADY_PAID: 'Esta liquidación ya figura como pagada.',

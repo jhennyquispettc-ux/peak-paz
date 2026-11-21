@@ -80,6 +80,9 @@ export class GuideProfile {
   @Column({ name: 'verified_at', type: 'timestamptz', nullable: true })
   verifiedAt: Date | null;
 
+  @Column({ name: 'first_approved_at', type: 'timestamptz', nullable: true })
+  firstApprovedAt: Date | null;
+
   @Column({
     name: 'rating_average',
     type: 'numeric',

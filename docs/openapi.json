@@ -6044,7 +6044,7 @@
             "bearer": []
           }
         ],
-        "summary": "El guía marca el inicio del tour con su ubicación, desde una hora antes hasta el final",
+        "summary": "El guía confirma el tour, con ubicación opcional, desde una hora antes hasta 24 horas después del final",
         "tags": [
           "Tour checks"
         ]
@@ -6219,6 +6219,356 @@
         "summary": "Reportar que el guía no llegó. Se puede después de 30 minutos de espera y abre una disputa",
         "tags": [
           "Tour checks"
+        ]
+      }
+    },
+    "/api/bookings/{id}/help": {
+      "post": {
+        "operationId": "TourHelpController_ask",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTourHelpDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TourHelpDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Pedir ayuda durante el tour. Avisa al administrador, sin mover dinero ni sancionar",
+        "tags": [
+          "Tour help"
+        ]
+      },
+      "get": {
+        "operationId": "TourHelpController_listMine",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TourHelpDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Ver mis pedidos de ayuda de un tour",
+        "tags": [
+          "Tour help"
+        ]
+      }
+    },
+    "/api/admin/help-requests": {
+      "get": {
+        "operationId": "TourHelpController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "OPEN",
+                "ATTENDED"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminTourHelpPageDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Listar pedidos de ayuda con los contactos, los más antiguos primero",
+        "tags": [
+          "Tour help"
+        ]
+      }
+    },
+    "/api/admin/help-requests/{id}/attend": {
+      "post": {
+        "operationId": "TourHelpController_attend",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttendTourHelpDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminTourHelpDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Registrar cómo se atendió un pedido de ayuda y avisar al turista",
+        "tags": [
+          "Tour help"
         ]
       }
     },
@@ -8378,7 +8728,7 @@
             "bearer": []
           }
         ],
-        "summary": "Reclamar por un tour completado, una vez y hasta 72 horas después. La liquidación del proveedor queda retenida",
+        "summary": "Reclamar desde el inicio del tour hasta 72 horas después del final, una vez. La liquidación del proveedor queda retenida",
         "tags": [
           "Complaints"
         ]
@@ -10534,6 +10884,11 @@
             "type": "object",
             "nullable": true
           },
+          "firstApprovedAt": {
+            "type": "object",
+            "nullable": true,
+            "description": "Primera aprobación. Conserva el acceso limitado durante una renovación"
+          },
           "ratingAverage": {
             "type": "number"
           },
@@ -10576,6 +10931,7 @@
           "verificationStatus",
           "rejectionReason",
           "verifiedAt",
+          "firstApprovedAt",
           "ratingAverage",
           "reviewsCount",
           "documents",
@@ -13033,17 +13389,13 @@
           "latitude": {
             "type": "number",
             "example": -16.3502,
-            "description": "Ubicación actual del guía"
+            "description": "Ubicación del guía. Opcional, se envía junto con la longitud"
           },
           "longitude": {
             "type": "number",
             "example": -67.9198
           }
-        },
-        "required": [
-          "latitude",
-          "longitude"
-        ]
+        }
       },
       "NoShowReportDto": {
         "type": "object",
@@ -13204,6 +13556,182 @@
           "resolution",
           "resolvedAt",
           "createdAt"
+        ]
+      },
+      "CreateTourHelpDto": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "example": "El guía nos está tratando de forma agresiva."
+          }
+        },
+        "required": [
+          "description"
+        ]
+      },
+      "TourHelpDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bookingId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bookingCode": {
+            "type": "string",
+            "example": "PP-7K3M9QX2"
+          },
+          "description": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "ATTENDED"
+            ]
+          },
+          "adminNote": {
+            "type": "object",
+            "nullable": true
+          },
+          "attendedAt": {
+            "type": "object",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "bookingId",
+          "bookingCode",
+          "description",
+          "status",
+          "adminNote",
+          "attendedAt",
+          "createdAt"
+        ]
+      },
+      "AdminTourHelpDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bookingId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bookingCode": {
+            "type": "string",
+            "example": "PP-7K3M9QX2"
+          },
+          "description": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "ATTENDED"
+            ]
+          },
+          "adminNote": {
+            "type": "object",
+            "nullable": true
+          },
+          "attendedAt": {
+            "type": "object",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "tourDate": {
+            "type": "object",
+            "example": "2026-12-05",
+            "nullable": true
+          },
+          "routeNameEs": {
+            "type": "object",
+            "nullable": true
+          },
+          "touristName": {
+            "type": "object",
+            "nullable": true
+          },
+          "touristPhone": {
+            "type": "object",
+            "nullable": true
+          },
+          "touristEmail": {
+            "type": "object",
+            "nullable": true
+          },
+          "providerName": {
+            "type": "object",
+            "nullable": true
+          },
+          "providerPhone": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "bookingId",
+          "bookingCode",
+          "description",
+          "status",
+          "adminNote",
+          "attendedAt",
+          "createdAt",
+          "tourDate",
+          "routeNameEs",
+          "touristName",
+          "touristPhone",
+          "touristEmail",
+          "providerName",
+          "providerPhone"
+        ]
+      },
+      "AdminTourHelpPageDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminTourHelpDto"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMetaDto"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "AttendTourHelpDto": {
+        "type": "object",
+        "properties": {
+          "note": {
+            "type": "string",
+            "example": "Llamé al guía y a la turista, el tour continúa."
+          }
+        },
+        "required": [
+          "note"
         ]
       },
       "ProposeRescheduleDto": {
@@ -14192,6 +14720,15 @@
           "description": {
             "type": "string",
             "example": "El guía nos dejó solos en el descenso y llegamos de noche sin linterna."
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "GENERAL",
+              "NO_SHOW"
+            ],
+            "default": "GENERAL",
+            "description": "NO_SHOW si el guía o la agencia no se presentó"
           }
         },
         "required": [
@@ -14270,6 +14807,28 @@
           "description": {
             "type": "string"
           },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "GENERAL",
+              "NO_SHOW"
+            ]
+          },
+          "bookingStatus": {
+            "type": "string",
+            "enum": [
+              "REQUESTED",
+              "ACCEPTED",
+              "CONFIRMED",
+              "IN_PROGRESS",
+              "COMPLETED",
+              "REJECTED",
+              "EXPIRED",
+              "CANCELLED_BY_TOURIST",
+              "CANCELLED_BY_PROVIDER",
+              "CANCELLED_WEATHER"
+            ]
+          },
           "status": {
             "type": "string",
             "enum": [
@@ -14321,6 +14880,8 @@
           "id",
           "touristName",
           "description",
+          "reason",
+          "bookingStatus",
           "status",
           "refundPercent",
           "deductionAmount",
@@ -14363,7 +14924,7 @@
             "example": 50,
             "minimum": 0,
             "maximum": 100,
-            "description": "Obligatorio al aceptar. Porcentaje de lo pagado que se devuelve al turista y se descuenta al proveedor"
+            "description": "Obligatorio al aceptar, salvo en una no presentación que siempre devuelve el 100%. Porcentaje de lo pagado que se devuelve al turista y se descuenta al proveedor"
           },
           "strike": {
             "type": "boolean",

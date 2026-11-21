@@ -246,6 +246,7 @@ async function createCases(db: DataSource): Promise<void> {
         verificationStatus: VerificationStatus.APPROVED,
         verifiedById: admin.id,
         verifiedAt: new Date(),
+        firstApprovedAt: new Date(),
       },
     );
     for (const route of [valley, tooth]) {

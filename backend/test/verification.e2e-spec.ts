@@ -230,7 +230,7 @@ describe('Account verification through the real microservice', () => {
       .set(auth(guide.accessToken))
       .expect(200);
   });
-  it('removes guides with expired credentials from the public catalogue and service access', async () => {
+  it('removes guides with expired credentials from the public catalogue and keeps their current work', async () => {
     const db = app.get(DataSource);
     await request(server).get(`/api/guides/${guideId}`).expect(200);
     await db.query(
@@ -242,7 +242,7 @@ describe('Account verification through the real microservice', () => {
       await request(server)
         .get('/api/guides/me/bookings')
         .set(auth(guide.accessToken))
-        .expect(403);
+        .expect(200);
     } finally {
       await db.query(
         "UPDATE guide_documents SET expires_at='2030-12-31' WHERE guide_profile_id=$1 AND type='FIRST_AID'",
@@ -270,10 +270,20 @@ describe('Account verification through the real microservice', () => {
       .expect((response) =>
         expect(response.body.verificationStatus).toBe('PENDING'),
       );
+    await request(server).get(`/api/guides/${guideId}`).expect(404);
     await request(server)
       .get('/api/guides/me/bookings')
       .set(auth(guide.accessToken))
-      .expect(403);
+      .expect(200);
+    await request(server)
+      .post(
+        '/api/guides/me/bookings/00000000-0000-4000-8000-000000000000/accept',
+      )
+      .set(auth(guide.accessToken))
+      .expect(403)
+      .expect((response) =>
+        expect(response.body.error).toBe('DOCUMENTS_IN_REVIEW'),
+      );
   });
   it('keeps registration durable when the verification service is unavailable', async () => {
     const client = app.get(VerificationClient);

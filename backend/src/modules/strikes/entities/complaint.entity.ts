@@ -12,7 +12,7 @@ import {
 import { numericTransformer } from '../../../common/transformers/numeric.transformer.js';
 import { Booking } from '../../bookings/entities/booking.entity.js';
 import { User } from '../../users/entities/user.entity.js';
-import { ComplaintStatus } from '../strikes.enums.js';
+import { ComplaintReason, ComplaintStatus } from '../strikes.enums.js';
 
 @Entity('complaints')
 @Index('IDX_complaints_booking', ['bookingId'])
@@ -31,6 +31,14 @@ export class Complaint {
 
   @Column({ type: 'text' })
   description: string;
+
+  @Column({
+    type: 'enum',
+    enum: ComplaintReason,
+    enumName: 'complaint_reason',
+    default: ComplaintReason.GENERAL,
+  })
+  reason: ComplaintReason;
 
   @Column({
     type: 'enum',

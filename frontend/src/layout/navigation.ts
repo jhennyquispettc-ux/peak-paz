@@ -6,6 +6,7 @@ import {
   Compass,
   Flag,
   Gavel,
+  LifeBuoy,
   LayoutDashboard,
   Map,
   MessageSquareWarning,
@@ -64,6 +65,13 @@ const ADMIN_NAV: NavGroup[] = [
         icon: Gavel,
         phase: 'F2',
         what: 'los tours sin confirmar o con guía ausente',
+      },
+      {
+        path: 'ayuda',
+        label: 'Ayuda en ruta',
+        icon: LifeBuoy,
+        phase: 'F4',
+        what: 'los pedidos de ayuda durante el tour',
       },
       {
         path: 'reclamos',
@@ -278,12 +286,3 @@ export function findNavItem(role: Role, path: string): NavItem | undefined {
     .flatMap((group) => group.items)
     .find((item) => item.path === path);
 }
-
-export const PROVIDER_PATHS = Array.from(
-  new Set(
-    [...GUIDE_NAV, ...AGENCY_NAV]
-      .flatMap((group) => group.items)
-      .map((item) => item.path)
-      .filter(Boolean),
-  ),
-);

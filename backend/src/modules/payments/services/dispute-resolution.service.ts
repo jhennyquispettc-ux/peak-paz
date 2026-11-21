@@ -26,6 +26,7 @@ import {
 } from '../../bookings/exceptions/bookings.exceptions.js';
 import { BookingsRepository } from '../../bookings/repositories/bookings.repository.js';
 import { DisputesRepository } from '../../bookings/repositories/disputes.repository.js';
+import { ComplaintsRepository } from '../../strikes/repositories/complaints.repository.js';
 import { StrikeIssuerService } from '../../strikes/services/strike-issuer.service.js';
 import { ProviderKind } from '../../strikes/sanctions.js';
 import { StrikeReason } from '../../strikes/strikes.enums.js';
@@ -46,6 +47,7 @@ const RUNNING = new Set([BookingStatus.CONFIRMED, BookingStatus.IN_PROGRESS]);
 export class DisputeResolutionService {
   constructor(
     private readonly disputes: DisputesRepository,
+    private readonly complaints: ComplaintsRepository,
     private readonly bookings: BookingsRepository,
     private readonly cancellations: BookingCancellationService,
     private readonly payouts: PayoutsService,
@@ -127,6 +129,13 @@ export class DisputeResolutionService {
             weight: NO_SHOW_STRIKE_WEIGHT,
             adminId,
           },
+          now,
+          manager,
+        );
+        await this.complaints.closeAsRefunded(
+          detail.id,
+          adminId,
+          dto.resolution,
           now,
           manager,
         );
