@@ -1,0 +1,120 @@
+databases:
+  - name: peak-paz-db
+    plan: free
+    databaseName: peak_paz
+    user: peakpaz
+
+envVarGroups:
+  - name: peak-paz-shared
+    envVars:
+      - key: VERIFICATION_SERVICE_KEY
+        generateValue: true
+      - key: NODE_ENV
+        value: production
+      - key: MAIL_TRANSPORT
+        value: smtp
+      - key: SMTP_URL
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+      - key: PUBLIC_WEB_URL
+        sync: false
+
+services:
+  - type: web
+    name: peak-paz-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - fromGroup: peak-paz-shared
+      - key: DB_HOST
+        fromDatabase:
+          name: peak-paz-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: peak-paz-db
+          property: port
+      - key: DB_USER
+        fromDatabase:
+          name: peak-paz-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: peak-paz-db
+          property: password
+      - key: DB_NAME
+        fromDatabase:
+          name: peak-paz-db
+          property: database
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SEED_ADMIN_EMAIL
+        sync: false
+      - key: SEED_ADMIN_PASSWORD
+        sync: false
+      - key: VERIFICATION_SERVICE_URL
+        sync: false
+      - key: PAYMENT_DRIVER
+        value: fake
+      - key: PAYMENT_RETURN_URL
+        sync: false
+      - key: PAYMENT_CANCEL_URL
+        sync: false
+      - key: STORAGE_DRIVER
+        value: local
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+
+  - type: web
+    name: peak-paz-verification
+    runtime: docker
+    plan: free
+    dockerfilePath: ./verification-service/Dockerfile
+    dockerContext: ./verification-service
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - fromGroup: peak-paz-shared
+      - key: DB_HOST
+        fromDatabase:
+          name: peak-paz-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: peak-paz-db
+          property: port
+      - key: DB_USER
+        fromDatabase:
+          name: peak-paz-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: peak-paz-db
+          property: password
+      - key: DB_NAME
+        value: peak_paz_verification
+      - key: EMAIL_TOKEN_SECRET
+        generateValue: true
+
+  - type: web
+    name: peak-paz-web
+    runtime: static
+    buildCommand: cd frontend && npm ci && npm run build
+    staticPublishPath: ./frontend/dist
+    autoDeploy: true
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://peak-paz-api.onrender.com/api/*
+      - type: rewrite
+        source: /*
+        destination: /index.html
