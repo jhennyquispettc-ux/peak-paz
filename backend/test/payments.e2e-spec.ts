@@ -337,7 +337,7 @@ describe('Payments, refunds and payouts (e2e)', () => {
   });
 
   it('keeps the money and pays the guide when the tourist cancels late', async () => {
-    const bookingId = await paidBooking(3);
+    const bookingId = await paidBooking(2);
     const cancelled = await request(server)
       .post(`/api/bookings/${bookingId}/cancel`)
       .set(auth(touristToken))
@@ -360,6 +360,50 @@ describe('Payments, refunds and payouts (e2e)', () => {
         status: 'PENDING',
       },
     ]);
+  });
+
+  it('refunds half and pays the provider on the retained part between three and seven days', async () => {
+    const bookingId = await paidBooking(5);
+    const preview = await request(server)
+      .get(`/api/bookings/${bookingId}/cancellation-preview`)
+      .set(auth(touristToken))
+      .expect(200);
+    expect(preview.body).toMatchObject({
+      cancellable: true,
+      paid: true,
+      refundPercent: 50,
+      refundAmount: 75,
+      retainedAmount: 75,
+    });
+    const cancelled = await request(server)
+      .post(`/api/bookings/${bookingId}/cancel`)
+      .set(auth(touristToken))
+      .send({})
+      .expect(200);
+    expect(cancelled.body.refund).toMatchObject({
+      amount: 10.78,
+      currency: 'USD',
+      reason: 'TOURIST_CANCELLATION',
+    });
+    const payouts = await request(server)
+      .get('/api/guides/me/payouts')
+      .query({ limit: 100 })
+      .set(auth(guideToken))
+      .expect(200);
+    expect(
+      payouts.body.data.find(
+        (item: { bookingId: string }) => item.bookingId === bookingId,
+      ),
+    ).toMatchObject({
+      grossAmount: 75,
+      commissionAmount: 11.25,
+      netAmount: 63.75,
+    });
+    const payments = await request(server)
+      .get(`/api/bookings/${bookingId}/payments`)
+      .set(auth(touristToken))
+      .expect(200);
+    expect(payments.body[0].status).toBe('CAPTURED');
   });
 
   it('does not charge once the payment window has closed', async () => {

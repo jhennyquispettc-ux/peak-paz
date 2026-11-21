@@ -30,6 +30,26 @@ export class GuideCancellationDto {
   weather?: boolean;
 }
 
+export class CancellationPreviewDto {
+  @ApiProperty({ description: 'La reserva todavía se puede cancelar' })
+  cancellable: boolean;
+
+  @ApiProperty({ description: 'La reserva ya fue pagada' })
+  paid: boolean;
+
+  @ApiProperty({ example: 50 })
+  refundPercent: number;
+
+  @ApiProperty({ example: 150, description: 'En bolivianos' })
+  refundAmount: number;
+
+  @ApiProperty({ example: 150, description: 'En bolivianos' })
+  retainedAmount: number;
+
+  @ApiProperty({ description: 'El guía no reconfirmó a tiempo' })
+  guideMissedReconfirmation: boolean;
+}
+
 export class CancellationResultDto {
   @ApiProperty({ type: BookingDto })
   booking: BookingDto;

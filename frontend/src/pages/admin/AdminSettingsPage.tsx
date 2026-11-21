@@ -25,6 +25,8 @@ const GROUPS: { title: string; keys: string[] }[] = [
       'PRIVATE_MAX_PEOPLE',
       'SCHEDULE_BUFFER_MIN',
       'REFUND_MIN_DAYS',
+      'REFUND_PARTIAL_MIN_DAYS',
+      'REFUND_PARTIAL_PERCENT',
       'RESCHEDULE_DEADLINE_HOURS',
     ],
   },

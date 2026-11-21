@@ -16,6 +16,7 @@ interface I18nState {
   setLocale: (locale: Locale) => void;
   t: (key: MessageKey, values?: Record<string, string | number>) => string;
   dateLocale: string;
+  pick: (es: string, en: string) => string;
 }
 
 const I18nContext = createContext<I18nState | null>(null);
@@ -38,6 +39,7 @@ function buildState(
     locale,
     setLocale,
     dateLocale: locale === 'en' ? 'en-US' : 'es-BO',
+    pick: (es, en) => (locale === 'en' ? en : es),
     t: (key, values = {}) =>
       MESSAGES[locale][key].replace(/\{(\w+)\}/g, (_, name: string) =>
         String(values[name] ?? ''),

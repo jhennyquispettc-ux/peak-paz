@@ -1,9 +1,16 @@
 import type { Difficulty } from '../api/types';
+import { useI18n } from '../i18n/I18nContext';
 
 export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
   EASY: 'Fácil',
   MODERATE: 'Moderado',
   HARD: 'Difícil',
+};
+
+const DIFFICULTY_LABELS_EN: Record<Difficulty, string> = {
+  EASY: 'Easy',
+  MODERATE: 'Moderate',
+  HARD: 'Hard',
 };
 
 const MOUNTAINS: Record<Difficulty, number> = { EASY: 1, MODERATE: 2, HARD: 3 };
@@ -13,10 +20,15 @@ export default function DifficultyBadge({
 }: {
   difficulty: Difficulty;
 }) {
+  const { locale, pick } = useI18n();
+  const label =
+    locale === 'en'
+      ? DIFFICULTY_LABELS_EN[difficulty]
+      : DIFFICULTY_LABELS[difficulty];
   return (
     <span
       className="badge"
-      aria-label={`Dificultad ${DIFFICULTY_LABELS[difficulty]}`}
+      aria-label={`${pick('Dificultad', 'Difficulty')} ${label}`}
     >
       <span className="mountains">
         {Array.from({ length: MOUNTAINS[difficulty] }, (_, index) => (
@@ -25,7 +37,7 @@ export default function DifficultyBadge({
           </svg>
         ))}
       </span>
-      {DIFFICULTY_LABELS[difficulty]}
+      {label}
     </span>
   );
 }
