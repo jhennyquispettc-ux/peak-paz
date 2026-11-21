@@ -41,7 +41,10 @@ import ProviderPayoutsPage from './pages/provider/ProviderPayoutsPage';
 import ProviderSanctionsPage from './pages/provider/ProviderSanctionsPage';
 import RouteDetailPage from './pages/RouteDetailPage';
 import RoutesPage from './pages/RoutesPage';
-import ComingSoonPage from './pages/shared/ComingSoonPage';
+import BookingDetailPage from './pages/tourist/BookingDetailPage';
+import MyBookingsPage from './pages/tourist/MyBookingsPage';
+import PaymentPage from './pages/tourist/PaymentPage';
+import PaymentReturnPage from './pages/tourist/PaymentReturnPage';
 import VerificationPage from './pages/VerificationPage';
 import { ToastProvider } from './ui/Toast';
 
@@ -63,15 +66,12 @@ export default function App() {
               <Route element={<RequireRole roles={['TOURIST']} />}>
                 <Route element={<TouristLayout />}>
                   <Route path="/avisos" element={<NotificationsPage />} />
+                  <Route path="/reservas" element={<MyBookingsPage />} />
+                  <Route path="/reservas/:id" element={<BookingDetailPage />} />
+                  <Route path="/reservas/:id/pagar" element={<PaymentPage />} />
                   <Route
-                    path="/reservas/*"
-                    element={
-                      <ComingSoonPage
-                        title="Mis reservas"
-                        phase="F6"
-                        what="tus reservas, pagos, cancelaciones, reseñas y reclamos"
-                      />
-                    }
+                    path="/pagos/confirmar"
+                    element={<PaymentReturnPage />}
                   />
                 </Route>
               </Route>

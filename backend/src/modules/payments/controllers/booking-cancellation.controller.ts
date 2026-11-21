@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Param,
@@ -32,6 +33,7 @@ import { Roles } from '../../auth/decorators/roles.decorator.js';
 import type { AuthenticatedUser } from '../../auth/types/authenticated-user.js';
 import { UserRole } from '../../users/users.enums.js';
 import {
+  CancellationPreviewDto,
   CancellationResultDto,
   GuideCancellationDto,
   TouristCancellationDto,
@@ -49,12 +51,25 @@ import { BookingCancellationService } from '../services/booking-cancellation.ser
 export class BookingCancellationController {
   constructor(private readonly cancellations: BookingCancellationService) {}
 
+  @Get('bookings/:id/cancellation-preview')
+  @Roles(UserRole.TOURIST)
+  @ApiOperation({
+    summary: 'Ver cuánto se devolvería si el turista cancela ahora',
+  })
+  @ApiOkResponse({ type: CancellationPreviewDto })
+  preview(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<CancellationPreviewDto> {
+    return this.cancellations.previewForTourist(user.id, id);
+  }
+
   @Post('bookings/:id/cancel')
   @Roles(UserRole.TOURIST)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary:
-      'Cancelar una reserva. Pagada con 7 días o más de anticipación se reembolsa el 100%',
+      'Cancelar una reserva. Con 7 días o más se devuelve el 100%, de 3 a 6 días el 50% y con menos de 3 días nada',
   })
   @ApiOkResponse({ type: CancellationResultDto })
   cancelByTourist(

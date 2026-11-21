@@ -22,12 +22,19 @@ import type { UploadedFileData } from '../../../common/types/uploaded-file.js';
 import { CancellationReviewsService } from '../../strikes/services/cancellation-reviews.service.js';
 import { SettingsService } from '../../settings/services/settings.service.js';
 import { SettingKey } from '../../settings/setting-keys.js';
-import { CancellationResultDto } from '../dto/cancellation.dto.js';
+import {
+  retainedAmount,
+  touristRefundPercent,
+} from '../cancellation-policy.js';
+import {
+  CancellationPreviewDto,
+  CancellationResultDto,
+} from '../dto/cancellation.dto.js';
 import { RefundDto } from '../dto/payment.dto.js';
 import { Refund } from '../entities/refund.entity.js';
 import { TourAlreadyStartedException } from '../exceptions/payments.exceptions.js';
 import { reconfirmationMissed } from '../../bookings/tour-checks.js';
-import { isRefundable, round2 } from '../money.js';
+import { round2 } from '../money.js';
 import {
   PaymentStatus,
   RefundReason,
@@ -61,15 +68,68 @@ export class BookingCancellationService {
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
+  private refundRules() {
+    return Promise.all([
+      this.settings.getNumber(SettingKey.REFUND_MIN_DAYS),
+      this.settings.getNumber(SettingKey.REFUND_PARTIAL_MIN_DAYS),
+      this.settings.getNumber(SettingKey.REFUND_PARTIAL_PERCENT),
+      this.settings.getNumber(SettingKey.RECONFIRM_DEADLINE_HOURS),
+    ]);
+  }
+
+  async previewForTourist(
+    touristId: string,
+    bookingId: string,
+  ): Promise<CancellationPreviewDto> {
+    const booking = await this.bookings.findDetailById(bookingId);
+    if (!booking || booking.touristId !== touristId) {
+      throw new BookingNotFoundException();
+    }
+    const empty = {
+      refundPercent: 0,
+      refundAmount: 0,
+      retainedAmount: 0,
+      guideMissedReconfirmation: false,
+    };
+    if (UNPAID_STATUSES.has(booking.status)) {
+      return { cancellable: true, paid: false, ...empty };
+    }
+    const now = new Date();
+    const startsAt = bookingStartsAt(booking);
+    if (booking.status !== BookingStatus.CONFIRMED || startsAt <= now) {
+      return { cancellable: false, paid: true, ...empty };
+    }
+    const [fullDays, partialDays, partialPercent, deadlineHours] =
+      await this.refundRules();
+    const guideMissedReconfirmation =
+      booking.guideProfileId !== null &&
+      reconfirmationMissed(now, startsAt, deadlineHours, booking.reconfirmedAt);
+    const refundPercent = touristRefundPercent({
+      startsAt,
+      now,
+      fullDays,
+      partialDays,
+      partialPercent,
+      guideMissedReconfirmation,
+    });
+    const retained = retainedAmount(booking.totalAmount, refundPercent);
+    return {
+      cancellable: true,
+      paid: true,
+      refundPercent,
+      refundAmount: round2(booking.totalAmount - retained),
+      retainedAmount: retained,
+      guideMissedReconfirmation,
+    };
+  }
+
   async cancelByTourist(
     touristId: string,
     bookingId: string,
     reason: string | undefined,
   ): Promise<CancellationResultDto> {
-    const [minDays, deadlineHours] = await Promise.all([
-      this.settings.getNumber(SettingKey.REFUND_MIN_DAYS),
-      this.settings.getNumber(SettingKey.RECONFIRM_DEADLINE_HOURS),
-    ]);
+    const [fullDays, partialDays, partialPercent, deadlineHours] =
+      await this.refundRules();
 
     const outcome = await this.dataSource.transaction(async (manager) => {
       await this.bookings.findForUpdate(bookingId, manager);
@@ -101,33 +161,43 @@ export class BookingCancellationService {
           deadlineHours,
           booking.reconfirmedAt,
         );
-      if (isRefundable(startsAt, now, minDays) || guideMissedReconfirmation) {
-        const refund = await this.refundCapture(
-          booking,
-          RefundReason.TOURIST_CANCELLATION,
-          manager,
-        );
-        await this.close(
-          booking,
-          BookingStatus.CANCELLED_BY_TOURIST,
-          reason,
-          now,
-          manager,
-          { userId: providerUserIdOf(booking), refunded: true },
-        );
-        return refund;
-      }
-
+      const refundPercent = touristRefundPercent({
+        startsAt,
+        now,
+        fullDays,
+        partialDays,
+        partialPercent,
+        guideMissedReconfirmation,
+      });
+      const refund =
+        refundPercent > 0
+          ? await this.refundCapture(
+              booking,
+              RefundReason.TOURIST_CANCELLATION,
+              manager,
+              refundPercent,
+            )
+          : null;
       await this.close(
         booking,
         BookingStatus.CANCELLED_BY_TOURIST,
         reason,
         now,
         manager,
-        { userId: providerUserIdOf(booking), refunded: false },
+        {
+          userId: providerUserIdOf(booking),
+          refunded: refundPercent >= 100,
+          partial: refundPercent > 0 && refundPercent < 100,
+        },
       );
-      await this.payouts.createForBooking(booking, manager);
-      return null;
+      if (refundPercent < 100) {
+        await this.payouts.createForBooking(
+          booking,
+          manager,
+          retainedAmount(booking.totalAmount, refundPercent),
+        );
+      }
+      return refund;
     });
 
     return this.result(bookingId, outcome, false, null);
@@ -297,7 +367,7 @@ export class BookingCancellationService {
     reason: string | undefined,
     now: Date,
     manager: EntityManager,
-    notice?: { userId: string | null; refunded: boolean },
+    notice?: { userId: string | null; refunded: boolean; partial?: boolean },
   ): Promise<void> {
     if (notice) {
       await this.notices.notify(
@@ -306,7 +376,11 @@ export class BookingCancellationService {
         NotificationType.BOOKING_CANCELLED,
         bookingNotice(booking, {
           reason: reason ?? '',
-          refund: notice.refunded ? 'FULL_REFUND' : 'NO_REFUND',
+          refund: notice.refunded
+            ? 'FULL_REFUND'
+            : notice.partial
+              ? 'PARTIAL_REFUND'
+              : 'NO_REFUND',
         }),
       );
     }

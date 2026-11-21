@@ -40,25 +40,26 @@ export class PayoutsService {
   async createForBooking(
     booking: Booking,
     manager: EntityManager,
+    grossAmount = booking.totalAmount,
   ): Promise<void> {
     if (await this.payouts.existsForBooking(booking.id, manager)) return;
     const commissionRate = await this.settings.getNumber(
       SettingKey.COMMISSION_RATE,
     );
-    const beforeFines = splitPayout(booking.totalAmount, commissionRate);
+    const beforeFines = splitPayout(grossAmount, commissionRate);
     const provider = await this.providerOf(booking, manager);
     const penaltyDeduction = provider
       ? await this.fines.settle(provider, beforeFines.netAmount, manager)
       : 0;
     const { commissionAmount, netAmount } = splitPayout(
-      booking.totalAmount,
+      grossAmount,
       commissionRate,
       penaltyDeduction,
     );
     await this.payouts.insertIfMissing(
       {
         bookingId: booking.id,
-        grossAmount: booking.totalAmount,
+        grossAmount,
         commissionRate,
         commissionAmount,
         penaltyDeduction,

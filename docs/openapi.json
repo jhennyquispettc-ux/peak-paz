@@ -7602,6 +7602,92 @@
         ]
       }
     },
+    "/api/bookings/{id}/cancellation-preview": {
+      "get": {
+        "operationId": "BookingCancellationController_preview",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CancellationPreviewDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Ver cuánto se devolvería si el turista cancela ahora",
+        "tags": [
+          "Bookings"
+        ]
+      }
+    },
     "/api/bookings/{id}/cancel": {
       "post": {
         "operationId": "BookingCancellationController_cancelByTourist",
@@ -7692,7 +7778,7 @@
             "bearer": []
           }
         ],
-        "summary": "Cancelar una reserva. Pagada con 7 días o más de anticipación se reembolsa el 100%",
+        "summary": "Cancelar una reserva. Con 7 días o más se devuelve el 100%, de 3 a 6 días el 50% y con menos de 3 días nada",
         "tags": [
           "Bookings"
         ]
@@ -14307,6 +14393,45 @@
           "exchangeRate",
           "chargedAmount",
           "createdAt"
+        ]
+      },
+      "CancellationPreviewDto": {
+        "type": "object",
+        "properties": {
+          "cancellable": {
+            "type": "boolean",
+            "description": "La reserva todavía se puede cancelar"
+          },
+          "paid": {
+            "type": "boolean",
+            "description": "La reserva ya fue pagada"
+          },
+          "refundPercent": {
+            "type": "number",
+            "example": 50
+          },
+          "refundAmount": {
+            "type": "number",
+            "example": 150,
+            "description": "En bolivianos"
+          },
+          "retainedAmount": {
+            "type": "number",
+            "example": 150,
+            "description": "En bolivianos"
+          },
+          "guideMissedReconfirmation": {
+            "type": "boolean",
+            "description": "El guía no reconfirmó a tiempo"
+          }
+        },
+        "required": [
+          "cancellable",
+          "paid",
+          "refundPercent",
+          "refundAmount",
+          "retainedAmount",
+          "guideMissedReconfirmation"
         ]
       },
       "TouristCancellationDto": {

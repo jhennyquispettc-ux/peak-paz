@@ -84,6 +84,22 @@
 .seat-bar { position: relative; height: 10px; border-radius: var(--radius-pill); background: var(--surface-subtle); }
 .seat-fill { position: absolute; inset: 0 auto 0 0; border-radius: var(--radius-pill); background: var(--cafe-800); }
 .seat-min { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--guindo); }
+.narrow { max-width: 680px; margin: 0 auto; width: 100%; }
+.policy { display: flex; flex-direction: column; gap: var(--space-2); }
+.policy ul { margin: 0; padding-left: var(--space-5); display: flex; flex-direction: column; gap: var(--space-2); font: 400 14px/20px var(--font-sans); }
+.test-payment { border: 2px dashed var(--sol); }
+.test-tag { display: inline-flex; align-items: center; align-self: flex-start; gap: var(--space-2); padding: var(--space-1) var(--space-3); border-radius: var(--radius-pill); background: var(--sol-claro); color: var(--cafe-800); font: 700 13px/18px var(--font-sans); }
+.test-tag svg { width: 18px; height: 18px; }
+.rating-input { display: flex; gap: var(--space-1); color: var(--sol); }
+.rating-input button { display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: var(--radius-md); background: transparent; color: inherit; cursor: pointer; }
+.rating-input button:focus-visible { outline: 2px solid var(--focus-ring); }
+.rating-input svg { width: 28px; height: 28px; }
+.departure-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-3); }
+.departure-list li { display: flex; flex-direction: column; gap: 2px; padding-top: var(--space-3); border-top: 1px solid var(--border-subtle); }
+.departure-list li:first-child { padding-top: 0; border-top: 0; }
+.departure-join { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-top: var(--space-2); }
+.departure-join input { width: 72px; min-height: 36px; padding: 0 var(--space-2); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--surface-card); color: var(--text-primary); font: 500 14px/20px var(--font-sans); }
+.field select { font-family: var(--font-sans); }
 .inline-icon { width: 18px; height: 18px; flex: none; }
 
 @media (max-width: 520px) {

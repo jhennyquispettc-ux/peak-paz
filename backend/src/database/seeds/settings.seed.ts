@@ -30,7 +30,17 @@ const DEFAULT_SETTINGS: Pick<Setting, 'key' | 'value' | 'description'>[] = [
   {
     key: 'REFUND_MIN_DAYS',
     value: '7',
-    description: 'Días mínimos de anticipación para tener reembolso',
+    description: 'Días mínimos de anticipación para tener reembolso del 100%',
+  },
+  {
+    key: 'REFUND_PARTIAL_MIN_DAYS',
+    value: '3',
+    description: 'Días mínimos de anticipación para tener reembolso parcial',
+  },
+  {
+    key: 'REFUND_PARTIAL_PERCENT',
+    value: '50',
+    description: 'Porcentaje del reembolso parcial',
   },
   {
     key: 'GROUP_MIN_PEOPLE',
