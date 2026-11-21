@@ -34,6 +34,7 @@ const COLUMNS: Column<AdminBooking>[] = [
   { key: 'code', header: 'Código', nowrap: true, render: (row) => row.code },
   {
     key: 'type',
+    wideOnly: true,
     header: 'Tipo',
     render: (row) => (row.type === 'GROUP' ? 'Grupal' : 'Privada'),
   },
@@ -43,7 +44,12 @@ const COLUMNS: Column<AdminBooking>[] = [
     header: 'Turista',
     render: (row) => `${row.tourist.firstName} ${row.tourist.lastName}`,
   },
-  { key: 'provider', header: 'Proveedor', render: providerOf },
+  {
+    key: 'provider',
+    header: 'Proveedor',
+    wideOnly: true,
+    render: providerOf,
+  },
   {
     key: 'date',
     header: 'Tour',

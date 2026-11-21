@@ -7,7 +7,7 @@ import NotificationBell from '../notifications/NotificationBell';
 
 export default function SiteHeader() {
   const { user, logout } = useAuth();
-  const { t, locale, setLocale } = useI18n();
+  const { t, locale, setLocale, fixed } = useI18n();
   const navigate = useNavigate();
   const isTourist = user?.role === 'TOURIST';
   const hasPanel = Boolean(user && !isTourist);
@@ -32,15 +32,17 @@ export default function SiteHeader() {
         )}
       </nav>
       <div className="site-user">
-        <button
-          type="button"
-          className="btn btn-sm btn-on-dark lang-btn"
-          aria-label={t('nav.language')}
-          onClick={() => setLocale(locale === 'es' ? 'en' : 'es')}
-        >
-          <Languages aria-hidden="true" />
-          {locale === 'es' ? 'EN' : 'ES'}
-        </button>
+        {!fixed && (
+          <button
+            type="button"
+            className="btn btn-sm btn-on-dark lang-btn"
+            aria-label={t('nav.language')}
+            onClick={() => setLocale(locale === 'es' ? 'en' : 'es')}
+          >
+            <Languages aria-hidden="true" />
+            {locale === 'es' ? 'EN' : 'ES'}
+          </button>
+        )}
         {user && <NotificationBell onDark />}
         {user ? (
           <>

@@ -11,7 +11,9 @@ export interface Resource<T> {
 export function errorMessage(caught: unknown): string {
   return caught instanceof ApiError
     ? caught.message
-    : 'Algo salió mal. Intenta de nuevo en un momento.';
+    : document.documentElement.lang === 'en'
+      ? 'Something went wrong. Please try again in a moment.'
+      : 'Algo salió mal. Intenta de nuevo en un momento.';
 }
 
 export function useResource<T>(

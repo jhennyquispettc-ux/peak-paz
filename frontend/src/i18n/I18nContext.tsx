@@ -17,6 +17,7 @@ interface I18nState {
   t: (key: MessageKey, values?: Record<string, string | number>) => string;
   dateLocale: string;
   pick: (es: string, en: string) => string;
+  fixed: boolean;
 }
 
 const I18nContext = createContext<I18nState | null>(null);
@@ -34,10 +35,12 @@ function initialLocale(): Locale {
 function buildState(
   locale: Locale,
   setLocale: (locale: Locale) => void,
+  fixed = false,
 ): I18nState {
   return {
     locale,
     setLocale,
+    fixed,
     dateLocale: locale === 'en' ? 'en-US' : 'es-BO',
     pick: (es, en) => (locale === 'en' ? en : es),
     t: (key, values = {}) =>
@@ -70,7 +73,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 export function SpanishScope({ children }: { children: ReactNode }) {
   const parent = useI18n();
   const value = useMemo(
-    () => buildState('es', parent.setLocale),
+    () => buildState('es', parent.setLocale, true),
     [parent.setLocale],
   );
   useEffect(() => {

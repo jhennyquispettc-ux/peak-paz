@@ -110,6 +110,7 @@
 
 @media (min-width: 641px) and (max-width: 1200px) {
   .data-table th, .data-table td { padding-left: var(--space-2); padding-right: var(--space-2); }
+  .data-table [data-wide="true"] { display: none; }
 }
 
 @media (max-width: 640px) {

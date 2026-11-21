@@ -28,8 +28,6 @@ export const MESSAGES = {
     'notices.emptyUnread': 'Ya leíste todos tus avisos.',
     'notices.bell': 'Avisos, {count} sin leer',
     'notices.done': 'Listo. Tus avisos quedaron leídos.',
-    'soon.title': 'Esta sección llega en la fase {phase}',
-    'soon.body': 'La estructura ya está lista. Aquí se construirá: {what}.',
   },
   en: {
     'nav.explore': 'Explore trails',
@@ -58,8 +56,6 @@ export const MESSAGES = {
     'notices.emptyUnread': 'You have read all your notifications.',
     'notices.bell': 'Notifications, {count} unread',
     'notices.done': 'Done. Your notifications are marked as read.',
-    'soon.title': 'This section arrives in phase {phase}',
-    'soon.body': 'The structure is ready. This will hold: {what}.',
   },
 } as const;
 

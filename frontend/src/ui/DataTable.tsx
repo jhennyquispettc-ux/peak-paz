@@ -6,6 +6,7 @@ export interface Column<T> {
   render: (row: T) => ReactNode;
   align?: 'left' | 'right';
   nowrap?: boolean;
+  wideOnly?: boolean;
 }
 
 export default function DataTable<T>({
@@ -28,7 +29,12 @@ export default function DataTable<T>({
         <thead>
           <tr>
             {columns.map((column) => (
-              <th key={column.key} scope="col" data-align={column.align}>
+              <th
+                key={column.key}
+                scope="col"
+                data-align={column.align}
+                data-wide={column.wideOnly ? 'true' : undefined}
+              >
                 {column.header}
               </th>
             ))}
@@ -55,6 +61,7 @@ export default function DataTable<T>({
                   data-label={column.header}
                   data-align={column.align}
                   data-nowrap={column.nowrap ? 'true' : undefined}
+                  data-wide={column.wideOnly ? 'true' : undefined}
                 >
                   {column.render(row)}
                 </td>
