@@ -392,6 +392,12 @@ describe('Complaints after the tour (e2e)', () => {
 
     const payout = await payoutOf(booking.accepted);
     expect(payout).toMatchObject({ penaltyDeduction: 75, netAmount: 52.5 });
+    await dataSource
+      .getRepository(Booking)
+      .update(
+        { id: booking.accepted },
+        { endsAt: new Date(Date.now() - 73 * HOUR) },
+      );
     await request(server)
       .patch(`/api/admin/payouts/${payout.id}/paid`)
       .set(auth(adminToken))

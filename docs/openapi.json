@@ -13892,6 +13892,11 @@
             "type": "object",
             "nullable": true
           },
+          "providerName": {
+            "type": "object",
+            "example": "Rosa Mamani",
+            "nullable": true
+          },
           "grossAmount": {
             "type": "number",
             "example": 150,
@@ -13927,6 +13932,21 @@
           "createdAt": {
             "format": "date-time",
             "type": "string"
+          },
+          "stage": {
+            "type": "string",
+            "enum": [
+              "WAITING",
+              "READY",
+              "ON_HOLD",
+              "PAID"
+            ],
+            "description": "WAITING dentro de la ventana de reclamos, READY lista para pagar, ON_HOLD retenida por un reclamo abierto, PAID pagada"
+          },
+          "payableAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Momento desde el que se puede pagar si no hay reclamos"
           }
         },
         "required": [
@@ -13935,6 +13955,7 @@
           "bookingCode",
           "tourDate",
           "routeNameEs",
+          "providerName",
           "grossAmount",
           "commissionRate",
           "commissionAmount",
@@ -13942,7 +13963,9 @@
           "netAmount",
           "status",
           "paidAt",
-          "createdAt"
+          "createdAt",
+          "stage",
+          "payableAt"
         ]
       },
       "PayoutPageDto": {

@@ -287,7 +287,3 @@ export const PROVIDER_PATHS = Array.from(
       .filter(Boolean),
   ),
 );
-
-export const ADMIN_PATHS = ADMIN_NAV.flatMap((group) => group.items)
-  .filter((item) => item.phase === 'F3')
-  .map((item) => item.path);
