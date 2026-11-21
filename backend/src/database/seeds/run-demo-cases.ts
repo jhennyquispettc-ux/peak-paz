@@ -66,9 +66,33 @@ try {
   } else {
     await createCases(db);
   }
+  await ensureAgencyDocuments(db);
   await createPendingProviders(db);
 } finally {
   await app.close();
+}
+
+async function ensureAgencyDocuments(db: DataSource): Promise<void> {
+  const agency = await db.getRepository(Agency).findOne({
+    where: { user: { email: `andes.trek@${DOMAIN}` } },
+    relations: { documents: true },
+  });
+  if (!agency) return;
+  const service = app.get(AgencyProfilesService);
+  const expiresAt = addDays(todayInLaPaz(), 365);
+  for (const type of REQUIRED_AGENCY_DOCUMENTS) {
+    if (agency.documents.some((document) => document.type === type)) continue;
+    await service.uploadDocument(
+      agency.userId,
+      { type, expiresAt },
+      {
+        originalname: `${type.toLowerCase()}.pdf`,
+        mimetype: 'application/pdf',
+        size: PDF.length,
+        buffer: PDF,
+      },
+    );
+  }
 }
 
 async function createPendingProviders(db: DataSource): Promise<void> {
@@ -396,6 +420,7 @@ async function createCases(db: DataSource): Promise<void> {
     });
   }
 
+  await ensureAgencyDocuments(db);
   const departure = await agencyDepartures.create(agencyUser.id, {
     routeId: valley.id,
     departureDate: addDays(today, 15),

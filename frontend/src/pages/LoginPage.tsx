@@ -11,13 +11,22 @@ export default function LoginPage({ mode }: { mode: Mode }) {
   const { login, register } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [accountRole, setAccountRole] = useState<'TOURIST' | 'GUIDE'>(
+  const [accountRole, setAccountRole] = useState<
+    'TOURIST' | 'GUIDE' | 'AGENCY'
+  >(
     'TOURIST',
   );
   const [guide, setGuide] = useState({
     nationalId: '',
     languages: 'es',
     yearsExperience: '0',
+  });
+  const [agency, setAgency] = useState({
+    legalName: '',
+    taxId: '',
+    operatorLicense: '',
+    association: '',
+    address: '',
   });
   const [replay, setReplay] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +63,15 @@ export default function LoginPage({ mode }: { mode: Mode }) {
                     .filter(Boolean),
                   yearsExperience: Number(guide.yearsExperience),
                 }
-              : {}),
+              : accountRole === 'AGENCY'
+                ? {
+                    legalName: agency.legalName.trim(),
+                    taxId: agency.taxId.trim(),
+                    operatorLicense: agency.operatorLicense.trim(),
+                    association: agency.association.trim(),
+                    address: agency.address.trim(),
+                  }
+                : {}),
           });
       navigate(
         ['TOURIST', 'GUIDE'].includes(sessionUser.role) &&
@@ -118,6 +135,14 @@ export default function LoginPage({ mode }: { mode: Mode }) {
                 onClick={() => setAccountRole('GUIDE')}
               >
                 Soy guía
+              </button>
+              <button
+                type="button"
+                className="chip"
+                aria-pressed={accountRole === 'AGENCY'}
+                onClick={() => setAccountRole('AGENCY')}
+              >
+                Soy agencia
               </button>
             </div>
           )}
@@ -198,6 +223,81 @@ export default function LoginPage({ mode }: { mode: Mode }) {
               <p className="field-hint">
                 Después del registro confirmarás tu correo y cargarás tus tres
                 documentos de guía.
+              </p>
+            </>
+          )}
+
+          {!isLogin && accountRole === 'AGENCY' && (
+            <>
+              <div className="field">
+                <label htmlFor="legalName">Razón social</label>
+                <input
+                  id="legalName"
+                  value={agency.legalName}
+                  onChange={(event) =>
+                    setAgency({ ...agency, legalName: event.target.value })
+                  }
+                  maxLength={160}
+                  required
+                />
+              </div>
+              <div className="field-row">
+                <div className="field">
+                  <label htmlFor="taxId">NIT</label>
+                  <input
+                    id="taxId"
+                    inputMode="numeric"
+                    value={agency.taxId}
+                    onChange={(event) =>
+                      setAgency({ ...agency, taxId: event.target.value })
+                    }
+                    pattern="[0-9]{7,15}"
+                    required
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor="operatorLicense">Licencia de operador</label>
+                  <input
+                    id="operatorLicense"
+                    value={agency.operatorLicense}
+                    onChange={(event) =>
+                      setAgency({
+                        ...agency,
+                        operatorLicense: event.target.value,
+                      })
+                    }
+                    maxLength={40}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="field">
+                <label htmlFor="association">Asociación</label>
+                <input
+                  id="association"
+                  value={agency.association}
+                  onChange={(event) =>
+                    setAgency({ ...agency, association: event.target.value })
+                  }
+                  maxLength={120}
+                  required
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="address">Dirección</label>
+                <input
+                  id="address"
+                  value={agency.address}
+                  onChange={(event) =>
+                    setAgency({ ...agency, address: event.target.value })
+                  }
+                  maxLength={200}
+                  required
+                />
+              </div>
+              <p className="field-hint">
+                Después del registro cargarás los documentos de la agencia en tu
+                panel.
               </p>
             </>
           )}

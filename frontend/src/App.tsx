@@ -3,6 +3,7 @@ import { AuthProvider } from './auth/AuthContext';
 import RequireApprovedGuide from './auth/RequireApprovedGuide';
 import RequireRole from './auth/RequireRole';
 import { I18nProvider } from './i18n/I18nContext';
+import { getAgencySanctions, listAgencyPayouts } from './api/agency';
 import { getGuideSanctions, listGuidePayouts } from './api/guide';
 import ByRole from './layout/ByRole';
 import PanelLayout from './layout/PanelLayout';
@@ -22,6 +23,11 @@ import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminVerificationsPage from './pages/admin/AdminVerificationsPage';
 import AdminRouteEditorPage from './pages/admin/routes/AdminRouteEditorPage';
 import AdminRoutesPage from './pages/admin/routes/AdminRoutesPage';
+import AgencyDepartureDetailPage from './pages/agency/AgencyDepartureDetailPage';
+import AgencyDeparturesPage from './pages/agency/AgencyDeparturesPage';
+import AgencyHomePage from './pages/agency/AgencyHomePage';
+import AgencyProfilePage from './pages/agency/AgencyProfilePage';
+import AgencyReviewsPage from './pages/agency/AgencyReviewsPage';
 import ConfirmEmailPage from './pages/ConfirmEmailPage';
 import GuideAgendaPage from './pages/guide/GuideAgendaPage';
 import GuideBookingDetailPage from './pages/guide/GuideBookingDetailPage';
@@ -109,18 +115,64 @@ export default function App() {
                       element={
                         <ByRole
                           guide={<GuideHomePage />}
-                          agency={<ComingSoonPage />}
+                          agency={<AgencyHomePage />}
                         />
                       }
                     />
-                    <Route path="reservas" element={<GuideBookingsPage />} />
+                    <Route
+                      path="reservas"
+                      element={
+                        <ByRole
+                          guide={<GuideBookingsPage />}
+                          agency={<Navigate to="/panel/salidas" replace />}
+                        />
+                      }
+                    />
                     <Route
                       path="reservas/:id"
-                      element={<GuideBookingDetailPage />}
+                      element={
+                        <ByRole
+                          guide={<GuideBookingDetailPage />}
+                          agency={<Navigate to="/panel/salidas" replace />}
+                        />
+                      }
                     />
-                    <Route path="agenda" element={<GuideAgendaPage />} />
-                    <Route path="mis-rutas" element={<GuideRoutesPage />} />
-                    <Route path="salidas/*" element={<ComingSoonPage />} />
+                    <Route
+                      path="agenda"
+                      element={
+                        <ByRole
+                          guide={<GuideAgendaPage />}
+                          agency={<Navigate to="/panel" replace />}
+                        />
+                      }
+                    />
+                    <Route
+                      path="mis-rutas"
+                      element={
+                        <ByRole
+                          guide={<GuideRoutesPage />}
+                          agency={<Navigate to="/panel" replace />}
+                        />
+                      }
+                    />
+                    <Route
+                      path="salidas"
+                      element={
+                        <ByRole
+                          guide={<Navigate to="/panel" replace />}
+                          agency={<AgencyDeparturesPage />}
+                        />
+                      }
+                    />
+                    <Route
+                      path="salidas/:id"
+                      element={
+                        <ByRole
+                          guide={<Navigate to="/panel" replace />}
+                          agency={<AgencyDepartureDetailPage />}
+                        />
+                      }
+                    />
                     <Route
                       path="liquidaciones"
                       element={
@@ -128,7 +180,9 @@ export default function App() {
                           guide={
                             <ProviderPayoutsPage load={listGuidePayouts} />
                           }
-                          agency={<ComingSoonPage />}
+                          agency={
+                            <ProviderPayoutsPage load={listAgencyPayouts} />
+                          }
                         />
                       }
                     />
@@ -137,7 +191,7 @@ export default function App() {
                       element={
                         <ByRole
                           guide={<GuideReviewsPage />}
-                          agency={<ComingSoonPage />}
+                          agency={<AgencyReviewsPage />}
                         />
                       }
                     />
@@ -148,7 +202,9 @@ export default function App() {
                           guide={
                             <ProviderSanctionsPage load={getGuideSanctions} />
                           }
-                          agency={<ComingSoonPage />}
+                          agency={
+                            <ProviderSanctionsPage load={getAgencySanctions} />
+                          }
                         />
                       }
                     />
@@ -157,7 +213,7 @@ export default function App() {
                       element={
                         <ByRole
                           guide={<GuideProfilePage />}
-                          agency={<ComingSoonPage />}
+                          agency={<AgencyProfilePage />}
                         />
                       }
                     />

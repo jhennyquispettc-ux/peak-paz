@@ -38,6 +38,9 @@ export function markAllNoticesRead() {
 
 export function noticeHref(link: string | null, role: Role): string {
   if (!link) return noticesPathFor(role);
+  if (role === 'AGENCY' && /^\/(guia\/)?reservas/.test(link)) {
+    return '/panel/salidas';
+  }
   if (link.startsWith('/guia/')) return link.replace('/guia/', '/panel/');
   if (link.startsWith('/reservas')) {
     if (role === 'GUIDE' || role === 'AGENCY') return `/panel${link}`;
