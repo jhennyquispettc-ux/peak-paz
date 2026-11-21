@@ -1,4 +1,5 @@
 import {
+  ForbiddenException,
   BadRequestException,
   ConflictException,
   NotFoundException,
@@ -52,6 +53,15 @@ export class PriceBelowMinimumException extends BadRequestException {
 export class InvalidGroupSizeException extends BadRequestException {
   constructor(message: string) {
     super({ error: 'INVALID_GROUP_SIZE', message });
+  }
+}
+
+export class AgencyDocumentsExpiredException extends ForbiddenException {
+  constructor() {
+    super({
+      error: 'AGENCY_DOCUMENTS_EXPIRED',
+      message: 'Renew the agency documents to publish new departures.',
+    });
   }
 }
 

@@ -54,6 +54,15 @@ const MESSAGES: Record<string, string> = {
   COMPLAINT_ALREADY_EXISTS: 'Ya presentaste un reclamo para este tour.',
   NO_SHOW_REPORT_NOT_ALLOWED:
     'Puedes reportarlo después de 30 minutos de espera.',
+  AGENCY_DOCUMENTS_EXPIRED:
+    'Renueva los documentos de tu agencia para publicar salidas nuevas.',
+  DEPARTURE_CLOSED: 'Las inscripciones de esta salida ya cerraron.',
+  DEPARTURE_TOO_SOON:
+    'La salida debe publicarse con más de 48 horas de anticipación.',
+  INVALID_GROUP_SIZE:
+    'Revisa el mínimo y el máximo de personas para esta ruta.',
+  NOT_ENOUGH_SEATS: 'No quedan cupos suficientes.',
+  PRICE_BELOW_MINIMUM: 'El precio está por debajo del mínimo de la ruta.',
   PAYOUT_NOT_READY: 'Esta liquidación aún está en el plazo de reclamos.',
   PAYOUT_ON_HOLD: 'Esta liquidación espera la resolución de un reclamo.',
   PAYOUT_ALREADY_PAID: 'Esta liquidación ya figura como pagada.',

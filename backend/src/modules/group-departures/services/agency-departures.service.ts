@@ -3,6 +3,8 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { VerificationStatus } from '../../../common/enums/verification-status.enum.js';
 import { ProviderNotApprovedException } from '../../../common/exceptions/verification.exceptions.js';
+import { missingDocumentTypes } from '../../../common/verification/verification-documents.js';
+import { REQUIRED_AGENCY_DOCUMENTS } from '../../agencies/agencies.enums.js';
 import { addMinutes, laPazInstant } from '../../../common/time/la-paz-time.js';
 import { AgencyNotFoundException } from '../../agencies/exceptions/agencies.exceptions.js';
 import { AgenciesRepository } from '../../agencies/repositories/agencies.repository.js';
@@ -37,6 +39,7 @@ import {
   InvalidGroupSizeException,
   NotEnoughSeatsException,
   PriceBelowMinimumException,
+  AgencyDocumentsExpiredException,
 } from '../exceptions/group-departures.exceptions.js';
 import { GroupDepartureStatus } from '../group-departures.enums.js';
 import { GroupDeparturesRepository } from '../repositories/group-departures.repository.js';
@@ -209,10 +212,16 @@ export class AgencyDeparturesService {
   }
 
   private async approvedAgencyId(userId: string): Promise<string> {
-    const agency = await this.agencies.findIdByUserId(userId);
+    const agency = await this.agencies.findByUserId(userId);
     if (!agency) throw new AgencyNotFoundException();
     if (agency.verificationStatus !== VerificationStatus.APPROVED) {
       throw new ProviderNotApprovedException();
+    }
+    if (
+      missingDocumentTypes(REQUIRED_AGENCY_DOCUMENTS, agency.documents ?? [])
+        .length > 0
+    ) {
+      throw new AgencyDocumentsExpiredException();
     }
     return agency.id;
   }

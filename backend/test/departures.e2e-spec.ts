@@ -307,6 +307,26 @@ describe('Group departures (e2e)', () => {
     expect(tourist.body.error).toBe('INSUFFICIENT_ROLE');
   });
 
+  it('blocks new departures while an agency document is expired', async () => {
+    await dataSource.query(
+      `UPDATE agency_documents SET expires_at = $1 WHERE agency_id = $2 AND type = 'TAX_ID'`,
+      [addDays(today, -1), agencyId],
+    );
+    try {
+      const blocked = await publish().expect(403);
+      expect(blocked.body.error).toBe('AGENCY_DOCUMENTS_EXPIRED');
+      await request(server)
+        .get('/api/agencies/me/departures')
+        .set(auth(agencyToken))
+        .expect(200);
+    } finally {
+      await dataSource.query(
+        `UPDATE agency_documents SET expires_at = $1 WHERE agency_id = $2 AND type = 'TAX_ID'`,
+        [addDays(today, 365), agencyId],
+      );
+    }
+  });
+
   it('publishes a departure that closes 48 hours before the start', async () => {
     const created = await publish().expect(201);
     departureIds.push(created.body.id);
