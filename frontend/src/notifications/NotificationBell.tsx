@@ -1,15 +1,15 @@
-import { Bell } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Bell } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   listNotices,
   markNoticeRead,
   noticeHref,
   type Notice,
-} from "../api/notifications";
-import { useAuth } from "../auth/AuthContext";
-import { noticesPathFor } from "../auth/roles";
-import { useI18n } from "../i18n/I18nContext";
+} from '../api/notifications';
+import { useAuth } from '../auth/AuthContext';
+import { noticesPathFor } from '../auth/roles';
+import { useI18n } from '../i18n/I18nContext';
 
 const REFRESH_MS = 60_000;
 
@@ -56,13 +56,13 @@ export default function NotificationBell({
       if (!box.current?.contains(event.target as Node)) setOpen(false);
     };
     const escape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === 'Escape') setOpen(false);
     };
-    document.addEventListener("mousedown", close);
-    document.addEventListener("keydown", escape);
+    document.addEventListener('mousedown', close);
+    document.addEventListener('keydown', escape);
     return () => {
-      document.removeEventListener("mousedown", close);
-      document.removeEventListener("keydown", escape);
+      document.removeEventListener('mousedown', close);
+      document.removeEventListener('keydown', escape);
     };
   }, [open]);
 
@@ -80,30 +80,30 @@ export default function NotificationBell({
     <div className="bell" ref={box}>
       <button
         type="button"
-        className={`icon-btn ${onDark ? "on-dark" : ""}`}
-        aria-label={t("notices.bell", { count: unread })}
+        className={`icon-btn ${onDark ? 'on-dark' : ''}`}
+        aria-label={t('notices.bell', { count: unread })}
         aria-expanded={open}
         onClick={() => setOpen((current) => !current)}
       >
         <Bell aria-hidden="true" />
         {unread > 0 && (
           <span className="bell-count" aria-hidden="true">
-            {unread > 9 ? "9+" : unread}
+            {unread > 9 ? '9+' : unread}
           </span>
         )}
       </button>
       {open && (
         <div className="bell-menu">
-          <p className="body-strong">{t("notices.title")}</p>
+          <p className="body-strong">{t('notices.title')}</p>
           {notices.length === 0 ? (
-            <p className="small muted">{t("notices.empty")}</p>
+            <p className="small muted">{t('notices.empty')}</p>
           ) : (
             <ul>
               {notices.map((notice) => (
                 <li key={notice.id}>
                   <button
                     type="button"
-                    className={notice.readAt ? "" : "unread"}
+                    className={notice.readAt ? '' : 'unread'}
                     onClick={() => void openNotice(notice)}
                   >
                     <span className="small notice-subject">
@@ -111,8 +111,8 @@ export default function NotificationBell({
                     </span>
                     <span className="caption muted">
                       {new Date(notice.createdAt).toLocaleString(dateLocale, {
-                        dateStyle: "short",
-                        timeStyle: "short",
+                        dateStyle: 'short',
+                        timeStyle: 'short',
                       })}
                     </span>
                   </button>
@@ -121,7 +121,7 @@ export default function NotificationBell({
             </ul>
           )}
           <Link to={noticesPathFor(user.role)} className="bell-all">
-            {t("notices.seeAll")}
+            {t('notices.seeAll')}
           </Link>
         </div>
       )}

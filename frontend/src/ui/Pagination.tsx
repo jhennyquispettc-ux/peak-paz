@@ -1,5 +1,5 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useI18n } from "../i18n/I18nContext";
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useI18n } from '../i18n/I18nContext';
 
 export default function Pagination({
   page,
@@ -12,7 +12,7 @@ export default function Pagination({
 }) {
   const { t } = useI18n();
   if (totalPages <= 1) return null;
-  const label = t("state.page", { page, total: totalPages });
+  const label = t('state.page', { page, total: totalPages });
   return (
     <nav className="pagination" aria-label={label}>
       <button
@@ -22,7 +22,7 @@ export default function Pagination({
         onClick={() => onChange(page - 1)}
       >
         <ChevronLeft aria-hidden="true" />
-        {t("state.previous")}
+        {t('state.previous')}
       </button>
       <span className="small muted">{label}</span>
       <button
@@ -31,7 +31,7 @@ export default function Pagination({
         disabled={page >= totalPages}
         onClick={() => onChange(page + 1)}
       >
-        {t("state.next")}
+        {t('state.next')}
         <ChevronRight aria-hidden="true" />
       </button>
     </nav>

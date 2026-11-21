@@ -1,5 +1,5 @@
-import { Inbox, type LucideIcon } from "lucide-react";
-import type { ReactNode } from "react";
+import { Inbox, type LucideIcon } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 export default function EmptyState({
   title,

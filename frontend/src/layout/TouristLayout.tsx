@@ -1,5 +1,5 @@
-import { Outlet } from "react-router-dom";
-import SiteHeader from "../components/SiteHeader";
+import { Outlet } from 'react-router-dom';
+import SiteHeader from '../components/SiteHeader';
 
 export default function TouristLayout() {
   return (

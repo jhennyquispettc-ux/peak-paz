@@ -6,6 +6,7 @@ import './styles/typography.css';
 import './styles/components.css';
 import './styles/app.css';
 import './styles/panel.css';
+import './styles/admin.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

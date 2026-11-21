@@ -1,29 +1,29 @@
-import { ExternalLink, LogOut, Menu, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ExternalLink, LogOut, Menu, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import {
   Link,
   NavLink,
   Outlet,
   useLocation,
   useNavigate,
-} from "react-router-dom";
-import { useAuth } from "../auth/AuthContext";
-import { SpanishScope } from "../i18n/I18nContext";
-import NotificationBell from "../notifications/NotificationBell";
+} from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
+import { SpanishScope } from '../i18n/I18nContext';
+import NotificationBell from '../notifications/NotificationBell';
 import {
   areaLabelFor,
   baseFor,
   navigationFor,
   NOTICES_ITEM,
   type NavItem,
-} from "./navigation";
+} from './navigation';
 
 function SideLink({
   base,
   item,
 }: {
   base: string;
-  item: Pick<NavItem, "path" | "label" | "icon">;
+  item: Pick<NavItem, 'path' | 'label' | 'icon'>;
 }) {
   const Icon = item.icon;
   return (
@@ -55,7 +55,7 @@ export default function PanelLayout() {
     <SpanishScope>
       <div className="pp panel-shell">
         <aside
-          className={`panel-side ${open ? "open" : ""}`}
+          className={`panel-side ${open ? 'open' : ''}`}
           aria-label="Menú del panel"
         >
           <div className="panel-brand">
@@ -99,7 +99,7 @@ export default function PanelLayout() {
               className="side-link"
               onClick={() => {
                 logout();
-                navigate("/rutas");
+                navigate('/rutas');
               }}
             >
               <LogOut aria-hidden="true" />

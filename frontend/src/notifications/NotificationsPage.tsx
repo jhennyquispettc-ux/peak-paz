@@ -1,34 +1,34 @@
-import { CheckCheck } from "lucide-react";
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { CheckCheck } from 'lucide-react';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   listNotices,
   markAllNoticesRead,
   markNoticeRead,
   noticeHref,
-} from "../api/notifications";
-import { useAuth } from "../auth/AuthContext";
-import { errorMessage, useResource } from "../hooks/useResource";
-import { useI18n } from "../i18n/I18nContext";
-import EmptyState from "../ui/EmptyState";
-import ErrorState from "../ui/ErrorState";
-import FilterChips from "../ui/FilterChips";
-import LoadingState from "../ui/LoadingState";
-import PageHeader from "../ui/PageHeader";
-import Pagination from "../ui/Pagination";
-import { useToast } from "../ui/Toast";
+} from '../api/notifications';
+import { useAuth } from '../auth/AuthContext';
+import { errorMessage, useResource } from '../hooks/useResource';
+import { useI18n } from '../i18n/I18nContext';
+import EmptyState from '../ui/EmptyState';
+import ErrorState from '../ui/ErrorState';
+import FilterChips from '../ui/FilterChips';
+import LoadingState from '../ui/LoadingState';
+import PageHeader from '../ui/PageHeader';
+import Pagination from '../ui/Pagination';
+import { useToast } from '../ui/Toast';
 
-type Filter = "all" | "unread";
+type Filter = 'all' | 'unread';
 
 export default function NotificationsPage() {
   const { user } = useAuth();
   const { t, dateLocale } = useI18n();
   const toast = useToast();
-  const [filter, setFilter] = useState<Filter>("all");
+  const [filter, setFilter] = useState<Filter>('all');
   const [page, setPage] = useState(1);
   const [actionError, setActionError] = useState<string | null>(null);
   const notices = useResource(
-    () => listNotices(page, 15, filter === "unread"),
+    () => listNotices(page, 15, filter === 'unread'),
     [page, filter],
   );
 
@@ -46,29 +46,29 @@ export default function NotificationsPage() {
   return (
     <div className="page-stack">
       <PageHeader
-        title={t("notices.title")}
-        intro={t("notices.intro")}
+        title={t('notices.title')}
+        intro={t('notices.intro')}
         actions={
           notices.data && notices.data.unread > 0 ? (
             <button
               type="button"
               className="btn btn-ghost"
-              onClick={() => void run(markAllNoticesRead, t("notices.done"))}
+              onClick={() => void run(markAllNoticesRead, t('notices.done'))}
             >
               <CheckCheck aria-hidden="true" />
-              {t("notices.markAll")}
+              {t('notices.markAll')}
             </button>
           ) : undefined
         }
       />
       <FilterChips
-        label={t("notices.filter")}
+        label={t('notices.filter')}
         value={filter}
         options={[
-          { value: "all", label: t("notices.all") },
+          { value: 'all', label: t('notices.all') },
           {
-            value: "unread",
-            label: `${t("notices.unread")} (${notices.data?.unread ?? 0})`,
+            value: 'unread',
+            label: `${t('notices.unread')} (${notices.data?.unread ?? 0})`,
           },
         ]}
         onChange={(next) => {
@@ -87,7 +87,7 @@ export default function NotificationsPage() {
       {notices.data?.data.length === 0 && (
         <EmptyState
           title={
-            filter === "unread" ? t("notices.emptyUnread") : t("notices.empty")
+            filter === 'unread' ? t('notices.emptyUnread') : t('notices.empty')
           }
         />
       )}
@@ -96,15 +96,15 @@ export default function NotificationsPage() {
           {notices.data.data.map((notice) => (
             <li
               key={notice.id}
-              className={`card notice-card ${notice.readAt ? "" : "unread"}`}
+              className={`card notice-card ${notice.readAt ? '' : 'unread'}`}
             >
               <div className="notice-text">
                 <p className="body-strong">{notice.subject}</p>
                 <p className="small">{notice.body}</p>
                 <p className="caption muted">
                   {new Date(notice.createdAt).toLocaleString(dateLocale, {
-                    dateStyle: "medium",
-                    timeStyle: "short",
+                    dateStyle: 'medium',
+                    timeStyle: 'short',
                   })}
                 </p>
               </div>
@@ -119,7 +119,7 @@ export default function NotificationsPage() {
                       }
                     }}
                   >
-                    {t("notices.open")}
+                    {t('notices.open')}
                   </Link>
                 )}
                 {!notice.readAt && (
@@ -128,7 +128,7 @@ export default function NotificationsPage() {
                     className="btn btn-sm btn-ghost"
                     onClick={() => void run(() => markNoticeRead(notice.id))}
                   >
-                    {t("notices.markRead")}
+                    {t('notices.markRead')}
                   </button>
                 )}
               </div>

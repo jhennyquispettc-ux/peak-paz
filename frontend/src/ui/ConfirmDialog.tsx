@@ -1,13 +1,13 @@
-import { useState, type ReactNode } from "react";
-import { errorMessage } from "../hooks/useResource";
-import ErrorState from "./ErrorState";
-import Modal from "./Modal";
+import { useState, type ReactNode } from 'react';
+import { errorMessage } from '../hooks/useResource';
+import ErrorState from './ErrorState';
+import Modal from './Modal';
 
 export default function ConfirmDialog({
   title,
   children,
   confirmLabel,
-  cancelLabel = "Volver",
+  cancelLabel = 'Volver',
   destructive = false,
   onConfirm,
   onClose,
@@ -49,7 +49,7 @@ export default function ConfirmDialog({
           </button>
           <button
             type="button"
-            className={`btn ${destructive ? "btn-danger" : "btn-primary"}`}
+            className={`btn ${destructive ? 'btn-danger' : 'btn-primary'}`}
             disabled={busy}
             onClick={() => void confirm()}
           >
