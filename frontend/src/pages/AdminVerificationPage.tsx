@@ -10,7 +10,6 @@ import {
 } from '../api/verification';
 import type { Page, User } from '../api/types';
 import { useAuth } from '../auth/AuthContext';
-import SiteHeader from '../components/SiteHeader';
 
 export default function AdminVerificationPage() {
   const { user, loading } = useAuth();
@@ -100,9 +99,8 @@ export default function AdminVerificationPage() {
     );
   if (role !== 'ADMIN') return <Navigate to="/rutas" replace />;
   return (
-    <div className="pp app-shell">
-      <SiteHeader />
-      <main className="verification-page">
+    <div className="pp">
+      <div className="verification-page">
         <header className="verification-intro">
           <h1 className="h1">Revisión de guías</h1>
           <p className="muted">
@@ -298,7 +296,7 @@ export default function AdminVerificationPage() {
             )}
           </section>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

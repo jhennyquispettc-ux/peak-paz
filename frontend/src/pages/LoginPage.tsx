@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ApiError } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
+import { homeFor } from '../auth/roles';
 import PeakPazHero from '../brand/PeakPazHero';
 
 type Mode = 'login' | 'register';
@@ -28,7 +29,7 @@ export default function LoginPage({ mode }: { mode: Mode }) {
     password: '',
   });
 
-  const target = (location.state as { from?: string } | null)?.from ?? '/rutas';
+  const target = (location.state as { from?: string } | null)?.from;
   const isLogin = mode === 'login';
 
   const update = (field: keyof typeof form) => (value: string) =>
@@ -59,9 +60,7 @@ export default function LoginPage({ mode }: { mode: Mode }) {
         ['TOURIST', 'GUIDE'].includes(sessionUser.role) &&
           (!isLogin || !sessionUser.emailVerifiedAt)
           ? '/mi-verificacion'
-          : sessionUser.role === 'ADMIN' && target === '/rutas'
-            ? '/admin/verificaciones'
-            : target,
+          : (target ?? homeFor(sessionUser.role)),
         { replace: true },
       );
     } catch (caught) {
