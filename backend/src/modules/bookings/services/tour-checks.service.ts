@@ -131,13 +131,14 @@ export class TourChecksService {
   async startByGuide(
     userId: string,
     bookingId: string,
-    latitude: number,
-    longitude: number,
+    latitude?: number,
+    longitude?: number,
   ): Promise<BookingDto> {
     const guideProfileId = await this.profileIdOf(userId);
-    const earlyMinutes = await this.settings.getNumber(
-      SettingKey.START_EARLY_MIN,
-    );
+    const [earlyMinutes, graceHours] = await Promise.all([
+      this.settings.getNumber(SettingKey.START_EARLY_MIN),
+      this.settings.getNumber(SettingKey.START_CONFIRM_GRACE_HOURS),
+    ]);
     await this.dataSource.transaction(async (manager) => {
       const booking = await this.guideBooking(
         bookingId,
@@ -155,23 +156,37 @@ export class TourChecksService {
           bookingStartsAt(booking),
           bookingEndsAt(booking),
           earlyMinutes,
-          0,
+          graceHours,
         )
       ) {
         throw new StartWindowClosedException();
       }
-      const route = booking.route!;
-      booking.status = BookingStatus.IN_PROGRESS;
-      booking.guideStartedAt = now;
-      booking.guideStartLatitude = latitude;
-      booking.guideStartLongitude = longitude;
-      booking.guideStartDistanceM = distanceMeters(
-        latitude,
-        longitude,
-        route.startLatitude,
-        route.startLongitude,
+      const hasDispute = await this.disputes.existsForBooking(
+        booking.id,
+        manager,
       );
+      if (!hasDispute) booking.status = BookingStatus.IN_PROGRESS;
+      booking.guideStartedAt = now;
+      if (latitude !== undefined && longitude !== undefined) {
+        const route = booking.route!;
+        booking.guideStartLatitude = latitude;
+        booking.guideStartLongitude = longitude;
+        booking.guideStartDistanceM = distanceMeters(
+          latitude,
+          longitude,
+          route.startLatitude,
+          route.startLongitude,
+        );
+      }
       await this.bookings.save(booking, manager);
+      if (!hasDispute && !booking.touristStartedAt) {
+        await this.notices.notify(
+          manager,
+          booking.touristId,
+          NotificationType.TOUR_CONFIRM_REMINDER,
+          bookingNotice(booking),
+        );
+      }
     });
     return this.dto(bookingId, true);
   }

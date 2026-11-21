@@ -2,6 +2,10 @@ import { ReschedulesController } from './controllers/reschedules.controller.js';
 import { ReschedulesRepository } from './repositories/reschedules.repository.js';
 import { ReschedulesService } from './services/reschedules.service.js';
 import { TourChecksController } from './controllers/tour-checks.controller.js';
+import { TourHelpController } from './controllers/tour-help.controller.js';
+import { TourHelpRequest } from './entities/tour-help-request.entity.js';
+import { TourHelpRepository } from './repositories/tour-help.repository.js';
+import { TourHelpService } from './services/tour-help.service.js';
 import { Dispute } from './entities/dispute.entity.js';
 import { DisputesRepository } from './repositories/disputes.repository.js';
 import { TourChecksService } from './services/tour-checks.service.js';
@@ -26,7 +30,13 @@ import { GuideBookingsService } from './services/guide-bookings.service.js';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Booking, Reschedule, GroupDeparture, Dispute]),
+    TypeOrmModule.forFeature([
+      Booking,
+      Reschedule,
+      GroupDeparture,
+      Dispute,
+      TourHelpRequest,
+    ]),
     GuidesModule,
     RoutesModule,
     SettingsModule,
@@ -37,6 +47,7 @@ import { GuideBookingsService } from './services/guide-bookings.service.js';
     GuideAgendaController,
     AdminBookingsController,
     TourChecksController,
+    TourHelpController,
     ReschedulesController,
   ],
   providers: [
@@ -48,6 +59,8 @@ import { GuideBookingsService } from './services/guide-bookings.service.js';
     GuideAgendaService,
     DisputesRepository,
     TourChecksService,
+    TourHelpRepository,
+    TourHelpService,
     ReschedulesRepository,
     ReschedulesService,
   ],

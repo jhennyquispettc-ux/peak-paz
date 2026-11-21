@@ -43,6 +43,11 @@ export enum DisputeStatus {
   RESOLVED = 'RESOLVED',
 }
 
+export enum TourHelpStatus {
+  OPEN = 'OPEN',
+  ATTENDED = 'ATTENDED',
+}
+
 export enum DisputeDecision {
   TOUR_HAPPENED = 'TOUR_HAPPENED',
   GUIDE_NO_SHOW = 'GUIDE_NO_SHOW',

@@ -27,11 +27,20 @@ const STATUS: Record<ComplaintStatus, { label: string; tone: StatusTone }> = {
   REJECTED: { label: 'Rechazado', tone: 'muted' },
 };
 
+const REASONS: Record<Complaint['reason'], string> = {
+  GENERAL: 'Problema en el servicio',
+  NO_SHOW: 'El proveedor no llegó',
+};
+
 const COLUMNS: Column<Complaint>[] = [
   { key: 'code', header: 'Reserva', render: (row) => row.bookingCode ?? '' },
   { key: 'tourist', header: 'Turista', render: (row) => row.touristName ?? '' },
   { key: 'provider', header: 'Proveedor', render: providerName },
-  { key: 'route', header: 'Ruta', render: (row) => row.routeNameEs ?? '' },
+  {
+    key: 'reason',
+    header: 'Motivo',
+    render: (row) => REASONS[row.reason],
+  },
   {
     key: 'date',
     nowrap: true,
@@ -66,6 +75,11 @@ function ComplaintModal({
   const [resolution, setResolution] = useState('');
   const { busy, error, run } = useAction();
   const isOpen = complaint.status === 'OPEN';
+  const isNoShow = complaint.reason === 'NO_SHOW';
+  const isRunning = ['CONFIRMED', 'IN_PROGRESS'].includes(
+    complaint.bookingStatus,
+  );
+  const canAccept = complaint.bookingStatus === 'COMPLETED';
   const percent = Number(refundPercent);
   const validPercent =
     refundPercent.trim() !== '' &&
@@ -73,8 +87,9 @@ function ComplaintModal({
     percent >= 0 &&
     percent <= 100;
   const canSubmit =
+    !isRunning &&
     Boolean(decision) &&
-    (decision === 'REJECTED' || validPercent) &&
+    (decision === 'REJECTED' || (canAccept && (isNoShow || validPercent))) &&
     resolution.trim().length >= 5 &&
     !busy;
 
@@ -84,7 +99,9 @@ function ComplaintModal({
       const outcome = await resolveComplaint(complaint.id, {
         decision,
         resolution: resolution.trim(),
-        ...(decision === 'ACCEPTED' ? { refundPercent: percent, strike } : {}),
+        ...(decision === 'ACCEPTED' && !isNoShow
+          ? { refundPercent: percent, strike }
+          : {}),
       });
       await onResolved(`Reclamo resuelto.${sanctionNote(outcome)}`);
     });
@@ -113,6 +130,7 @@ function ComplaintModal({
     >
       <Facts
         items={[
+          { label: 'Motivo', value: REASONS[complaint.reason] },
           { label: 'Turista', value: complaint.touristName ?? '' },
           { label: 'Proveedor', value: providerName(complaint) },
           { label: 'Ruta', value: complaint.routeNameEs ?? '' },
@@ -133,6 +151,17 @@ function ComplaintModal({
             Mientras el reclamo siga abierto, el pago al proveedor queda
             retenido.
           </p>
+          {isRunning && (
+            <p className="notice notice-info">
+              El tour todavía no se cerró. Podrás decidir cuando termine.
+            </p>
+          )}
+          {!isRunning && !canAccept && (
+            <p className="notice notice-info">
+              Esta reserva ya fue cancelada y reembolsada. Solo puedes cerrar el
+              reclamo.
+            </p>
+          )}
           <ChoiceGroup
             legend="Decisión"
             name="complaint-decision"
@@ -142,7 +171,9 @@ function ComplaintModal({
               {
                 value: 'ACCEPTED',
                 label: 'Aceptar',
-                hint: 'Se devuelve un porcentaje y se descuenta al proveedor.',
+                hint: isNoShow
+                  ? 'Se devuelve el 100 % y el proveedor recibe un strike grave.'
+                  : 'Se devuelve un porcentaje y se descuenta al proveedor.',
               },
               {
                 value: 'REJECTED',
@@ -151,7 +182,7 @@ function ComplaintModal({
               },
             ]}
           />
-          {decision === 'ACCEPTED' && (
+          {decision === 'ACCEPTED' && !isNoShow && (
             <>
               <div className="field">
                 <label htmlFor="refundPercent">

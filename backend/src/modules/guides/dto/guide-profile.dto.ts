@@ -41,6 +41,13 @@ export class GuideProfileDto {
   @ApiProperty({ nullable: true })
   verifiedAt: Date | null;
 
+  @ApiProperty({
+    nullable: true,
+    description:
+      'Primera aprobación. Conserva el acceso limitado durante una renovación',
+  })
+  firstApprovedAt: Date | null;
+
   @ApiProperty()
   ratingAverage: number;
 
@@ -73,6 +80,7 @@ export class GuideProfileDto {
       verificationStatus: profile.verificationStatus,
       rejectionReason: profile.rejectionReason,
       verifiedAt: profile.verifiedAt,
+      firstApprovedAt: profile.firstApprovedAt,
       ratingAverage: profile.ratingAverage,
       reviewsCount: profile.reviewsCount,
       documents: documents.map((document) =>

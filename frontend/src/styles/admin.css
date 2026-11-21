@@ -70,6 +70,25 @@
 .view-tabs { overflow-x: auto; }
 .view-tabs button { flex: none; }
 
+.queue-main { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.queue-main .small { margin-left: 0; }
+.queue-item > svg { width: 20px; height: 20px; flex: none; color: var(--text-muted); }
+.action-hint { color: var(--guindo); font-weight: 600; }
+.action-bar { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.action-bar .btn svg { width: 20px; height: 20px; }
+.slot-row { display: grid; grid-template-columns: minmax(120px, 1.2fr) minmax(100px, 1fr) minmax(100px, 1fr) auto; align-items: end; gap: var(--space-3); }
+.plain-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.plain-list li { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) 0; border-top: 1px solid var(--border-subtle); }
+.plain-list li:first-child { border-top: 0; }
+.form-stack-flat { display: flex; flex-direction: column; gap: var(--space-3); }
+.inline-icon { width: 18px; height: 18px; flex: none; }
+
+@media (max-width: 520px) {
+  .slot-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .slot-row > .field:first-child { grid-column: 1 / -1; }
+  .action-bar .btn { flex: 1 1 100%; }
+}
+
 @media (min-width: 641px) and (max-width: 1200px) {
   .data-table th, .data-table td { padding-left: var(--space-2); padding-right: var(--space-2); }
 }

@@ -81,6 +81,15 @@ export class PayoutNotReadyException extends ConflictException {
   }
 }
 
+export class ComplaintNotResolvableException extends ConflictException {
+  constructor() {
+    super({
+      error: 'COMPLAINT_TOUR_RUNNING',
+      message: 'This complaint can be decided when the tour is closed.',
+    });
+  }
+}
+
 export class ComplaintNotFoundException extends NotFoundException {
   constructor() {
     super({ error: 'COMPLAINT_NOT_FOUND', message: 'Complaint not found.' });

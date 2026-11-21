@@ -62,7 +62,7 @@ export class TourChecksController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary:
-      'El guía marca el inicio del tour con su ubicación, desde una hora antes hasta el final',
+      'El guía confirma el tour, con ubicación opcional, desde una hora antes hasta 24 horas después del final',
   })
   @ApiOkResponse({ type: BookingDto })
   @ApiBadRequestResponse({ type: ErrorResponseDto })

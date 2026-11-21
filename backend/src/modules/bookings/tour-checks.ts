@@ -75,11 +75,19 @@ export function canReportNoShow(
   );
 }
 
+export function canAskForHelp(
+  now: Date,
+  startsAt: Date,
+  endsAt: Date,
+): boolean {
+  return now >= startsAt && now <= endsAt;
+}
+
 export function completionOutcome(
   guideStartedAt: Date | null,
   touristStartedAt: Date | null,
 ): CompletionOutcome {
-  return guideStartedAt && touristStartedAt
+  return guideStartedAt || touristStartedAt
     ? CompletionOutcome.COMPLETE
     : CompletionOutcome.DISPUTE;
 }

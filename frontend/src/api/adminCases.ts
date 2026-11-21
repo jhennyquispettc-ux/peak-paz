@@ -9,6 +9,7 @@ export type CancellationDecision = 'NO_SANCTION' | 'STRIKE' | 'STRIKE_AND_FINE';
 export type DisputeStatus = 'OPEN' | 'RESOLVED';
 export type DisputeDecision = 'TOUR_HAPPENED' | 'GUIDE_NO_SHOW';
 export type ComplaintStatus = 'OPEN' | 'ACCEPTED' | 'REJECTED';
+export type HelpStatus = 'OPEN' | 'ATTENDED';
 export type StrikeStatus = 'ACTIVE' | 'REVERTED' | 'EXPIRED';
 export type StrikeReason =
   'CANCELLED_WITHOUT_WEATHER' | 'NO_SHOW' | 'COMPLAINT';
@@ -85,6 +86,8 @@ export interface Complaint extends SanctionSubject {
   id: string;
   touristName: string | null;
   description: string;
+  reason: 'GENERAL' | 'NO_SHOW';
+  bookingStatus: string;
   status: ComplaintStatus;
   refundPercent: number | null;
   deductionAmount: number;
@@ -92,6 +95,24 @@ export interface Complaint extends SanctionSubject {
   resolution: string | null;
   resolvedAt: string | null;
   createdAt: string;
+}
+
+export interface HelpRequest {
+  id: string;
+  bookingId: string;
+  bookingCode: string;
+  description: string;
+  status: HelpStatus;
+  adminNote: string | null;
+  attendedAt: string | null;
+  createdAt: string;
+  tourDate: string | null;
+  routeNameEs: string | null;
+  touristName: string | null;
+  touristPhone: string | null;
+  touristEmail: string | null;
+  providerName: string | null;
+  providerPhone: string | null;
 }
 
 export interface AgencySummary {
@@ -223,6 +244,16 @@ export const resolveComplaint = (
     resolution: string;
   },
 ) => postJson<SanctionOutcome>(`/admin/complaints/${id}/resolve`, body);
+
+export const listHelpRequests = (
+  status: HelpStatus,
+  page: number,
+  limit = 15,
+) =>
+  api<Page<HelpRequest>>(listPath('/admin/help-requests', status, page, limit));
+
+export const attendHelpRequest = (id: string, note: string) =>
+  postJson<HelpRequest>(`/admin/help-requests/${id}/attend`, { note });
 
 export const listStrikes = (status: StrikeStatus, page: number, limit = 15) =>
   api<Page<Strike>>(listPath('/admin/strikes', status, page, limit));

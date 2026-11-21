@@ -114,6 +114,18 @@ const TEMPLATES: Templates = {
       link: '/reservas/{bookingId}',
     },
   },
+  [NotificationType.TOUR_CONFIRM_REMINDER]: {
+    es: {
+      subject: 'Confirma tu tour {code}',
+      body: 'El guía confirmó tu salida a {route} el {date}. Confírmala tú también. Si no respondes, se dará por realizada 24 horas después del fin del tour. Si hubo un problema, podrás presentar un reclamo.',
+      link: '/reservas/{bookingId}',
+    },
+    en: {
+      subject: 'Confirm your tour {code}',
+      body: 'The guide confirmed your trip to {route} on {date}. Please confirm it too. If you do not answer, it will count as done 24 hours after the tour ends. If something went wrong, you can file a complaint.',
+      link: '/reservas/{bookingId}',
+    },
+  },
   [NotificationType.RESCHEDULE_PROPOSED]: {
     es: {
       subject: 'El guía propone otra fecha para {code}',
@@ -174,6 +186,18 @@ const TEMPLATES: Templates = {
       link: '/panel/sanciones',
     },
   },
+  [NotificationType.HELP_ATTENDED]: {
+    es: {
+      subject: 'Atendimos tu pedido de ayuda en {code}',
+      body: 'Sobre tu salida a {route}: {note}',
+      link: '/reservas/{bookingId}',
+    },
+    en: {
+      subject: 'We handled your help request for {code}',
+      body: 'About your trip to {route}: {note}',
+      link: '/reservas/{bookingId}',
+    },
+  },
   [NotificationType.COMPLAINT_RESOLVED]: {
     es: {
       subject: 'Reclamo resuelto para {code}',
@@ -232,6 +256,7 @@ const WORDS: Record<Language, Record<string, string>> = {
     START_MISMATCH_CASE: 'falta la confirmación de inicio de una de las partes',
     CANCELLATION_CASE: 'cancelación de un proveedor',
     COMPLAINT_CASE: 'reclamo de un turista',
+    HELP_CASE: 'un turista pide ayuda durante el tour',
   },
   en: {
     ACCEPTED: 'accepted',
@@ -252,6 +277,7 @@ const WORDS: Record<Language, Record<string, string>> = {
     START_MISMATCH_CASE: 'one side did not confirm the start',
     CANCELLATION_CASE: 'cancellation by a provider',
     COMPLAINT_CASE: 'complaint from a tourist',
+    HELP_CASE: 'a tourist asks for help during the tour',
   },
 };
 

@@ -34,6 +34,25 @@ export class ComplaintsRepository {
     return manager.getRepository(Complaint).exists({ where: { bookingId } });
   }
 
+  async closeAsRefunded(
+    bookingId: string,
+    adminId: string,
+    resolution: string,
+    now: Date,
+    manager: EntityManager,
+  ): Promise<void> {
+    await manager.getRepository(Complaint).update(
+      { bookingId, status: ComplaintStatus.OPEN },
+      {
+        status: ComplaintStatus.ACCEPTED,
+        refundPercent: 100,
+        resolution,
+        resolvedById: adminId,
+        resolvedAt: now,
+      },
+    );
+  }
+
   hasOpenForBooking(bookingId: string): Promise<boolean> {
     return this.complaints.exists({
       where: { bookingId, status: ComplaintStatus.OPEN },

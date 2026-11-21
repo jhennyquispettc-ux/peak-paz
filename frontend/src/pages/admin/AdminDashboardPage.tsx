@@ -1,6 +1,7 @@
 import {
   CalendarX,
   Gavel,
+  LifeBuoy,
   MessageSquareWarning,
   ShieldAlert,
   ShieldCheck,
@@ -14,6 +15,7 @@ import {
   listComplaints,
   listDisputes,
   listGuidesCount,
+  listHelpRequests,
   listStrikes,
 } from '../../api/adminCases';
 import { useResource } from '../../hooks/useResource';
@@ -39,7 +41,7 @@ interface QueueItem {
 }
 
 async function loadSummary() {
-  const [guides, agencies, cancellations, disputes, complaints, strikes] =
+  const [guides, agencies, cancellations, disputes, complaints, strikes, help] =
     await Promise.all([
       listGuidesCount('PENDING'),
       listAgencies('PENDING', 1, 1),
@@ -47,8 +49,15 @@ async function loadSummary() {
       listDisputes('OPEN', 1, 5),
       listComplaints('OPEN', 1, 5),
       listStrikes('ACTIVE', 1, 1),
+      listHelpRequests('OPEN', 1, 5),
     ]);
   const tiles: Tile[] = [
+    {
+      label: 'Ayuda en ruta',
+      count: help.meta.total,
+      to: '/admin/ayuda',
+      icon: LifeBuoy,
+    },
     {
       label: 'Guías por revisar',
       count: guides.meta.total,
@@ -87,6 +96,13 @@ async function loadSummary() {
     },
   ];
   const queue: QueueItem[] = [
+    ...help.data.map((item) => ({
+      key: `h-${item.id}`,
+      kind: 'Ayuda en ruta',
+      title: `${item.bookingCode}, ${item.routeNameEs ?? 'sin ruta'}`,
+      createdAt: item.createdAt,
+      to: '/admin/ayuda',
+    })),
     ...cancellations.data.map((item) => ({
       key: `c-${item.id}`,
       kind: 'Cancelación',

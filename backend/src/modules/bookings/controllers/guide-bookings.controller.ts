@@ -21,6 +21,7 @@ import {
 } from '@nestjs/swagger';
 import { ErrorResponseDto } from '../../../common/dto/error-response.dto.js';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator.js';
+import { RequiresCurrentDocuments } from '../../auth/decorators/requires-current-documents.decorator.js';
 import { Roles } from '../../auth/decorators/roles.decorator.js';
 import type { AuthenticatedUser } from '../../auth/types/authenticated-user.js';
 import { UserRole } from '../../users/users.enums.js';
@@ -49,6 +50,7 @@ export class GuideBookingsController {
   }
 
   @Post(':id/accept')
+  @RequiresCurrentDocuments()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Aceptar una solicitud. Abre el plazo de pago del turista',

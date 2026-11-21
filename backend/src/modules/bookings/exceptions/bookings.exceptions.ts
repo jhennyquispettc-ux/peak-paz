@@ -131,6 +131,39 @@ export class DisputeAlreadyOpenException extends ConflictException {
   }
 }
 
+export class TourHelpWindowClosedException extends ConflictException {
+  constructor() {
+    super({
+      error: 'HELP_WINDOW_CLOSED',
+      message: 'Help can be requested only while the tour is running.',
+    });
+  }
+}
+
+export class TourHelpAlreadyOpenException extends ConflictException {
+  constructor() {
+    super({
+      error: 'HELP_ALREADY_OPEN',
+      message: 'This tour already has an open help request.',
+    });
+  }
+}
+
+export class TourHelpNotFoundException extends NotFoundException {
+  constructor() {
+    super({ error: 'HELP_NOT_FOUND', message: 'Help request not found.' });
+  }
+}
+
+export class TourHelpAlreadyAttendedException extends ConflictException {
+  constructor() {
+    super({
+      error: 'HELP_ALREADY_ATTENDED',
+      message: 'This help request was already attended.',
+    });
+  }
+}
+
 export class DisputeNotFoundException extends NotFoundException {
   constructor() {
     super({ error: 'DISPUTE_NOT_FOUND', message: 'Dispute not found.' });
