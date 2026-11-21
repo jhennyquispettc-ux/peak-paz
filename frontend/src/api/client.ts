@@ -25,6 +25,23 @@ const MESSAGES: Record<string, string> = {
   START_TIME_OUTSIDE_WINDOW:
     'Esa hora está fuera del horario sugerido de la ruta.',
   BAD_REQUEST: 'Revisa los datos del formulario.',
+  PAYOUT_NOT_READY: 'Esta liquidación aún está en el plazo de reclamos.',
+  PAYOUT_ON_HOLD: 'Esta liquidación espera la resolución de un reclamo.',
+  PAYOUT_ALREADY_PAID: 'Esta liquidación ya figura como pagada.',
+  FINE_TOO_HIGH: 'La multa supera el máximo definido en Reglas.',
+  FINE_PERCENT_REQUIRED: 'Indica el porcentaje de la multa.',
+  REFUND_PERCENT_REQUIRED: 'Indica el porcentaje de reembolso.',
+  HIDDEN_REASON_REQUIRED: 'Indica el motivo para ocultar la reseña.',
+  CANNOT_CHANGE_OWN_STATUS: 'No puedes cambiar el estado de tu propia cuenta.',
+  CANCELLATION_REVIEW_RESOLVED: 'Este caso ya fue resuelto.',
+  COMPLAINT_RESOLVED: 'Este reclamo ya fue resuelto.',
+  STRIKE_NOT_ACTIVE: 'Este strike ya no está activo.',
+  ROUTE_NOT_READY: 'La ruta necesita al menos 2 paradas de itinerario.',
+  INVALID_GPX: 'El archivo GPX no es válido.',
+  GPX_FILE_REQUIRED: 'Selecciona un archivo GPX.',
+  INVALID_ITINERARY_STOP: 'Completa el orden y el día de la parada.',
+  INVALID_START_WINDOW:
+    'El inicio más temprano debe ser antes que el más tarde.',
 };
 
 export class ApiError extends Error {

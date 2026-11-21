@@ -40,6 +40,17 @@ export class ComplaintsRepository {
     });
   }
 
+  async openBookingIds(bookingIds: string[]): Promise<Set<string>> {
+    if (bookingIds.length === 0) return new Set();
+    const rows = await this.complaints
+      .createQueryBuilder('complaint')
+      .select('complaint.bookingId', 'bookingId')
+      .where('complaint.bookingId IN (:...bookingIds)', { bookingIds })
+      .andWhere('complaint.status = :open', { open: ComplaintStatus.OPEN })
+      .getRawMany<{ bookingId: string }>();
+    return new Set(rows.map((row) => row.bookingId));
+  }
+
   findByBooking(bookingId: string): Promise<Complaint | null> {
     return this.query()
       .where('complaint.bookingId = :bookingId', { bookingId })

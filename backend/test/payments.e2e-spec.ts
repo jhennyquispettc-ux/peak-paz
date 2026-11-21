@@ -434,7 +434,31 @@ describe('Payments, refunds and payouts (e2e)', () => {
     expect(payout).toMatchObject({
       netAmount: 127.5,
       routeNameEs: `Choro pagos ${suffix}`,
+      stage: 'WAITING',
     });
+
+    const early = await request(server)
+      .patch(`/api/admin/payouts/${payout.id}/paid`)
+      .set(auth(adminToken))
+      .expect(409);
+    expect(early.body.error).toBe('PAYOUT_NOT_READY');
+
+    await dataSource
+      .getRepository(Booking)
+      .update(
+        { id: bookingId },
+        { endsAt: new Date(Date.now() - 73 * 60 * 60_000) },
+      );
+    const ready = await request(server)
+      .get('/api/admin/payouts')
+      .query({ status: 'PENDING', limit: 100 })
+      .set(auth(adminToken))
+      .expect(200);
+    expect(
+      ready.body.data.find(
+        (item: { id: string; stage: string }) => item.id === payout.id,
+      ).stage,
+    ).toBe('READY');
 
     const paid = await request(server)
       .patch(`/api/admin/payouts/${payout.id}/paid`)

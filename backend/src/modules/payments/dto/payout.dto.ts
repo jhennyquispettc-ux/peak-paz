@@ -3,6 +3,7 @@ import { IsEnum, IsOptional } from 'class-validator';
 import { PaginationMetaDto } from '../../../common/dto/pagination-meta.dto.js';
 import { PaginationQueryDto } from '../../../common/dto/pagination-query.dto.js';
 import { Payout } from '../entities/payout.entity.js';
+import { PayoutStage } from '../payout-rules.js';
 import { PayoutStatus } from '../payments.enums.js';
 
 export class PayoutQueryDto extends PaginationQueryDto {
@@ -28,6 +29,9 @@ export class PayoutDto {
   @ApiProperty({ nullable: true })
   routeNameEs: string | null;
 
+  @ApiProperty({ example: 'Rosa Mamani', nullable: true })
+  providerName: string | null;
+
   @ApiProperty({ example: 150, description: 'En bolivianos' })
   grossAmount: number;
 
@@ -52,7 +56,22 @@ export class PayoutDto {
   @ApiProperty()
   createdAt: Date;
 
-  static fromEntity(payout: Payout): PayoutDto {
+  @ApiProperty({
+    enum: PayoutStage,
+    description:
+      'WAITING dentro de la ventana de reclamos, READY lista para pagar, ON_HOLD retenida por un reclamo abierto, PAID pagada',
+  })
+  stage: PayoutStage;
+
+  @ApiProperty({
+    description: 'Momento desde el que se puede pagar si no hay reclamos',
+  })
+  payableAt: Date;
+
+  static fromEntity(
+    payout: Payout,
+    timing: { stage: PayoutStage; payableAt: Date },
+  ): PayoutDto {
     return {
       id: payout.id,
       bookingId: payout.bookingId,
@@ -64,6 +83,11 @@ export class PayoutDto {
       routeNameEs:
         (payout.booking?.route ?? payout.booking?.groupDeparture?.route)
           ?.nameEs ?? null,
+      providerName:
+        payout.booking?.groupDeparture?.agency?.legalName ??
+        (payout.booking?.guideProfile?.user
+          ? `${payout.booking.guideProfile.user.firstName} ${payout.booking.guideProfile.user.lastName}`
+          : null),
       grossAmount: payout.grossAmount,
       commissionRate: payout.commissionRate,
       commissionAmount: payout.commissionAmount,
@@ -72,6 +96,8 @@ export class PayoutDto {
       status: payout.status,
       paidAt: payout.paidAt,
       createdAt: payout.createdAt,
+      stage: timing.stage,
+      payableAt: timing.payableAt,
     };
   }
 }

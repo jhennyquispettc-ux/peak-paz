@@ -72,6 +72,15 @@ export class PayoutOnHoldException extends ConflictException {
   }
 }
 
+export class PayoutNotReadyException extends ConflictException {
+  constructor(payableAt: Date) {
+    super({
+      error: 'PAYOUT_NOT_READY',
+      message: `This payout can be paid from ${payableAt.toISOString()}.`,
+    });
+  }
+}
+
 export class ComplaintNotFoundException extends NotFoundException {
   constructor() {
     super({ error: 'COMPLAINT_NOT_FOUND', message: 'Complaint not found.' });
