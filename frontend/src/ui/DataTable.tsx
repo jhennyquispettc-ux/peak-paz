@@ -1,10 +1,11 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from 'react';
 
 export interface Column<T> {
   key: string;
   header: string;
   render: (row: T) => ReactNode;
-  align?: "left" | "right";
+  align?: 'left' | 'right';
+  nowrap?: boolean;
 }
 
 export default function DataTable<T>({
@@ -37,13 +38,13 @@ export default function DataTable<T>({
           {rows.map((row) => (
             <tr
               key={rowKey(row)}
-              className={onRowClick ? "clickable" : undefined}
+              className={onRowClick ? 'clickable' : undefined}
               tabIndex={onRowClick ? 0 : undefined}
               onClick={onRowClick ? () => onRowClick(row) : undefined}
               onKeyDown={
                 onRowClick
                   ? (event) => {
-                      if (event.key === "Enter") onRowClick(row);
+                      if (event.key === 'Enter') onRowClick(row);
                     }
                   : undefined
               }
@@ -53,6 +54,7 @@ export default function DataTable<T>({
                   key={column.key}
                   data-label={column.header}
                   data-align={column.align}
+                  data-nowrap={column.nowrap ? 'true' : undefined}
                 >
                   {column.render(row)}
                 </td>

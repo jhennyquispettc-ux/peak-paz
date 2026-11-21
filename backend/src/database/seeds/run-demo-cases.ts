@@ -4,7 +4,9 @@ import { AppModule } from '../../app.module.js';
 import { addDays } from '../../common/time/la-paz-time.js';
 import { todayInLaPaz } from '../../common/verification/verification-documents.js';
 import { AppConfig } from '../../config/app.config.js';
+import { REQUIRED_AGENCY_DOCUMENTS } from '../../modules/agencies/agencies.enums.js';
 import { Agency } from '../../modules/agencies/entities/agency.entity.js';
+import { AgencyProfilesService } from '../../modules/agencies/services/agency-profiles.service.js';
 import { PasswordService } from '../../modules/auth/services/password.service.js';
 import { BookingStatus } from '../../modules/bookings/bookings.enums.js';
 import { Booking } from '../../modules/bookings/entities/booking.entity.js';
@@ -64,8 +66,95 @@ try {
   } else {
     await createCases(db);
   }
+  await createPendingProviders(db);
 } finally {
   await app.close();
+}
+
+async function createPendingProviders(db: DataSource): Promise<void> {
+  const users = db.getRepository(User);
+  if (await users.exists({ where: { email: `jorge.condori@${DOMAIN}` } })) {
+    return;
+  }
+  const passwordHash = await app.get(PasswordService).hash(PASSWORD);
+  const account = (
+    local: string,
+    firstName: string,
+    lastName: string,
+    role: UserRole,
+  ) =>
+    users.save(
+      users.create({
+        email: `${local}@${DOMAIN}`,
+        passwordHash,
+        firstName,
+        lastName,
+        phone: '+591 70000000',
+        country: 'BO',
+        language: Language.ES,
+        role,
+        status: UserStatus.ACTIVE,
+        emailVerifiedAt: new Date(),
+      }),
+    );
+  const pdf = (type: string) => ({
+    originalname: `${type.toLowerCase()}.pdf`,
+    mimetype: 'application/pdf',
+    size: PDF.length,
+    buffer: PDF,
+  });
+  const expiresAt = addDays(todayInLaPaz(), 365);
+
+  const guideUser = await account(
+    'jorge.condori',
+    'Jorge',
+    'Condori',
+    UserRole.GUIDE,
+  );
+  const guideProfiles = db.getRepository(GuideProfile);
+  await guideProfiles.save(
+    guideProfiles.create({
+      userId: guideUser.id,
+      nationalId: '8765432',
+      bioEs: 'Jorge guía rutas de La Paz desde hace varios años.',
+      languages: ['es'],
+      yearsExperience: 3,
+    }),
+  );
+  const guideService = app.get(GuideProfilesService);
+  for (const type of Object.values(GuideDocumentType)) {
+    await guideService.uploadDocument(
+      guideUser.id,
+      { type, expiresAt },
+      pdf(type),
+    );
+  }
+
+  const agencyUser = await account(
+    'cumbre.real',
+    'Paola',
+    'Limachi',
+    UserRole.AGENCY,
+  );
+  const agencies = db.getRepository(Agency);
+  await agencies.save(
+    agencies.create({
+      userId: agencyUser.id,
+      legalName: 'Cumbre Real Demo S.R.L.',
+      taxId: '9000000025',
+      operatorLicense: 'RNT-LP-DEMO-2',
+      association: 'ASOGUIA La Paz',
+      address: 'Avenida Illampu 120, La Paz',
+    }),
+  );
+  const agencyService = app.get(AgencyProfilesService);
+  for (const type of REQUIRED_AGENCY_DOCUMENTS) {
+    await agencyService.uploadDocument(
+      agencyUser.id,
+      { type, expiresAt },
+      pdf(type),
+    );
+  }
 }
 
 async function createCases(db: DataSource): Promise<void> {

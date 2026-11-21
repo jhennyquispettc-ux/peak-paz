@@ -1,5 +1,5 @@
-import { TriangleAlert } from "lucide-react";
-import { useI18n } from "../i18n/I18nContext";
+import { TriangleAlert } from 'lucide-react';
+import { useI18n } from '../i18n/I18nContext';
 
 export default function ErrorState({
   message,
@@ -19,7 +19,7 @@ export default function ErrorState({
           className="btn btn-sm btn-ghost"
           onClick={onRetry}
         >
-          {t("state.retry")}
+          {t('state.retry')}
         </button>
       )}
     </div>

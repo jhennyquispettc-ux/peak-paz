@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ApiError } from "../api/client";
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ApiError } from '../api/client';
 
 export interface Resource<T> {
   data: T | null;
@@ -11,7 +11,7 @@ export interface Resource<T> {
 export function errorMessage(caught: unknown): string {
   return caught instanceof ApiError
     ? caught.message
-    : "Algo salió mal. Intenta de nuevo en un momento.";
+    : 'Algo salió mal. Intenta de nuevo en un momento.';
 }
 
 export function useResource<T>(

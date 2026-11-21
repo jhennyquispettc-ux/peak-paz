@@ -1,4 +1,4 @@
-import { CircleCheck } from "lucide-react";
+import { CircleCheck } from 'lucide-react';
 import {
   createContext,
   useCallback,
@@ -6,7 +6,7 @@ import {
   useRef,
   useState,
   type ReactNode,
-} from "react";
+} from 'react';
 
 const ToastContext = createContext<((message: string) => void) | null>(null);
 
@@ -35,6 +35,6 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
 export function useToast() {
   const context = useContext(ToastContext);
-  if (!context) throw new Error("useToast must be used inside ToastProvider");
+  if (!context) throw new Error('useToast must be used inside ToastProvider');
   return context;
 }

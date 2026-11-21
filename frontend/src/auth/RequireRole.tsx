@@ -1,7 +1,7 @@
-import { Navigate, Outlet, useLocation } from "react-router-dom";
-import LoadingState from "../ui/LoadingState";
-import { useAuth } from "./AuthContext";
-import { homeFor, needsEmailCheck, type Role } from "./roles";
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import LoadingState from '../ui/LoadingState';
+import { useAuth } from './AuthContext';
+import { homeFor, needsEmailCheck, type Role } from './roles';
 
 export default function RequireRole({ roles }: { roles: Role[] }) {
   const { user, loading } = useAuth();

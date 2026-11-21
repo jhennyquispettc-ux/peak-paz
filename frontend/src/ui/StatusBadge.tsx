@@ -1,4 +1,4 @@
-export type StatusTone = "success" | "warning" | "danger" | "info" | "muted";
+export type StatusTone = 'success' | 'warning' | 'danger' | 'info' | 'muted';
 
 export default function StatusBadge({
   tone,
