@@ -16,7 +16,12 @@ const COLUMNS: Column<ProviderPayout>[] = [
     nowrap: true,
     render: (row) => row.bookingCode,
   },
-  { key: 'route', header: 'Ruta', render: (row) => row.routeNameEs ?? '' },
+  {
+    key: 'route',
+    header: 'Ruta',
+    wideOnly: true,
+    render: (row) => row.routeNameEs ?? '',
+  },
   {
     key: 'date',
     header: 'Tour',
@@ -32,6 +37,7 @@ const COLUMNS: Column<ProviderPayout>[] = [
   },
   {
     key: 'commission',
+    wideOnly: true,
     header: 'Comisión',
     align: 'right',
     nowrap: true,

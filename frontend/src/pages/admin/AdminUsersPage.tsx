@@ -68,6 +68,7 @@ export default function AdminUsersPage() {
       { key: 'role', header: 'Rol', render: (row) => ROLE_LABELS[row.role] },
       {
         key: 'created',
+        wideOnly: true,
         header: 'Alta',
         nowrap: true,
         render: (row) => dateOnly(row.createdAt),

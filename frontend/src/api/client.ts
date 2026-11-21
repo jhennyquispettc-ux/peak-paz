@@ -96,6 +96,67 @@ const MESSAGES: Record<string, string> = {
     'El inicio más temprano debe ser antes que el más tarde.',
 };
 
+const MESSAGES_EN: Record<string, string> = {
+  EMAIL_NOT_VERIFIED:
+    'Confirm your email in My verification before continuing.',
+  INVALID_VERIFICATION_TOKEN:
+    'The link expired, was already used or is not valid. Request a new one from your account.',
+  VERIFICATION_UNAVAILABLE:
+    'Verification is not available. Your request is saved, please try again.',
+  VERIFICATION_RATE_LIMITED: 'Wait a minute before requesting another email.',
+  INVALID_CREDENTIALS: 'The email or password is not correct.',
+  EMAIL_ALREADY_REGISTERED:
+    'That email already has an account. Try signing in.',
+  USER_SUSPENDED: 'This account is suspended.',
+  INVALID_TOKEN: 'Your session ended. Please sign in again.',
+  ROUTE_NOT_FOUND: 'We could not find that trail.',
+  WEATHER_UNAVAILABLE: 'The forecast is not available right now.',
+  START_TIME_OUTSIDE_WINDOW:
+    'That time is outside the suggested schedule for this trail.',
+  BAD_REQUEST: 'Check the form details.',
+  ALREADY_STARTED: 'You already confirmed this tour.',
+  START_WINDOW_CLOSED:
+    'You can confirm from one hour before until 24 hours after the end.',
+  INVALID_BOOKING_STATUS: 'This booking no longer allows that action.',
+  GUIDE_NOT_AVAILABLE: 'That guide is not available on that date.',
+  BOOKING_NOT_FOUND: 'We could not find that booking.',
+  HELP_WINDOW_CLOSED: 'You can ask for help only while the tour is running.',
+  HELP_ALREADY_OPEN: 'You already have an open help request for this tour.',
+  COMPLAINT_WINDOW_CLOSED:
+    'You can file a complaint from the start of the tour until 72 hours after it ends.',
+  COMPLAINT_ALREADY_EXISTS: 'You already filed a complaint for this tour.',
+  NO_SHOW_REPORT_NOT_ALLOWED: 'You can report it after waiting 30 minutes.',
+  DEPARTURE_CLOSED: 'Registration for this departure is closed.',
+  NOT_ENOUGH_SEATS: 'There are not enough seats left.',
+  ALREADY_JOINED: 'You already joined this departure.',
+  BOOKING_ALREADY_REQUESTED: 'You already have a request for that tour.',
+  INSUFFICIENT_ADVANCE: 'Please book further in advance.',
+  TOO_MANY_PEOPLE: 'Too many people for this tour.',
+  GUIDE_NOT_AUTHORIZED_FOR_ROUTE: 'That guide is not available for this trail.',
+  PAYMENT_WINDOW_CLOSED: 'The payment window has closed.',
+  PAYMENT_NOT_COMPLETED: 'The payment was not completed. Please try again.',
+  PAYMENT_PROVIDER_ERROR:
+    'The payment service did not respond. Please try again.',
+  TOUR_ALREADY_STARTED: 'The tour already started and cannot be cancelled.',
+  REVIEW_ALREADY_EXISTS: 'You already rated this tour.',
+  REVIEW_WINDOW_CLOSED: 'The time to rate this tour has ended.',
+  RESCHEDULE_CLOSED: 'This date change is no longer available.',
+  DISPUTE_ALREADY_OPEN: 'You already reported this case.',
+};
+
+function isEnglish() {
+  return document.documentElement.lang === 'en';
+}
+
+function messageFor(code: string) {
+  if (isEnglish()) {
+    return (
+      MESSAGES_EN[code] ?? 'Something went wrong. Please try again in a moment.'
+    );
+  }
+  return MESSAGES[code] ?? 'Algo salió mal. Intenta de nuevo en un momento.';
+}
+
 export class ApiError extends Error {
   constructor(
     readonly status: number,
@@ -134,7 +195,13 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   try {
     response = await fetch(`/api${path}`, { ...init, headers });
   } catch {
-    throw new ApiError(0, 'NETWORK', 'No pudimos conectar con el servidor.');
+    throw new ApiError(
+      0,
+      'NETWORK',
+      isEnglish()
+        ? 'We could not reach the server.'
+        : 'No pudimos conectar con el servidor.',
+    );
   }
 
   if (response.ok) {
@@ -155,6 +222,6 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
       ? Array.isArray(body.message)
         ? body.message.join('. ')
         : body.message
-      : (MESSAGES[code] ?? 'Algo salió mal. Intenta de nuevo en un momento.'),
+      : messageFor(code),
   );
 }
