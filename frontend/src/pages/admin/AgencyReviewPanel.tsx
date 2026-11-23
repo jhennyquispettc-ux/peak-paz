@@ -15,6 +15,7 @@ import Facts from '../../ui/Facts';
 import FilterChips from '../../ui/FilterChips';
 import LoadingState from '../../ui/LoadingState';
 import PageHeader from '../../ui/PageHeader';
+import DocumentAnalysis from '../../ui/DocumentAnalysis';
 import Pagination from '../../ui/Pagination';
 import StatusBadge from '../../ui/StatusBadge';
 import { useToast } from '../../ui/Toast';
@@ -120,8 +121,6 @@ export default function AgencyReviewPanel() {
               <Facts
                 items={[
                   { label: 'NIT', value: agency.taxId },
-                  { label: 'Licencia', value: agency.operatorLicense },
-                  { label: 'Asociación', value: agency.association },
                   { label: 'Dirección', value: agency.address },
                   {
                     label: 'Representante',
@@ -135,6 +134,13 @@ export default function AgencyReviewPanel() {
                   Último motivo: {agency.rejectionReason}
                 </p>
               )}
+              <DocumentAnalysis
+                key={agency.id}
+                subject="AGENCY"
+                subjectId={agency.id}
+                labels={AGENCY_DOCUMENTS}
+                complete={agency.missingDocuments.length === 0}
+              />
               {AGENCY_DOCUMENTS.map((document) => {
                 const file = agency.documents.find(
                   (item) => item.type === document.type,

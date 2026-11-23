@@ -14,19 +14,6 @@ export class RegisterAgencyDto extends RegisterDto {
   })
   taxId: string;
 
-  @ApiProperty({
-    example: 'RNT-LP-0421',
-    description: 'Licencia de operador turístico',
-  })
-  @IsString()
-  @Length(3, 40)
-  operatorLicense: string;
-
-  @ApiProperty({ example: 'ASOGUIA La Paz' })
-  @IsString()
-  @Length(2, 120)
-  association: string;
-
   @ApiProperty({ example: 'Calle Sagárnaga 213, La Paz' })
   @IsString()
   @Length(5, 200)

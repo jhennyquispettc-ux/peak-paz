@@ -166,8 +166,6 @@ async function createPendingProviders(db: DataSource): Promise<void> {
       userId: agencyUser.id,
       legalName: 'Cumbre Real Demo S.R.L.',
       taxId: '9000000025',
-      operatorLicense: 'RNT-LP-DEMO-2',
-      association: 'ASOGUIA La Paz',
       address: 'Avenida Illampu 120, La Paz',
     }),
   );
@@ -318,8 +316,6 @@ async function createCases(db: DataSource): Promise<void> {
       userId: agencyUser.id,
       legalName: 'Andes Trek Demo S.R.L.',
       taxId: '9000000017',
-      operatorLicense: 'RNT-LP-DEMO',
-      association: 'ASOGUIA La Paz',
       address: 'Calle Sagárnaga 300, La Paz',
       verificationStatus: VerificationStatus.APPROVED,
       verifiedById: admin.id,

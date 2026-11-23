@@ -45,6 +45,9 @@ services:
     environment:
       RABBITMQ_URL: amqp://test:test-local-only@rabbitmq:5672
       SMTP_URL: smtp://mailpit:1025
+      DOCUMENT_BASE_URL: http://host.docker.internal:3099
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       rabbitmq:
         condition: service_healthy

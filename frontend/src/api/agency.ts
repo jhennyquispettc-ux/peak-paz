@@ -23,8 +23,6 @@ export interface AgencyMe {
   user: User;
   legalName: string;
   taxId: string;
-  operatorLicense: string;
-  association: string;
   address: string;
   descriptionEs: string | null;
   descriptionEn: string | null;

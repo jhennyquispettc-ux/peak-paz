@@ -1,10 +1,15 @@
+import asyncio
 from collections import OrderedDict
 from collections.abc import Awaitable, Callable
 
 import aiosmtplib
+from pydantic import ValidationError
 
 from app.config import Settings
 from app.contracts import (
+    DOCUMENT_REVIEW_FAILED_TYPE,
+    DOCUMENT_REVIEW_TYPE,
+    DOCUMENT_REVIEWED_TYPE,
     EMAIL_FAILED_TYPE,
     EMAIL_SEND_TYPE,
     EMAIL_SENT_TYPE,
@@ -14,6 +19,13 @@ from app.contracts import (
     Outcome,
     PermanentDeliveryError,
     TransientDeliveryError,
+)
+from app.document_review import (
+    DocumentDownloader,
+    DownloadError,
+    ReviewCommand,
+    analyze_document,
+    recommendation,
 )
 from app.email_sender import EmailCommand, MailSender, render_email
 
@@ -35,8 +47,14 @@ def is_permanent(error: Exception) -> bool:
     return False
 
 
-def build_handlers(settings: Settings, mail: MailSender) -> dict[str, Handler]:
+def build_handlers(
+    settings: Settings,
+    mail: MailSender,
+    downloader: DocumentDownloader | None = None,
+) -> dict[str, Handler]:
     delivered: OrderedDict[str, None] = OrderedDict()
+    files = downloader or DocumentDownloader(settings.document_base_url)
+    ocr_slot = asyncio.Semaphore(1)
 
     async def ping(command: Envelope) -> Outcome:
         return Outcome(
@@ -78,4 +96,50 @@ def build_handlers(settings: Settings, mail: MailSender) -> dict[str, Handler]:
             ]
         )
 
-    return {PING_TYPE: ping, EMAIL_SEND_TYPE: send_email}
+    async def review_documents(command: Envelope) -> Outcome:
+        failure = Envelope(
+            type=DOCUMENT_REVIEW_FAILED_TYPE,
+            correlation_id=command.id,
+            data={"reviewId": str(command.data.get("reviewId", ""))},
+        )
+        try:
+            review = ReviewCommand.model_validate(command.data)
+        except ValidationError as error:
+            raise PermanentDeliveryError(failure) from error
+        findings = []
+        for document in review.documents:
+            try:
+                content = await files.fetch(document.url)
+            except DownloadError as error:
+                if error.transient:
+                    raise TransientDeliveryError(failure) from error
+                raise PermanentDeliveryError(failure) from error
+            async with ocr_slot:
+                result = await asyncio.to_thread(
+                    analyze_document,
+                    content,
+                    document.type,
+                    document.expected_name,
+                )
+            findings.append(
+                {"documentId": str(document.id), "type": document.type, **result}
+            )
+        return Outcome(
+            events=[
+                Envelope(
+                    type=DOCUMENT_REVIEWED_TYPE,
+                    correlation_id=command.id,
+                    data={
+                        "reviewId": str(review.review_id),
+                        "recommendation": recommendation(findings),
+                        "documents": findings,
+                    },
+                )
+            ]
+        )
+
+    return {
+        PING_TYPE: ping,
+        EMAIL_SEND_TYPE: send_email,
+        DOCUMENT_REVIEW_TYPE: review_documents,
+    }

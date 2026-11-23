@@ -19,6 +19,7 @@ import {
   StorageService,
 } from '../../../storage/storage.service.js';
 import { User } from '../../users/entities/user.entity.js';
+import { DocumentReviewService } from '../../verification/document-review.service.js';
 import { REQUIRED_AGENCY_DOCUMENTS } from '../agencies.enums.js';
 import { AgencyDto } from '../dto/agency.dto.js';
 import { RegisterAgencyDto } from '../dto/register-agency.dto.js';
@@ -39,6 +40,7 @@ export class AgencyProfilesService {
     @InjectRepository(AgencyDocument) //es una anotacion que es necesaria para inyectar el repositorio
     private readonly documents: Repository<AgencyDocument>,
     private readonly storage: StorageService,
+    private readonly documentReviews: DocumentReviewService,
   ) {}
 
   existsByTaxId(taxId: string): Promise<boolean> {
@@ -55,8 +57,6 @@ export class AgencyProfilesService {
         userId: user.id, //llega del JWT
         legalName: dto.legalName,
         taxId: dto.taxId,
-        operatorLicense: dto.operatorLicense,
-        association: dto.association,
         address: dto.address,
         descriptionEs: dto.descriptionEs ?? null,
         descriptionEn: dto.descriptionEn ?? null,
@@ -118,6 +118,13 @@ export class AgencyProfilesService {
     for (const document of previous) {
       await this.documents.delete({ id: document.id });
       await this.storage.remove(document);
+    }
+    const current = await this.findMine(userId);
+    if (
+      missingDocumentTypes(REQUIRED_AGENCY_DOCUMENTS, current.documents)
+        .length === 0
+    ) {
+      await this.documentReviews.requestAfterUpload('AGENCY', agency.id);
     }
     return VerificationDocumentDto.fromEntity(saved);
   }

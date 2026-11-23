@@ -33,11 +33,16 @@ export class Agency {
   @Column({ name: 'tax_id', type: 'varchar', length: 20, unique: true })
   taxId: string;
 
-  @Column({ name: 'operator_license', type: 'varchar', length: 40 })
-  operatorLicense: string;
+  @Column({
+    name: 'operator_license',
+    type: 'varchar',
+    length: 40,
+    nullable: true,
+  })
+  operatorLicense: string | null;
 
-  @Column({ type: 'varchar', length: 120 })
-  association: string;
+  @Column({ type: 'varchar', length: 120, nullable: true })
+  association: string | null;
 
   @Column({ type: 'varchar', length: 200 })
   address: string;

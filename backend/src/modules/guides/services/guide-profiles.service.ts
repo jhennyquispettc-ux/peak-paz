@@ -23,6 +23,7 @@ import {
 import { RouteNotFoundException } from '../../routes/exceptions/routes.exceptions.js';
 import { RoutesRepository } from '../../routes/repositories/routes.repository.js';
 import { User } from '../../users/entities/user.entity.js';
+import { DocumentReviewService } from '../../verification/document-review.service.js';
 import { GuideProfileDto } from '../dto/guide-profile.dto.js';
 import { GuideRouteDto } from '../dto/guide-route.dto.js';
 import { RegisterGuideDto } from '../dto/register-guide.dto.js';
@@ -51,6 +52,7 @@ export class GuideProfilesService {
     private readonly guideRoutes: Repository<GuideRoute>,
     private readonly routes: RoutesRepository,
     private readonly storage: StorageService,
+    private readonly documentReviews: DocumentReviewService,
   ) {}
 
   createForUser(
@@ -159,6 +161,13 @@ export class GuideProfilesService {
 
     for (const document of previous) {
       await this.storage.remove(document);
+    }
+    const current = await this.findMine(userId);
+    if (
+      missingDocumentTypes(REQUIRED_GUIDE_DOCUMENTS, current.documents)
+        .length === 0
+    ) {
+      await this.documentReviews.requestAfterUpload('GUIDE', profile.id);
     }
     return VerificationDocumentDto.fromEntity(saved);
   }

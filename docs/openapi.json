@@ -143,6 +143,78 @@
         ]
       }
     },
+    "/api/admin/document-reviews/{subject}/{id}": {
+      "get": {
+        "operationId": "DocumentReviewController_latest",
+        "parameters": [
+          {
+            "name": "subject",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Último análisis automático de los documentos",
+        "tags": [
+          "Document review"
+        ]
+      },
+      "post": {
+        "operationId": "DocumentReviewController_request",
+        "parameters": [
+          {
+            "name": "subject",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Solicita un nuevo análisis de los documentos",
+        "tags": [
+          "Document review"
+        ]
+      }
+    },
     "/api/admin/messaging/status": {
       "get": {
         "operationId": "MessagingController_status",
@@ -4694,8 +4766,8 @@
                     "type": "string",
                     "enum": [
                       "TAX_ID",
-                      "OPERATOR_LICENSE",
-                      "ASSOCIATION_CERTIFICATE",
+                      "COMMERCE_REGISTRATION",
+                      "MUNICIPAL_LICENSE",
                       "REPRESENTATIVE_ID"
                     ]
                   },
@@ -10946,15 +11018,6 @@
             "example": "1020304025",
             "description": "NIT de la agencia"
           },
-          "operatorLicense": {
-            "type": "string",
-            "example": "RNT-LP-0421",
-            "description": "Licencia de operador turístico"
-          },
-          "association": {
-            "type": "string",
-            "example": "ASOGUIA La Paz"
-          },
           "address": {
             "type": "string",
             "example": "Calle Sagárnaga 213, La Paz"
@@ -10973,8 +11036,6 @@
           "lastName",
           "legalName",
           "taxId",
-          "operatorLicense",
-          "association",
           "address"
         ]
       },
@@ -12989,12 +13050,6 @@
           "taxId": {
             "type": "string"
           },
-          "operatorLicense": {
-            "type": "string"
-          },
-          "association": {
-            "type": "string"
-          },
           "address": {
             "type": "string"
           },
@@ -13041,8 +13096,8 @@
               "type": "string",
               "enum": [
                 "TAX_ID",
-                "OPERATOR_LICENSE",
-                "ASSOCIATION_CERTIFICATE",
+                "COMMERCE_REGISTRATION",
+                "MUNICIPAL_LICENSE",
                 "REPRESENTATIVE_ID"
               ]
             }
@@ -13053,8 +13108,6 @@
           "user",
           "legalName",
           "taxId",
-          "operatorLicense",
-          "association",
           "address",
           "descriptionEs",
           "descriptionEn",
@@ -13078,15 +13131,6 @@
             "type": "string",
             "example": "1020304025",
             "description": "NIT de la agencia"
-          },
-          "operatorLicense": {
-            "type": "string",
-            "example": "RNT-LP-0421",
-            "description": "Licencia de operador turístico"
-          },
-          "association": {
-            "type": "string",
-            "example": "ASOGUIA La Paz"
           },
           "address": {
             "type": "string",

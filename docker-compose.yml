@@ -70,6 +70,9 @@ services:
     environment:
       RABBITMQ_URL: amqp://peakpaz:${RABBITMQ_PASSWORD:?Run npm run setup}@rabbitmq:5672
       SMTP_URL: smtp://mailpit:1025
+      DOCUMENT_BASE_URL: http://host.docker.internal:3010
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "127.0.0.1:3030:3030"
     depends_on:

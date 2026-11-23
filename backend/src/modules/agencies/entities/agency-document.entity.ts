@@ -1,6 +1,9 @@
 import { Column, Entity, JoinColumn, ManyToOne, type Relation } from 'typeorm';
 import { VerificationDocumentBase } from '../../../common/entities/verification-document.base.js';
-import { AgencyDocumentType } from '../agencies.enums.js';
+import {
+  AgencyDocumentType,
+  RETIRED_AGENCY_DOCUMENTS,
+} from '../agencies.enums.js';
 import { Agency } from './agency.entity.js';
 
 @Entity('agency_documents')
@@ -16,7 +19,7 @@ export class AgencyDocument extends VerificationDocumentBase {
 
   @Column({
     type: 'enum',
-    enum: AgencyDocumentType,
+    enum: [...Object.values(AgencyDocumentType), ...RETIRED_AGENCY_DOCUMENTS],
     enumName: 'agency_document_type',
   })
   type: AgencyDocumentType;

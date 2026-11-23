@@ -78,6 +78,7 @@ try {
     PAYMENT_DRIVER: 'fake',
     VERIFICATION_SERVICE_URL: `http://127.0.0.1:${freePort}`,
     RABBITMQ_URL: `amqp://test:test-local-only@127.0.0.1:${port('rabbitmq', 5672)}`,
+    DOCUMENT_BASE_URL: 'http://host.docker.internal:3099',
     MAILPIT_TEST_URL: `http://127.0.0.1:${port('mailpit', 8025)}`,
     SMTP_URL: `smtp://127.0.0.1:${port('mailpit', 1025)}`,
   };

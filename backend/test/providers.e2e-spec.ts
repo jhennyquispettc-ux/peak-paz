@@ -362,8 +362,6 @@ describe('Provider verification (e2e)', () => {
       lastName: 'Quispe',
       legalName: `Andes Trekking ${suffix} S.R.L.`,
       taxId,
-      operatorLicense: 'RNT-LP-0421',
-      association: 'ASOGUIA La Paz',
       address: 'Calle Sagárnaga 213, La Paz',
     };
 
@@ -392,8 +390,8 @@ describe('Provider verification (e2e)', () => {
     it('approves the agency once all four documents are uploaded', async () => {
       for (const type of [
         'TAX_ID',
-        'OPERATOR_LICENSE',
-        'ASSOCIATION_CERTIFICATE',
+        'COMMERCE_REGISTRATION',
+        'MUNICIPAL_LICENSE',
         'REPRESENTATIVE_ID',
       ]) {
         await uploadDocument(

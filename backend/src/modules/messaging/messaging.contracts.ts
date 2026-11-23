@@ -11,6 +11,9 @@ export const PONG_TYPE = 'system.pong';
 export const EMAIL_SEND_TYPE = 'email.send';
 export const EMAIL_SENT_TYPE = 'email.sent';
 export const EMAIL_FAILED_TYPE = 'email.failed';
+export const DOCUMENT_REVIEW_TYPE = 'document.review';
+export const DOCUMENT_REVIEWED_TYPE = 'document.reviewed';
+export const DOCUMENT_REVIEW_FAILED_TYPE = 'document.review_failed';
 export const DIRECT_REPLY_QUEUE = 'amq.rabbitmq.reply-to';
 
 export interface Envelope<T = Record<string, unknown>> {

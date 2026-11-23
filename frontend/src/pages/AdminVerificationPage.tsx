@@ -10,6 +10,7 @@ import {
 } from '../api/verification';
 import type { Page, User } from '../api/types';
 import { useAuth } from '../auth/AuthContext';
+import DocumentAnalysis from '../ui/DocumentAnalysis';
 
 export default function AdminVerificationPage() {
   const { user, loading } = useAuth();
@@ -195,6 +196,13 @@ export default function AdminVerificationPage() {
                 <span className="badge badge-info">
                   {REVIEW_LABELS[profile.verificationStatus]}
                 </span>
+                <DocumentAnalysis
+                  key={profile.id}
+                  subject="GUIDE"
+                  subjectId={profile.id}
+                  labels={DOCUMENTS}
+                  complete={profile.missingDocuments.length === 0}
+                />
                 {DOCUMENTS.map((document) => {
                   const file = profile.documents.find(
                     (item) => item.type === document.type,
