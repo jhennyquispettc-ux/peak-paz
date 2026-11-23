@@ -11,6 +11,8 @@ import {
 } from '../api/verification';
 import { useAuth } from '../auth/AuthContext';
 import SiteHeader from '../components/SiteHeader';
+import { SpanishScope, useI18n } from '../i18n/I18nContext';
+import ProviderInterviewNotice from '../ui/ProviderInterviewNotice';
 
 function DocumentUpload({
   type,
@@ -45,6 +47,7 @@ function DocumentUpload({
         type,
         file,
         String(data.get('expiresAt') || ''),
+        String(data.get('credentialType') || ''),
       );
       form.reset();
       await reload();
@@ -105,6 +108,24 @@ function DocumentUpload({
             disabled={busy}
           />
         </div>
+        {type === 'GUIDE_CREDENTIAL' && (
+          <div className="field">
+            <label htmlFor="credentialType">Entidad de la credencial</label>
+            <select
+              id="credentialType"
+              name="credentialType"
+              defaultValue={profile.credentialType ?? ''}
+              required
+              disabled={busy}
+            >
+              <option value="" disabled>
+                Selecciona
+              </option>
+              <option value="SIRETUR">SIRETUR</option>
+              <option value="FEBOGUIT">FEBOGUIT</option>
+            </select>
+          </div>
+        )}
         <div className="field">
           <label htmlFor={`expiry-${type}`}>Vencimiento, si corresponde</label>
           <input
@@ -133,6 +154,18 @@ function DocumentUpload({
 }
 
 export default function VerificationPage() {
+  const { user } = useAuth();
+  return user?.role === 'GUIDE' ? (
+    <SpanishScope>
+      <VerificationContent />
+    </SpanishScope>
+  ) : (
+    <VerificationContent />
+  );
+}
+
+function VerificationContent() {
+  const { pick } = useI18n();
   const { user, loading, refresh } = useAuth();
   const [state, setState] = useState<VerificationState | null>(null);
   const [profile, setProfile] = useState<GuideProfile | null>(null);
@@ -170,7 +203,11 @@ export default function VerificationPage() {
   }, [reload]);
 
   if (loading)
-    return <main className="verification-page">Cargando tu cuenta…</main>;
+    return (
+      <main className="verification-page">
+        {pick('Cargando tu cuenta…', 'Loading your account…')}
+      </main>
+    );
   if (!user)
     return (
       <Navigate to="/ingresar" state={{ from: '/mi-verificacion' }} replace />
@@ -204,13 +241,21 @@ export default function VerificationPage() {
       <main className="verification-page">
         <header className="verification-intro">
           <Link to="/rutas" className="back small">
-            Volver a las rutas
+            {pick('Volver a las rutas', 'Back to trails')}
           </Link>
-          <h1 className="h1">Prepara tu cuenta para el camino</h1>
+          <h1 className="h1">
+            {pick(
+              'Prepara tu cuenta para el camino',
+              'Get your account ready for the trail',
+            )}
+          </h1>
           <p className="body muted">
             {user.role === 'GUIDE'
               ? 'Confirma tu correo y presenta tus credenciales para ofrecer tus servicios como guía.'
-              : 'Confirma tu correo para poder solicitar un guía o unirte a una salida.'}
+              : pick(
+                  'Confirma tu correo para poder solicitar un guía o unirte a una salida.',
+                  'Confirm your email to request a guide or join a departure.',
+                )}
           </p>
         </header>
         {error && (
@@ -225,31 +270,53 @@ export default function VerificationPage() {
         )}
         <section className="verification-section card">
           <div className="credential-heading">
-            <h2 className="h2">Confirma tu correo</h2>
+            <h2 className="h2">
+              {pick('Confirma tu correo', 'Confirm your email')}
+            </h2>
             <span
               className={`badge ${verified ? 'badge-success' : 'badge-warning'}`}
             >
-              {verified ? 'Correo confirmado' : 'Pendiente'}
+              {verified
+                ? pick('Correo confirmado', 'Email confirmed')
+                : pick('Pendiente', 'Pending')}
             </span>
           </div>
           <p>
-            Tu correo es <strong>{user.email}</strong>.
+            {pick('Tu correo es', 'Your email is')}{' '}
+            <strong>{user.email}</strong>.
           </p>
           {verified ? (
             <p className="muted">
               {user.role === 'GUIDE'
                 ? 'El siguiente paso es completar tus documentos.'
-                : 'Tu cuenta ya puede realizar reservas.'}
+                : pick(
+                    'Tu cuenta ya puede realizar reservas.',
+                    'Your account can now make bookings.',
+                  )}
             </p>
           ) : (
             <>
               <p className="muted">
-                Abre el mensaje de Peak Paz y pulsa “Confirmar mi correo”.
-                Revisa también la carpeta de spam. El enlace vence a los 30
-                minutos.
+                {pick(
+                  'Abre el mensaje de Peak Paz y pulsa “Confirmar mi correo”. Revisa también la carpeta de spam. El enlace vence a los 30 minutos.',
+                  'Open the Peak Paz message and press “Confirm my email”. Also check your spam folder. The link expires in 30 minutes.',
+                )}
               </p>
+              {state?.emailFailedAt && (
+                <p role="alert" className="notice notice-danger">
+                  {pick(
+                    'No pudimos entregar el correo. Revisa tu dirección o solicita otro.',
+                    'We could not deliver the email. Check your address or request another one.',
+                  )}
+                </p>
+              )}
               {!state && !error && (
-                <p role="status">Preparando tu verificación…</p>
+                <p role="status">
+                  {pick(
+                    'Preparando tu verificación…',
+                    'Preparing your verification…',
+                  )}
+                </p>
               )}
               <div className="verification-actions">
                 <button
@@ -260,21 +327,32 @@ export default function VerificationPage() {
                     void act(
                       () =>
                         api('/verification/email/resend', { method: 'POST' }),
-                      'Solicitamos un nuevo correo. El enlace anterior dejará de funcionar.',
+                      pick(
+                        'Solicitamos un nuevo correo. El enlace anterior dejará de funcionar.',
+                        'We requested a new email. The previous link will stop working.',
+                      ),
                     )
                   }
                 >
                   {wait > 0
-                    ? `Puedes reenviar en ${wait} s`
-                    : 'Reenviar correo'}
+                    ? pick(
+                        `Puedes reenviar en ${wait} s`,
+                        `You can resend in ${wait} s`,
+                      )
+                    : pick('Reenviar correo', 'Resend email')}
                 </button>
                 <button
                   type="button"
                   className="btn btn-ghost"
                   disabled={busy}
-                  onClick={() => void act(reload, 'Estado actualizado.')}
+                  onClick={() =>
+                    void act(
+                      reload,
+                      pick('Estado actualizado.', 'Status updated.'),
+                    )
+                  }
                 >
-                  Ya confirmé, actualizar
+                  {pick('Ya confirmé, actualizar', 'I confirmed, refresh')}
                 </button>
               </div>
             </>
@@ -299,6 +377,7 @@ export default function VerificationPage() {
                 Corrige lo siguiente: {profile.rejectionReason}
               </p>
             )}
+            <ProviderInterviewNotice />
             {DOCUMENTS.map((document) => (
               <DocumentUpload
                 key={document.type}

@@ -1,4 +1,5 @@
 import { api, readToken } from './client';
+import type { CredentialType } from './interviews';
 import type { User } from './types';
 
 export const DOCUMENTS = [
@@ -21,6 +22,7 @@ export interface GuideProfile {
   id: string;
   user: User;
   nationalId: string;
+  credentialType: CredentialType | null;
   verificationStatus: string;
   rejectionReason: string | null;
   documents: GuideDocument[];
@@ -29,6 +31,7 @@ export interface GuideProfile {
 export interface VerificationState {
   emailVerifiedAt: string | null;
   emailSentAt: string | null;
+  emailFailedAt: string | null;
   nextResendAt: string;
   reviews: {
     id: string;
@@ -63,10 +66,12 @@ export async function uploadGuideDocument(
   type: string,
   file: File,
   expiresAt: string,
+  credentialType?: string,
 ) {
   const body = new FormData();
   body.set('type', type);
   body.set('file', file);
   if (expiresAt) body.set('expiresAt', expiresAt);
+  if (credentialType) body.set('credentialType', credentialType);
   return api('/guides/me/documents', { method: 'POST', body });
 }

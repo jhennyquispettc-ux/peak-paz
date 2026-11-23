@@ -1,3 +1,5 @@
+import { passInterview } from './helpers/pass-interview.js';
+import { confirmTestEmail } from './helpers/confirm-email.js';
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { rm } from 'node:fs/promises';
@@ -163,6 +165,7 @@ describe('Reviews of guides (e2e)', () => {
         yearsExperience: 6,
       })
       .expect(201);
+    await confirmTestEmail(server, guide.body);
     guideToken = guide.body.accessToken;
     for (const type of ['NATIONAL_ID', 'GUIDE_CREDENTIAL', 'FIRST_AID']) {
       await request(server)
@@ -177,6 +180,7 @@ describe('Reviews of guides (e2e)', () => {
       .set(auth(guideToken))
       .expect(200);
     guideId = me.body.id;
+    await passInterview(server, adminToken, 'GUIDE', guideId);
     await request(server)
       .patch(`/api/admin/guides/${guideId}/verification`)
       .set(auth(adminToken))
@@ -215,6 +219,7 @@ describe('Reviews of guides (e2e)', () => {
         country: 'DE',
       })
       .expect(201);
+    await confirmTestEmail(server, tourist.body);
     touristToken = tourist.body.accessToken;
 
     booking.first = await paidBooking(8);

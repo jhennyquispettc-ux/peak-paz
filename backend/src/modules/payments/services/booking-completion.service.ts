@@ -1,3 +1,5 @@
+import { NotificationsService } from '../../notifications/services/notifications.service.js';
+import { NotificationType } from '../../notifications/notifications.enums.js';
 import { Injectable, Logger } from '@nestjs/common';
 import { Interval } from '@nestjs/schedule';
 import { InjectDataSource } from '@nestjs/typeorm';
@@ -37,6 +39,7 @@ export class BookingCompletionService {
     private readonly disputes: DisputesRepository,
     private readonly payouts: PayoutsService,
     private readonly settings: SettingsService,
+    private readonly notices: NotificationsService,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
@@ -81,6 +84,15 @@ export class BookingCompletionService {
               description: null,
             },
             manager,
+          );
+          await this.notices.notifyAdmins(
+            manager,
+            NotificationType.CASE_OPENED,
+            {
+              kind: 'START_MISMATCH_CASE',
+              code: booking.code,
+              section: 'disputas',
+            },
           );
           summary.disputed++;
           return;

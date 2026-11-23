@@ -16,6 +16,8 @@ import { useAuth } from '../auth/AuthContext';
 import DifficultyBadge from '../components/DifficultyBadge';
 import RouteMap from '../components/RouteMap';
 import SiteHeader from '../components/SiteHeader';
+import { useI18n } from '../i18n/I18nContext';
+import RouteBookingPanel from './tourist/RouteBookingPanel';
 import {
   formatDate,
   formatDays,
@@ -39,6 +41,7 @@ function startTimes(from: string, to: string): string[] {
 export default function RouteDetailPage() {
   const { slug = '' } = useParams();
   const { user } = useAuth();
+  const { locale, pick, dateLocale } = useI18n();
   const navigate = useNavigate();
   const [route, setRoute] = useState<RouteDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -81,7 +84,7 @@ export default function RouteDetailPage() {
         <SiteHeader />
         <main className="detail">
           <p className="notice notice-danger">{error}</p>
-          <Link to="/rutas">Volver a las rutas</Link>
+          <Link to="/rutas">{pick('Volver a las rutas', 'Back to trails')}</Link>
         </main>
       </div>
     );
@@ -92,11 +95,14 @@ export default function RouteDetailPage() {
       <div className="pp app-shell">
         <SiteHeader />
         <main className="detail">
-          <p className="muted">Cargando la ruta...</p>
+          <p className="muted">{pick('Cargando la ruta...', 'Loading trail...')}</p>
         </main>
       </div>
     );
   }
+
+  const name = locale === 'en' ? route.nameEn : route.nameEs;
+  const season = locale === 'en' ? route.bestSeasonEn : route.bestSeasonEs;
 
   const reserve = () => {
     if (!user) {
@@ -107,7 +113,9 @@ export default function RouteDetailPage() {
       navigate('/mi-verificacion');
       return;
     }
-    document.getElementById('guias')?.scrollIntoView({ behavior: 'smooth' });
+    document
+      .getElementById('reservar')
+      ?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
@@ -115,21 +123,21 @@ export default function RouteDetailPage() {
       <SiteHeader />
       <main className="detail">
         <Link to="/rutas" className="back small">
-          ← Todas las rutas
+          ← {pick('Todas las rutas', 'All trails')}
         </Link>
 
         <header className="detail-head">
           <div>
-            <p className="eyebrow">Ruta en La Paz</p>
-            <h1 className="h1">{route.nameEs}</h1>
+            <p className="eyebrow">{pick('Ruta en La Paz', 'Trail in La Paz')}</p>
+            <h1 className="h1">{name}</h1>
             <div className="badges">
               <DifficultyBadge difficulty={route.difficulty} />
-              <span className="badge badge-guindo">Con guía</span>
+              <span className="badge badge-guindo">{pick('Con guía', 'With guide')}</span>
             </div>
           </div>
           <div className="detail-cta card">
             <p className="caption muted">
-              Tour particular hasta {route.privateMaxPeople} personas
+              {pick(`Tour particular hasta ${route.privateMaxPeople} personas`, `Private tour up to ${route.privateMaxPeople} people`)}
             </p>
             <p className="h2">{formatPrice(route.privatePrice)}</p>
             <button
@@ -137,7 +145,7 @@ export default function RouteDetailPage() {
               className="btn btn-primary wide"
               onClick={reserve}
             >
-              Reservar guía
+              {pick('Reservar', 'Book now')}
             </button>
           </div>
         </header>
@@ -145,23 +153,23 @@ export default function RouteDetailPage() {
         <section className="stats stats-wide card">
           <div>
             <p className="h3">{route.distanceKm} km</p>
-            <p className="caption muted">Distancia</p>
+            <p className="caption muted">{pick('Distancia', 'Distance')}</p>
           </div>
           <div>
-            <p className="h3">{formatDays(route.days)}</p>
-            <p className="caption muted">Duración</p>
+            <p className="h3">{formatDays(route.days, locale)}</p>
+            <p className="caption muted">{pick('Duración', 'Duration')}</p>
           </div>
           <div>
             <p className="h3">↗ {route.elevationGainM} m</p>
-            <p className="caption muted">Ascenso</p>
+            <p className="caption muted">{pick('Ascenso', 'Ascent')}</p>
           </div>
           <div>
             <p className="h3">↘ {route.elevationLossM} m</p>
-            <p className="caption muted">Descenso</p>
+            <p className="caption muted">{pick('Descenso', 'Descent')}</p>
           </div>
           <div>
             <p className="h3">{route.maxAltitudeM} m</p>
-            <p className="caption muted">Altura máxima</p>
+            <p className="caption muted">{pick('Altura máxima', 'Max altitude')}</p>
           </div>
         </section>
 
@@ -170,23 +178,23 @@ export default function RouteDetailPage() {
             <RouteMap className="map map-detail" selected={route} />
 
             <section>
-              <h2 className="h2">Sobre la ruta</h2>
-              <p className="body">{route.descriptionEs}</p>
-              <h3 className="h3">Cómo llegar</h3>
-              <p className="body">{route.howToGetThereEs}</p>
-              {route.bestSeasonEs && (
+              <h2 className="h2">{pick('Sobre la ruta', 'About this trail')}</h2>
+              <p className="body">{locale === 'en' ? route.descriptionEn : route.descriptionEs}</p>
+              <h3 className="h3">{pick('Cómo llegar', 'How to get there')}</h3>
+              <p className="body">{locale === 'en' ? route.howToGetThereEn : route.howToGetThereEs}</p>
+              {season && (
                 <>
-                  <h3 className="h3">Mejor época</h3>
-                  <p className="body">{route.bestSeasonEs}</p>
+                  <h3 className="h3">{pick('Mejor época', 'Best season')}</h3>
+                  <p className="body">{season}</p>
                 </>
               )}
             </section>
 
             <section>
               <div className="section-head">
-                <h2 className="h2">Itinerario por etapas</h2>
+                <h2 className="h2">{pick('Itinerario por etapas', 'Stage itinerary')}</h2>
                 <label className="time-select small">
-                  Salida
+                  {pick('Salida', 'Start')}
                   <select
                     value={startTime ?? ''}
                     onChange={(event) => setStartTime(event.target.value)}
@@ -208,13 +216,13 @@ export default function RouteDetailPage() {
                       </span>
                       <span className="timeline-dot" aria-hidden="true" />
                       <span>
-                        <span className="body-strong">{stop.nameEs}</span>
+                        <span className="body-strong">{locale === 'en' ? stop.nameEn : stop.nameEs}</span>
                         <span className="small muted">
                           {' '}
-                          · Día {stop.dayNumber}
+                          · {pick('Día', 'Day')} {stop.dayNumber}
                           {stop.minutesFromPrevious > 0 &&
-                            ` · ${formatMinutes(stop.minutesFromPrevious)} desde la parada anterior`}
-                          {stop.isOvernight && ' · Noche de campamento'}
+                            ` · ${formatMinutes(stop.minutesFromPrevious)} ${pick('desde la parada anterior', 'from the previous stop')}`}
+                          {stop.isOvernight && ` · ${pick('Noche de campamento', 'Camp night')}`}
                         </span>
                       </span>
                     </li>
@@ -222,27 +230,28 @@ export default function RouteDetailPage() {
                 </ol>
               ) : (
                 <p className="muted">
-                  El itinerario de esta ruta todavía no está cargado.
+                  {pick('El itinerario de esta ruta todavía no está cargado.', 'The itinerary for this trail is not available yet.')}
                 </p>
               )}
             </section>
           </div>
 
           <aside className="detail-side">
+            <RouteBookingPanel route={route} times={options} />
             <section className="card side-card">
-              <h2 className="h3">Clima en el punto de inicio</h2>
+              <h2 className="h3">{pick('Clima en el punto de inicio', 'Weather at the trailhead')}</h2>
               {weatherError && (
                 <p className="notice notice-info small">
-                  El pronóstico no está disponible en este momento.
+                  {pick('El pronóstico no está disponible en este momento.', 'The forecast is not available right now.')}
                 </p>
               )}
               {weather && (
                 <ul className="weather">
                   {weather.days.map((day) => (
                     <li key={day.date}>
-                      <span className="small">{formatDate(day.date)}</span>
+                      <span className="small">{formatDate(day.date, dateLocale)}</span>
                       <span className="small muted">
-                        {weatherLabel(day.weatherCode)}
+                        {weatherLabel(day.weatherCode, locale)}
                       </span>
                       <span className="small body-strong">
                         {Math.round(day.temperatureMinC)}° /{' '}
@@ -255,10 +264,10 @@ export default function RouteDetailPage() {
             </section>
 
             <section className="card side-card" id="guias">
-              <h2 className="h3">Guías para esta ruta</h2>
+              <h2 className="h3">{pick('Guías para esta ruta', 'Guides for this trail')}</h2>
               {guides.length === 0 ? (
                 <p className="small muted">
-                  Todavía no hay guías verificados para esta ruta.
+                  {pick('Todavía no hay guías verificados para esta ruta.', 'There are no verified guides for this trail yet.')}
                 </p>
               ) : (
                 <ul className="guides">
@@ -273,11 +282,13 @@ export default function RouteDetailPage() {
                           {guide.firstName} {guide.lastName}
                         </span>
                         <span className="small muted">
-                          {guide.yearsExperience} años de experiencia ·{' '}
+                          {guide.credentialType &&
+                            `${pick('Guía', 'Guide')} ${guide.credentialType} · `}
+                          {guide.yearsExperience} {pick('años de experiencia', 'years of experience')} ·{' '}
                           {guide.languages.join(', ').toUpperCase()}
                         </span>
                       </span>
-                      <span className="badge badge-success">Verificado</span>
+                      <span className="badge badge-success">{pick('Verificado', 'Verified')}</span>
                     </li>
                   ))}
                 </ul>
@@ -286,13 +297,13 @@ export default function RouteDetailPage() {
 
             {route.gearRecommendations.length > 0 && (
               <section className="card side-card">
-                <h2 className="h3">Qué llevar</h2>
+                <h2 className="h3">{pick('Qué llevar', 'What to bring')}</h2>
                 <ul className="gear small">
                   {route.gearRecommendations.map((gear) => (
                     <li key={gear.id}>
-                      {gear.descriptionEs}
+                      {locale === 'en' ? gear.descriptionEn : gear.descriptionEs}
                       {gear.isRequired && (
-                        <span className="badge badge-warning">Obligatorio</span>
+                        <span className="badge badge-warning">{pick('Obligatorio', 'Required')}</span>
                       )}
                     </li>
                   ))}
@@ -301,7 +312,7 @@ export default function RouteDetailPage() {
             )}
 
             <section className="card side-card">
-              <h2 className="h3">Emergencias</h2>
+              <h2 className="h3">{pick('Emergencias', 'Emergencies')}</h2>
               <p className="small">{route.emergencyContacts}</p>
             </section>
           </aside>

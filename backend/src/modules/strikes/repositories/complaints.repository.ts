@@ -34,10 +34,40 @@ export class ComplaintsRepository {
     return manager.getRepository(Complaint).exists({ where: { bookingId } });
   }
 
+  async closeAsRefunded(
+    bookingId: string,
+    adminId: string,
+    resolution: string,
+    now: Date,
+    manager: EntityManager,
+  ): Promise<void> {
+    await manager.getRepository(Complaint).update(
+      { bookingId, status: ComplaintStatus.OPEN },
+      {
+        status: ComplaintStatus.ACCEPTED,
+        refundPercent: 100,
+        resolution,
+        resolvedById: adminId,
+        resolvedAt: now,
+      },
+    );
+  }
+
   hasOpenForBooking(bookingId: string): Promise<boolean> {
     return this.complaints.exists({
       where: { bookingId, status: ComplaintStatus.OPEN },
     });
+  }
+
+  async openBookingIds(bookingIds: string[]): Promise<Set<string>> {
+    if (bookingIds.length === 0) return new Set();
+    const rows = await this.complaints
+      .createQueryBuilder('complaint')
+      .select('complaint.bookingId', 'bookingId')
+      .where('complaint.bookingId IN (:...bookingIds)', { bookingIds })
+      .andWhere('complaint.status = :open', { open: ComplaintStatus.OPEN })
+      .getRawMany<{ bookingId: string }>();
+    return new Set(rows.map((row) => row.bookingId));
   }
 
   findByBooking(bookingId: string): Promise<Complaint | null> {

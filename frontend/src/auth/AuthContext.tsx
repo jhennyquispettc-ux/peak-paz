@@ -11,7 +11,10 @@ import { api, readToken, writeToken } from '../api/client';
 import type { AuthResponse, User } from '../api/types';
 
 interface RegisterData {
-  role?: 'TOURIST' | 'GUIDE';
+  role?: 'TOURIST' | 'GUIDE' | 'AGENCY';
+  legalName?: string;
+  taxId?: string;
+  address?: string;
   nationalId?: string;
   languages?: string[];
   yearsExperience?: number;
@@ -66,7 +69,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (data: RegisterData) => {
       return startSession(
         await api<AuthResponse>(
-          data.role === 'GUIDE' ? '/auth/register/guide' : '/auth/register',
+          data.role === 'GUIDE'
+            ? '/auth/register/guide'
+            : data.role === 'AGENCY'
+              ? '/auth/register/agency'
+              : '/auth/register',
           {
             method: 'POST',
             body: JSON.stringify(

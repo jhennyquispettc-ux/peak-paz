@@ -1,3 +1,5 @@
+import { passInterview } from './helpers/pass-interview.js';
+import { confirmTestEmail } from './helpers/confirm-email.js';
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { rm } from 'node:fs/promises';
@@ -164,6 +166,7 @@ describe('Complaints after the tour (e2e)', () => {
         yearsExperience: 6,
       })
       .expect(201);
+    await confirmTestEmail(server, guide.body);
     guideToken = guide.body.accessToken;
     for (const type of ['NATIONAL_ID', 'GUIDE_CREDENTIAL', 'FIRST_AID']) {
       await request(server)
@@ -178,6 +181,7 @@ describe('Complaints after the tour (e2e)', () => {
       .set(auth(guideToken))
       .expect(200);
     guideId = me.body.id;
+    await passInterview(server, adminToken, 'GUIDE', guideId);
     await request(server)
       .patch(`/api/admin/guides/${guideId}/verification`)
       .set(auth(adminToken))
@@ -216,12 +220,15 @@ describe('Complaints after the tour (e2e)', () => {
         country: 'DE',
       })
       .expect(201);
+    await confirmTestEmail(server, tourist.body);
     touristToken = tourist.body.accessToken;
 
     booking.accepted = await paidBooking(8);
     booking.rejected = await paidBooking(10);
     booking.late = await paidBooking(12);
-  });
+    booking.during = await paidBooking(14);
+    booking.noShow = await paidBooking(16);
+  }, 30_000);
 
   afterAll(async () => {
     if (bookingIds.length > 0) {
@@ -288,11 +295,33 @@ describe('Complaints after the tour (e2e)', () => {
     await app.get(BookingCompletionService).completeFinished(new Date());
   };
 
-  const complain = (bookingId: string, description: string) =>
+  const complain = (bookingId: string, description: string, reason?: string) =>
     request(server)
       .post(`/api/bookings/${bookingId}/complaints`)
       .set(auth(touristToken))
-      .send({ description });
+      .send({ description, ...(reason ? { reason } : {}) });
+
+  const moveTo = async (bookingId: string, startsAt: Date, endsAt: Date) => {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/La_Paz',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    }).formatToParts(startsAt);
+    const part = (type: string) =>
+      parts.find((item) => item.type === type)!.value;
+    await dataSource.getRepository(Booking).update(
+      { id: bookingId },
+      {
+        tourDate: `${part('year')}-${part('month')}-${part('day')}`,
+        startTime: `${part('hour')}:${part('minute')}`,
+        endsAt,
+      },
+    );
+  };
 
   const payoutOf = async (bookingId: string) => {
     const payouts = await request(server)
@@ -316,7 +345,7 @@ describe('Complaints after the tour (e2e)', () => {
       booking.accepted,
       'El guía nos dejó solos en el descenso.',
     ).expect(409);
-    expect(early.body.error).toBe('INVALID_BOOKING_STATUS');
+    expect(early.body.error).toBe('COMPLAINT_WINDOW_CLOSED');
 
     await finishTour(booking.accepted, 25 * HOUR);
     await complain(booking.accepted, 'Muy corto').expect(400);
@@ -389,6 +418,12 @@ describe('Complaints after the tour (e2e)', () => {
 
     const payout = await payoutOf(booking.accepted);
     expect(payout).toMatchObject({ penaltyDeduction: 75, netAmount: 52.5 });
+    await dataSource
+      .getRepository(Booking)
+      .update(
+        { id: booking.accepted },
+        { endsAt: new Date(Date.now() - 73 * HOUR) },
+      );
     await request(server)
       .patch(`/api/admin/payouts/${payout.id}/paid`)
       .set(auth(adminToken))
@@ -422,5 +457,99 @@ describe('Complaints after the tour (e2e)', () => {
       'Recién ahora puedo escribir sobre el tour que hicimos.',
     ).expect(409);
     expect(late.body.error).toBe('COMPLAINT_WINDOW_CLOSED');
+  });
+
+  it('lets the tourist ask for help during the tour without touching the money', async () => {
+    const description = 'El guía nos está tratando de forma agresiva.';
+    const ask = () =>
+      request(server)
+        .post(`/api/bookings/${booking.during}/help`)
+        .set(auth(touristToken))
+        .send({ description });
+    const early = await ask().expect(409);
+    expect(early.body.error).toBe('HELP_WINDOW_CLOSED');
+
+    const startsAt = new Date(Date.now() - HOUR);
+    await moveTo(booking.during, startsAt, new Date(Date.now() + 4 * HOUR));
+    const opened = await ask().expect(201);
+    expect(opened.body.status).toBe('OPEN');
+    const twice = await ask().expect(409);
+    expect(twice.body.error).toBe('HELP_ALREADY_OPEN');
+
+    const list = await request(server)
+      .get('/api/admin/help-requests')
+      .query({ status: 'OPEN', limit: 100 })
+      .set(auth(adminToken))
+      .expect(200);
+    const item = list.body.data.find(
+      (entry: { id: string }) => entry.id === opened.body.id,
+    );
+    expect(item).toMatchObject({
+      touristName: 'Tom Becker',
+      touristPhone: expect.any(String),
+    });
+
+    const attended = await request(server)
+      .post(`/api/admin/help-requests/${opened.body.id}/attend`)
+      .set(auth(adminToken))
+      .send({ note: 'Hablé con las dos partes y el tour continúa.' })
+      .expect(200);
+    expect(attended.body.status).toBe('ATTENDED');
+    await request(server)
+      .post(`/api/admin/help-requests/${opened.body.id}/attend`)
+      .set(auth(adminToken))
+      .send({ note: 'Segundo intento de atención.' })
+      .expect(409);
+    const mine = await request(server)
+      .get(`/api/bookings/${booking.during}/help`)
+      .set(auth(touristToken))
+      .expect(200);
+    expect(mine.body[0].adminNote).toContain('tour continúa');
+  });
+
+  it('accepts a complaint during the tour and waits for the close to decide it', async () => {
+    const opened = await complain(
+      booking.during,
+      'El guía cambió la ruta y nos dejó sin agua en el camino.',
+    ).expect(201);
+    const tooSoon = await resolve(opened.body.id, {
+      decision: 'REJECTED',
+    }).expect(409);
+    expect(tooSoon.body.error).toBe('COMPLAINT_TOUR_RUNNING');
+    await finishTour(booking.during, 30 * HOUR);
+    const payout = await payoutOf(booking.during);
+    expect(payout.stage).toBe('ON_HOLD');
+    await resolve(opened.body.id, { decision: 'REJECTED' }).expect(200);
+  });
+
+  it('refunds everything and gives a grave strike when a no show is proven', async () => {
+    const startsAt = new Date(Date.now() - 10 * MINUTE);
+    await moveTo(booking.noShow, startsAt, new Date(Date.now() + 4 * HOUR));
+    const description = 'El guía marcó el tour pero nunca llegó al punto.';
+    const early = await complain(booking.noShow, description, 'NO_SHOW').expect(
+      409,
+    );
+    expect(early.body.error).toBe('NO_SHOW_REPORT_NOT_ALLOWED');
+
+    const later = new Date(Date.now() - 40 * MINUTE);
+    await moveTo(booking.noShow, later, new Date(Date.now() + 4 * HOUR));
+    const opened = await complain(
+      booking.noShow,
+      description,
+      'NO_SHOW',
+    ).expect(201);
+    expect(opened.body.reason).toBe('NO_SHOW');
+    await finishTour(booking.noShow, 30 * HOUR);
+
+    const resolved = await resolve(opened.body.id, {
+      decision: 'ACCEPTED',
+    }).expect(200);
+    expect(resolved.body).toMatchObject({
+      complaint: { status: 'ACCEPTED', refundPercent: 100 },
+      refund: { reason: 'COMPLAINT', status: 'COMPLETED' },
+      strike: { reason: 'NO_SHOW', weight: 2 },
+    });
+    const payout = await payoutOf(booking.noShow);
+    expect(payout.netAmount).toBe(0);
   });
 });

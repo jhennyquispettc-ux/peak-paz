@@ -20,23 +20,6 @@ services:
       timeout: 5s
       retries: 10
 
-  verification-db:
-    image: postgres:17-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: peakpaz_verification
-      POSTGRES_PASSWORD: ${VERIFICATION_DB_PASSWORD:?Run npm run setup}
-      POSTGRES_DB: peak_paz_verification
-    ports:
-      - "127.0.0.1:5435:5432"
-    volumes:
-      - verification_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U peakpaz_verification -d peak_paz_verification"]
-      interval: 3s
-      timeout: 5s
-      retries: 20
-
   mailpit:
     image: axllent/mailpit:latest
     restart: unless-stopped
@@ -44,29 +27,48 @@ services:
       - "127.0.0.1:1025:1025"
       - "127.0.0.1:8025:8025"
 
-  verification:
-    build: ./verification-service
+  rabbitmq:
+    image: rabbitmq:4.0-management-alpine
+    hostname: peak-paz-rabbitmq
     restart: unless-stopped
-    env_file: ./verification-service/.env
     environment:
-      DB_HOST: verification-db
-      DB_PORT: 5432
-      VERIFICATION_SERVICE_KEY: ${VERIFICATION_SERVICE_KEY:?Run npm run setup}
-      DB_PASSWORD: ${VERIFICATION_DB_PASSWORD:?Run npm run setup}
-      SMTP_URL: smtp://mailpit:1025
+      RABBITMQ_DEFAULT_USER: peakpaz
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?Run npm run setup}
     ports:
-      - "127.0.0.1:3020:3020"
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 5672"]
+      interval: 5s
+      timeout: 10s
+      retries: 20
+
+  verification-python:
+    build:
+      context: ./verification-python
+      target: runtime
+    restart: unless-stopped
+    environment:
+      RABBITMQ_URL: amqp://peakpaz:${RABBITMQ_PASSWORD:?Run npm run setup}@rabbitmq:5672
+      SMTP_URL: smtp://mailpit:1025
+      DOCUMENT_BASE_URL: http://host.docker.internal:3010
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:3030:3030"
     depends_on:
-      verification-db:
+      rabbitmq:
         condition: service_healthy
       mailpit:
         condition: service_started
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:3020/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:3030/health')"]
       interval: 5s
       timeout: 5s
       retries: 20
 
 volumes:
   postgres_data:
-  verification_data:
+  rabbitmq_data:

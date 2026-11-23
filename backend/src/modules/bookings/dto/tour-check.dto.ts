@@ -7,6 +7,7 @@ import {
   IsOptional,
   IsString,
   Length,
+  ValidateIf,
 } from 'class-validator';
 import { PaginationMetaDto } from '../../../common/dto/pagination-meta.dto.js';
 import { PaginationQueryDto } from '../../../common/dto/pagination-query.dto.js';
@@ -19,16 +20,25 @@ import {
 } from '../bookings.enums.js';
 import { Dispute } from '../entities/dispute.entity.js';
 
+function hasLocation(dto: GuideStartDto): boolean {
+  return dto.latitude !== undefined || dto.longitude !== undefined;
+}
+
 export class GuideStartDto {
-  @ApiProperty({ example: -16.3502, description: 'Ubicación actual del guía' })
+  @ApiPropertyOptional({
+    example: -16.3502,
+    description: 'Ubicación del guía. Opcional, se envía junto con la longitud',
+  })
+  @ValidateIf(hasLocation)
   @Type(() => Number)
   @IsLatitude()
-  latitude: number;
+  latitude?: number;
 
-  @ApiProperty({ example: -67.9198 })
+  @ApiPropertyOptional({ example: -67.9198 })
+  @ValidateIf(hasLocation)
   @Type(() => Number)
   @IsLongitude()
-  longitude: number;
+  longitude?: number;
 }
 
 export class NoShowReportDto {

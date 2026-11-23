@@ -1,3 +1,5 @@
+import { passInterview } from './helpers/pass-interview.js';
+import { confirmTestEmail } from './helpers/confirm-email.js';
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { rm } from 'node:fs/promises';
@@ -202,6 +204,7 @@ describe('Reconfirmation, tour start and disputes (e2e)', () => {
         yearsExperience: 6,
       })
       .expect(201);
+    await confirmTestEmail(server, guide.body);
     guideToken = guide.body.accessToken;
     for (const type of ['NATIONAL_ID', 'GUIDE_CREDENTIAL', 'FIRST_AID']) {
       await request(server)
@@ -216,6 +219,7 @@ describe('Reconfirmation, tour start and disputes (e2e)', () => {
       .set(auth(guideToken))
       .expect(200);
     guideId = me.body.id;
+    await passInterview(server, adminToken, 'GUIDE', guideId);
     await request(server)
       .patch(`/api/admin/guides/${guideId}/verification`)
       .set(auth(adminToken))
@@ -254,6 +258,7 @@ describe('Reconfirmation, tour start and disputes (e2e)', () => {
         country: 'DE',
       })
       .expect(201);
+    await confirmTestEmail(server, tourist.body);
     touristToken = tourist.body.accessToken;
 
     booking.reconfirm = await paidBooking(8);
@@ -261,7 +266,9 @@ describe('Reconfirmation, tour start and disputes (e2e)', () => {
     booking.happy = await paidBooking(12);
     booking.mismatch = await paidBooking(14);
     booking.noShow = await paidBooking(16);
-  });
+    booking.nobody = await paidBooking(18);
+    booking.late = await paidBooking(20);
+  }, 30_000);
 
   afterAll(async () => {
     if (bookingIds.length > 0) {
@@ -407,7 +414,7 @@ describe('Reconfirmation, tour start and disputes (e2e)', () => {
     ).toBe(true);
   });
 
-  it('opens a dispute when only the guide confirmed and lets the admin settle it', async () => {
+  it('completes the tour and creates the payout when only the guide confirmed', async () => {
     const startsAt = new Date(Date.now() - 10 * MINUTE);
     await moveTo(
       booking.mismatch,
@@ -416,11 +423,58 @@ describe('Reconfirmation, tour start and disputes (e2e)', () => {
     );
     const started = await guideStart(booking.mismatch).expect(200);
     expect(started.body.status).toBe('IN_PROGRESS');
-
     await dataSource
       .getRepository(Booking)
       .update(
         { id: booking.mismatch },
+        { endsAt: new Date(Date.now() - 25 * HOUR) },
+      );
+    await app.get(BookingCompletionService).completeFinished(new Date());
+    const finished = await request(server)
+      .get(`/api/bookings/${booking.mismatch}`)
+      .set(auth(touristToken))
+      .expect(200);
+    expect(finished.body.status).toBe('COMPLETED');
+    const payouts = await request(server)
+      .get('/api/guides/me/payouts')
+      .set(auth(guideToken))
+      .expect(200);
+    expect(
+      payouts.body.data.some(
+        (item: { bookingId: string }) => item.bookingId === booking.mismatch,
+      ),
+    ).toBe(true);
+  });
+
+  it('lets the guide confirm after the tour ended and without location', async () => {
+    const startsAt = new Date(Date.now() - 8 * HOUR);
+    await moveTo(booking.late, startsAt, new Date(Date.now() - 2 * HOUR));
+    const started = await request(server)
+      .post(`/api/guides/me/bookings/${booking.late}/start`)
+      .set(auth(guideToken))
+      .send({})
+      .expect(200);
+    expect(started.body.status).toBe('IN_PROGRESS');
+    expect(started.body.guideStartedAt).not.toBeNull();
+    await request(server)
+      .post(`/api/guides/me/bookings/${booking.reconfirm}/start`)
+      .set(auth(guideToken))
+      .send({ latitude: -16.35 })
+      .expect(400);
+  });
+
+  it('opens a dispute when nobody confirmed and lets the admin settle it', async () => {
+    const startsAt = new Date(Date.now() - 10 * MINUTE);
+    await moveTo(
+      booking.nobody,
+      startsAt,
+      new Date(startsAt.getTime() + 5 * HOUR),
+    );
+
+    await dataSource
+      .getRepository(Booking)
+      .update(
+        { id: booking.nobody },
         { endsAt: new Date(Date.now() - 25 * HOUR) },
       );
     const summary = await app
@@ -434,23 +488,22 @@ describe('Reconfirmation, tour start and disputes (e2e)', () => {
       .set(auth(adminToken))
       .expect(200);
     const dispute = open.body.data.find(
-      (item: { bookingId: string }) => item.bookingId === booking.mismatch,
+      (item: { bookingId: string }) => item.bookingId === booking.nobody,
     );
     expect(dispute).toMatchObject({
       reason: 'START_MISMATCH',
       openedBy: 'SYSTEM',
+      guideStartedAt: null,
       touristStartedAt: null,
       guideName: 'Mario Condori',
     });
-    expect(dispute.guideStartDistanceM).toBeGreaterThan(0);
-    expect(dispute.guideStartDistanceM).toBeLessThan(200);
 
     const resolved = await request(server)
       .post(`/api/admin/disputes/${dispute.id}/resolve`)
       .set(auth(adminToken))
       .send({
         decision: 'TOUR_HAPPENED',
-        resolution: 'El guía marcó el inicio en el punto de partida.',
+        resolution: 'Las dos partes confirmaron por teléfono que se realizó.',
       })
       .expect(200);
     expect(resolved.body).toMatchObject({
@@ -465,7 +518,7 @@ describe('Reconfirmation, tour start and disputes (e2e)', () => {
       .expect(200);
     expect(
       payouts.body.data.some(
-        (item: { bookingId: string }) => item.bookingId === booking.mismatch,
+        (item: { bookingId: string }) => item.bookingId === booking.nobody,
       ),
     ).toBe(true);
   });
@@ -499,6 +552,24 @@ describe('Reconfirmation, tour start and disputes (e2e)', () => {
       .expect(409);
     expect(twice.body.error).toBe('DISPUTE_ALREADY_OPEN');
 
+    const lateGuide = await request(server)
+      .post(`/api/guides/me/bookings/${booking.noShow}/start`)
+      .set(auth(guideToken))
+      .send({})
+      .expect(200);
+    expect(lateGuide.body.status).toBe('CONFIRMED');
+    const stillOpen = await request(server)
+      .get(`/api/admin/disputes/${reported.body.id}`)
+      .set(auth(adminToken))
+      .expect(200);
+    expect(stillOpen.body.status).toBe('OPEN');
+    expect(stillOpen.body.guideStartedAt).not.toBeNull();
+    const held = await request(server)
+      .get(`/api/bookings/${booking.noShow}`)
+      .set(auth(touristToken))
+      .expect(200);
+    expect(held.body.status).toBe('CONFIRMED');
+
     const resolved = await request(server)
       .post(`/api/admin/disputes/${reported.body.id}/resolve`)
       .set(auth(adminToken))
@@ -521,5 +592,30 @@ describe('Reconfirmation, tour start and disputes (e2e)', () => {
       .send({ decision: 'TOUR_HAPPENED', resolution: 'Segundo intento.' })
       .expect(409);
     expect(again.body.error).toBe('DISPUTE_RESOLVED');
+  });
+
+  it('keeps limited access for an approved guide with an expired document', async () => {
+    await dataSource.query(
+      'UPDATE guide_documents SET expires_at = $1 WHERE guide_profile_id = $2',
+      [addDays(today, -1), guideId],
+    );
+    await request(server)
+      .get('/api/guides/me/bookings')
+      .set(auth(guideToken))
+      .expect(200);
+    await request(server)
+      .get('/api/guides/me/payouts')
+      .set(auth(guideToken))
+      .expect(200);
+    const blocked = await request(server)
+      .post(`/api/guides/me/bookings/${booking.reconfirm}/accept`)
+      .set(auth(guideToken))
+      .expect(403);
+    expect(blocked.body.error).toBe('DOCUMENTS_EXPIRED');
+    await request(server).get(`/api/guides/${guideId}`).expect(404);
+    await dataSource.query(
+      'UPDATE guide_documents SET expires_at = $1 WHERE guide_profile_id = $2',
+      [addDays(today, 365), guideId],
+    );
   });
 });

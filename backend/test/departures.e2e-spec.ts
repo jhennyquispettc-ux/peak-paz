@@ -1,3 +1,4 @@
+import { passInterview } from './helpers/pass-interview.js';
 import { confirmTestEmail } from './helpers/confirm-email.js';
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -190,16 +191,14 @@ describe('Group departures (e2e)', () => {
         lastName: 'Quispe',
         legalName: `Andes Grupos ${suffix} S.R.L.`,
         taxId: String(suffix).slice(-11),
-        operatorLicense: 'RNT-LP-0001',
-        association: 'ASOGUIA La Paz',
         address: 'Calle Sagárnaga 213, La Paz',
       })
       .expect(201);
     agencyToken = agency.body.accessToken;
     for (const type of [
       'TAX_ID',
-      'OPERATOR_LICENSE',
-      'ASSOCIATION_CERTIFICATE',
+      'COMMERCE_REGISTRATION',
+      'MUNICIPAL_LICENSE',
       'REPRESENTATIVE_ID',
     ]) {
       await request(server)
@@ -214,6 +213,7 @@ describe('Group departures (e2e)', () => {
       .set(auth(agencyToken))
       .expect(200);
     agencyId = me.body.id;
+    await passInterview(server, adminToken, 'AGENCY', agencyId);
     await request(server)
       .patch(`/api/admin/agencies/${agencyId}/verification`)
       .set(auth(adminToken))
@@ -305,6 +305,26 @@ describe('Group departures (e2e)', () => {
       .send({})
       .expect(403);
     expect(tourist.body.error).toBe('INSUFFICIENT_ROLE');
+  });
+
+  it('blocks new departures while an agency document is expired', async () => {
+    await dataSource.query(
+      `UPDATE agency_documents SET expires_at = $1 WHERE agency_id = $2 AND type = 'TAX_ID'`,
+      [addDays(today, -1), agencyId],
+    );
+    try {
+      const blocked = await publish().expect(403);
+      expect(blocked.body.error).toBe('AGENCY_DOCUMENTS_EXPIRED');
+      await request(server)
+        .get('/api/agencies/me/departures')
+        .set(auth(agencyToken))
+        .expect(200);
+    } finally {
+      await dataSource.query(
+        `UPDATE agency_documents SET expires_at = $1 WHERE agency_id = $2 AND type = 'TAX_ID'`,
+        [addDays(today, 365), agencyId],
+      );
+    }
   });
 
   it('publishes a departure that closes 48 hours before the start', async () => {

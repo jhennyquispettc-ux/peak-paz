@@ -11,50 +11,21 @@ const parse = (path) =>
       .filter((line) => /^[A-Z_]+=/.test(line))
       .map((line) => {
         const i = line.indexOf('=');
-        return [line.slice(0, i), line.slice(i + 1)];
+        return [line.slice(0, i), line.slice(i + 1).trim()];
       }),
   );
 const secret = () => randomBytes(32).toString('hex');
-const files = ['.env', 'backend/.env', 'verification-service/.env'].map(
-  (path) => resolve(root, path),
-);
+const keep = (value) =>
+  value && !value.startsWith('replace-') ? value : secret();
+const files = ['.env', 'backend/.env'].map((path) => resolve(root, path));
 const existing = files.map(parse);
-const configuredKeys = new Set(
-  existing
-    .map((env) => env.VERIFICATION_SERVICE_KEY)
-    .filter((value) => value && !value.startsWith('replace-')),
-);
-if (configuredKeys.size > 1)
-  throw new Error(
-    'Las claves VERIFICATION_SERVICE_KEY existentes no coinciden. Corrige los .env antes de continuar.',
-  );
-const key = [...configuredKeys][0] ?? secret();
-const password =
-  [existing[0].VERIFICATION_DB_PASSWORD, existing[2].DB_PASSWORD].find(
-    (value) => value && !value.startsWith('replace-'),
-  ) ?? secret();
+const rabbitPassword = keep(existing[0].RABBITMQ_PASSWORD);
 const values = [
-  { VERIFICATION_SERVICE_KEY: key, VERIFICATION_DB_PASSWORD: password },
+  { RABBITMQ_PASSWORD: rabbitPassword },
   {
-    VERIFICATION_SERVICE_KEY: key,
-    JWT_SECRET:
-      existing[1].JWT_SECRET && !existing[1].JWT_SECRET.startsWith('replace-')
-        ? existing[1].JWT_SECRET
-        : secret(),
-    SEED_ADMIN_PASSWORD:
-      existing[1].SEED_ADMIN_PASSWORD &&
-      !existing[1].SEED_ADMIN_PASSWORD.startsWith('replace-')
-        ? existing[1].SEED_ADMIN_PASSWORD
-        : secret(),
-  },
-  {
-    VERIFICATION_SERVICE_KEY: key,
-    DB_PASSWORD: password,
-    EMAIL_TOKEN_SECRET:
-      existing[2].EMAIL_TOKEN_SECRET &&
-      !existing[2].EMAIL_TOKEN_SECRET.startsWith('replace-')
-        ? existing[2].EMAIL_TOKEN_SECRET
-        : secret(),
+    RABBITMQ_URL: `amqp://peakpaz:${rabbitPassword}@localhost:5672`,
+    JWT_SECRET: keep(existing[1].JWT_SECRET),
+    SEED_ADMIN_PASSWORD: keep(existing[1].SEED_ADMIN_PASSWORD),
   },
 ];
 files.forEach((file, index) => {
@@ -65,7 +36,7 @@ files.forEach((file, index) => {
   for (const [name, value] of Object.entries(values[index])) {
     const pattern = new RegExp(`^${name}=.*$`, 'm');
     content = pattern.test(content)
-      ? content.replace(pattern, `${name}=${value}`)
+      ? content.replace(pattern, () => `${name}=${value}`)
       : `${content}\n${name}=${value}\n`;
   }
   writeFileSync(file, content, { mode: 0o600 });

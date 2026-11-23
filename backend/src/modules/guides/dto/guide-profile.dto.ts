@@ -5,9 +5,11 @@ import { missingDocumentTypes } from '../../../common/verification/verification-
 import { UserDto } from '../../users/dto/user.dto.js';
 import { GuideProfile } from '../entities/guide-profile.entity.js';
 import {
+  GUIDE_CREDENTIAL_TYPES,
   GuideDocumentType,
   REQUIRED_GUIDE_DOCUMENTS,
 } from '../guides.enums.js';
+import type { GuideCredentialType } from '../guides.enums.js';
 import { GuideRouteDto } from './guide-route.dto.js';
 
 export class GuideProfileDto {
@@ -19,6 +21,9 @@ export class GuideProfileDto {
 
   @ApiProperty({ example: '6123456-1B' })
   nationalId: string;
+
+  @ApiProperty({ enum: GUIDE_CREDENTIAL_TYPES, nullable: true })
+  credentialType: GuideCredentialType | null;
 
   @ApiProperty({ nullable: true })
   bioEs: string | null;
@@ -40,6 +45,13 @@ export class GuideProfileDto {
 
   @ApiProperty({ nullable: true })
   verifiedAt: Date | null;
+
+  @ApiProperty({
+    nullable: true,
+    description:
+      'Primera aprobación. Conserva el acceso limitado durante una renovación',
+  })
+  firstApprovedAt: Date | null;
 
   @ApiProperty()
   ratingAverage: number;
@@ -66,6 +78,7 @@ export class GuideProfileDto {
       id: profile.id,
       user: UserDto.fromEntity(profile.user),
       nationalId: profile.nationalId,
+      credentialType: profile.credentialType,
       bioEs: profile.bioEs,
       bioEn: profile.bioEn,
       languages: profile.languages,
@@ -73,6 +86,7 @@ export class GuideProfileDto {
       verificationStatus: profile.verificationStatus,
       rejectionReason: profile.rejectionReason,
       verifiedAt: profile.verifiedAt,
+      firstApprovedAt: profile.firstApprovedAt,
       ratingAverage: profile.ratingAverage,
       reviewsCount: profile.reviewsCount,
       documents: documents.map((document) =>

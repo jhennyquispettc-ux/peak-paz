@@ -71,10 +71,10 @@ describe('tour checks', () => {
     );
   });
 
-  it('completes the tour only when both sides confirmed the start', () => {
+  it('opens a dispute only when nobody confirmed the tour', () => {
     expect(completionOutcome(START, START)).toBe(CompletionOutcome.COMPLETE);
-    expect(completionOutcome(START, null)).toBe(CompletionOutcome.DISPUTE);
-    expect(completionOutcome(null, START)).toBe(CompletionOutcome.DISPUTE);
+    expect(completionOutcome(START, null)).toBe(CompletionOutcome.COMPLETE);
+    expect(completionOutcome(null, START)).toBe(CompletionOutcome.COMPLETE);
     expect(completionOutcome(null, null)).toBe(CompletionOutcome.DISPUTE);
   });
 });

@@ -1,3 +1,6 @@
+import { NotificationsService } from '../../notifications/services/notifications.service.js';
+import { NotificationType } from '../../notifications/notifications.enums.js';
+import { bookingNotice } from '../../notifications/booking-notice.js';
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -35,6 +38,7 @@ export class GuideBookingsService {
     private readonly bookings: BookingsRepository,
     private readonly guides: GuidesRepository,
     private readonly settings: SettingsService,
+    private readonly notices: NotificationsService,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
@@ -95,6 +99,12 @@ export class GuideBookingsService {
       booking.acceptedAt = now;
       booking.payBy = addMinutes(now, paymentMinutes);
       await this.bookings.save(booking, manager);
+      await this.notices.notify(
+        manager,
+        booking.touristId,
+        NotificationType.BOOKING_ACCEPTED,
+        bookingNotice(booking, { route: route.nameEs }),
+      );
       await this.bookings.rejectOverlappingRequests(
         guideProfileId,
         busy,
@@ -122,7 +132,15 @@ export class GuideBookingsService {
     }
     booking.status = BookingStatus.REJECTED;
     booking.cancellationReason = reason ?? null;
-    await this.bookings.save(booking);
+    await this.dataSource.transaction(async (manager) => {
+      await this.bookings.save(booking, manager);
+      await this.notices.notify(
+        manager,
+        booking.touristId,
+        NotificationType.BOOKING_REJECTED,
+        bookingNotice(booking),
+      );
+    });
     return this.getOwn(guideProfileId, bookingId);
   }
 

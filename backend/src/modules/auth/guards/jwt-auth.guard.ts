@@ -3,6 +3,7 @@ import { GuideProfile } from '../../guides/entities/guide-profile.entity.js';
 import { REQUIRED_GUIDE_DOCUMENTS } from '../../guides/guides.enums.js';
 import { missingDocumentTypes } from '../../../common/verification/verification-documents.js';
 import { ALLOW_UNVERIFIED_EMAIL } from '../decorators/allow-unverified-email.decorator.js';
+import { REQUIRES_CURRENT_DOCUMENTS } from '../decorators/requires-current-documents.decorator.js';
 import {
   CanActivate,
   ExecutionContext,
@@ -72,15 +73,33 @@ export class JwtAuthGuard implements CanActivate {
           where: { userId: user.id },
           relations: { documents: true },
         });
-      if (
-        !guide ||
-        guide.verificationStatus !== 'APPROVED' ||
-        missingDocumentTypes(REQUIRED_GUIDE_DOCUMENTS, guide.documents).length
-      ) {
+      const isApproved = guide?.verificationStatus === 'APPROVED';
+      if (!guide || (!isApproved && !guide.firstApprovedAt)) {
         throw new ForbiddenException({
           error: 'PROVIDER_NOT_APPROVED',
           message:
             'Completa la revisión de tus documentos antes de ofrecer servicios.',
+        });
+      }
+      const requiresCurrentDocuments =
+        this.reflector.getAllAndOverride<boolean>(REQUIRES_CURRENT_DOCUMENTS, [
+          context.getHandler(),
+          context.getClass(),
+        ]);
+      if (requiresCurrentDocuments && !isApproved) {
+        throw new ForbiddenException({
+          error: 'DOCUMENTS_IN_REVIEW',
+          message:
+            'Espera la revisión de tus documentos para aceptar solicitudes.',
+        });
+      }
+      if (
+        requiresCurrentDocuments &&
+        missingDocumentTypes(REQUIRED_GUIDE_DOCUMENTS, guide.documents).length
+      ) {
+        throw new ForbiddenException({
+          error: 'DOCUMENTS_EXPIRED',
+          message: 'Renueva tus documentos para aceptar nuevas solicitudes.',
         });
       }
     }

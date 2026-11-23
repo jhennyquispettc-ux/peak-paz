@@ -52,6 +52,9 @@ export interface PointOfInterest {
 
 export interface RouteDetail extends RouteSummary {
   descriptionEs: string;
+  descriptionEn: string;
+  howToGetThereEn: string;
+  bestSeasonEn: string | null;
   elevationLossM: number;
   startTimeFrom: string;
   startTimeTo: string;
@@ -64,6 +67,7 @@ export interface RouteDetail extends RouteSummary {
   gearRecommendations: {
     id: string;
     descriptionEs: string;
+    descriptionEn: string;
     isRequired: boolean;
   }[];
 }
@@ -82,6 +86,7 @@ export interface Itinerary {
     stageOrder: number;
     dayNumber: number;
     nameEs: string;
+    nameEn: string;
     arrivalTime: string;
     minutesFromPrevious: number;
     isOvernight: boolean;
@@ -102,6 +107,7 @@ export interface PublicGuide {
   id: string;
   firstName: string;
   lastName: string;
+  credentialType: 'SIRETUR' | 'FEBOGUIT' | null;
   languages: string[];
   yearsExperience: number;
   ratingAverage: number;

@@ -58,7 +58,13 @@ export class PayoutsRepository {
   findById(id: string): Promise<Payout | null> {
     return this.payouts.findOne({
       where: { id },
-      relations: { booking: { route: true, groupDeparture: { route: true } } },
+      relations: {
+        booking: {
+          route: true,
+          guideProfile: { user: true },
+          groupDeparture: { route: true, agency: true },
+        },
+      },
     });
   }
 
@@ -73,6 +79,9 @@ export class PayoutsRepository {
       .leftJoinAndSelect('booking.route', 'route')
       .leftJoinAndSelect('booking.groupDeparture', 'departure')
       .leftJoinAndSelect('departure.route', 'departureRoute')
+      .leftJoinAndSelect('departure.agency', 'agency')
+      .leftJoinAndSelect('booking.guideProfile', 'guideProfile')
+      .leftJoinAndSelect('guideProfile.user', 'guideUser')
       .orderBy('payout.createdAt', 'DESC')
       .skip(filters.skip)
       .take(filters.take);

@@ -1,3 +1,9 @@
+import { NotificationsService } from '../../notifications/services/notifications.service.js';
+import { NotificationType } from '../../notifications/notifications.enums.js';
+import {
+  bookingNotice,
+  providerUserIdOf,
+} from '../../notifications/booking-notice.js';
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -20,6 +26,7 @@ import {
 } from '../../bookings/exceptions/bookings.exceptions.js';
 import { BookingsRepository } from '../../bookings/repositories/bookings.repository.js';
 import { DisputesRepository } from '../../bookings/repositories/disputes.repository.js';
+import { ComplaintsRepository } from '../../strikes/repositories/complaints.repository.js';
 import { StrikeIssuerService } from '../../strikes/services/strike-issuer.service.js';
 import { ProviderKind } from '../../strikes/sanctions.js';
 import { StrikeReason } from '../../strikes/strikes.enums.js';
@@ -40,10 +47,12 @@ const RUNNING = new Set([BookingStatus.CONFIRMED, BookingStatus.IN_PROGRESS]);
 export class DisputeResolutionService {
   constructor(
     private readonly disputes: DisputesRepository,
+    private readonly complaints: ComplaintsRepository,
     private readonly bookings: BookingsRepository,
     private readonly cancellations: BookingCancellationService,
     private readonly payouts: PayoutsService,
     private readonly issuer: StrikeIssuerService,
+    private readonly notices: NotificationsService,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
@@ -123,6 +132,13 @@ export class DisputeResolutionService {
           now,
           manager,
         );
+        await this.complaints.closeAsRefunded(
+          detail.id,
+          adminId,
+          dto.resolution,
+          now,
+          manager,
+        );
         strikeId = issued.strikeId;
         activeStrikes = issued.sanction.activeStrikes;
         sanction = issued.sanction.level;
@@ -134,6 +150,18 @@ export class DisputeResolutionService {
       dispute.resolvedById = adminId;
       dispute.resolvedAt = now;
       await this.disputes.save(dispute, manager);
+      const notice = bookingNotice(detail, {
+        decision: dto.decision,
+        resolution: dto.resolution,
+      });
+      for (const userId of [detail.touristId, providerUserIdOf(detail)]) {
+        await this.notices.notify(
+          manager,
+          userId,
+          NotificationType.DISPUTE_RESOLVED,
+          notice,
+        );
+      }
       return { refund, strikeId, activeStrikes, sanction };
     });
 

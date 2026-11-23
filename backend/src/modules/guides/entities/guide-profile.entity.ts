@@ -15,6 +15,7 @@ import { VerificationStatus } from '../../../common/enums/verification-status.en
 import { numericTransformer } from '../../../common/transformers/numeric.transformer.js';
 import { User } from '../../users/entities/user.entity.js';
 import { AvailabilityMode } from '../guides.enums.js';
+import type { GuideCredentialType } from '../guides.enums.js';
 import { GuideAvailability } from './guide-availability.entity.js';
 import { GuideAvailableDate } from './guide-available-date.entity.js';
 import { GuideCommitment } from './guide-commitment.entity.js';
@@ -50,6 +51,14 @@ export class GuideProfile {
   yearsExperience: number;
 
   @Column({
+    name: 'credential_type',
+    type: 'varchar',
+    length: 10,
+    nullable: true,
+  })
+  credentialType: GuideCredentialType | null;
+
+  @Column({
     name: 'availability_mode',
     type: 'enum',
     enum: AvailabilityMode,
@@ -79,6 +88,9 @@ export class GuideProfile {
 
   @Column({ name: 'verified_at', type: 'timestamptz', nullable: true })
   verifiedAt: Date | null;
+
+  @Column({ name: 'first_approved_at', type: 'timestamptz', nullable: true })
+  firstApprovedAt: Date | null;
 
   @Column({
     name: 'rating_average',

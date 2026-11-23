@@ -1,3 +1,6 @@
+import { NotificationsService } from '../../notifications/services/notifications.service.js';
+import { NotificationType } from '../../notifications/notifications.enums.js';
+import { bookingNotice } from '../../notifications/booking-notice.js';
 import { Injectable, Logger } from '@nestjs/common';
 import { Interval } from '@nestjs/schedule';
 import { InjectDataSource } from '@nestjs/typeorm';
@@ -44,6 +47,7 @@ export class ReschedulesService {
     private readonly guides: GuidesRepository,
     private readonly tourIntervals: TourIntervalService,
     private readonly settings: SettingsService,
+    private readonly notices: NotificationsService,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
@@ -114,6 +118,16 @@ export class ReschedulesService {
         },
         manager,
       );
+      await this.notices.notify(
+        manager,
+        booking.touristId,
+        NotificationType.RESCHEDULE_PROPOSED,
+        bookingNotice(booking, {
+          newDate: dto.newDate,
+          reason: dto.reason,
+          respondBy: respondBy.toISOString().slice(0, 16).replace('T', ' '),
+        }),
+      );
       return reschedule.id;
     });
     return this.findDto(bookingId, id);
@@ -147,6 +161,15 @@ export class ReschedulesService {
       reschedule.response = RescheduleResponse.ACCEPTED;
       reschedule.respondedAt = new Date();
       await this.reschedules.save(reschedule, manager);
+      await this.notices.notify(
+        manager,
+        booking.guideProfile?.userId,
+        NotificationType.RESCHEDULE_ANSWERED,
+        bookingNotice(booking, {
+          answer: 'RESCHEDULE_ACCEPTED',
+          newDate: reschedule.newDate,
+        }),
+      );
     });
     const booking = await this.bookings.findDetailById(bookingId);
     return BookingDto.fromEntity(booking!);
@@ -177,12 +200,22 @@ export class ReschedulesService {
 
   async markRejected(
     reschedule: Reschedule,
+    booking: Booking,
     now: Date,
     manager: EntityManager,
   ): Promise<void> {
     reschedule.response = RescheduleResponse.REJECTED;
     reschedule.respondedAt = now;
     await this.reschedules.save(reschedule, manager);
+    await this.notices.notify(
+      manager,
+      booking.guideProfile?.userId,
+      NotificationType.RESCHEDULE_ANSWERED,
+      bookingNotice(booking, {
+        answer: 'RESCHEDULE_REJECTED',
+        newDate: reschedule.newDate,
+      }),
+    );
   }
 
   async listForTourist(

@@ -72,6 +72,24 @@ export class PayoutOnHoldException extends ConflictException {
   }
 }
 
+export class PayoutNotReadyException extends ConflictException {
+  constructor(payableAt: Date) {
+    super({
+      error: 'PAYOUT_NOT_READY',
+      message: `This payout can be paid from ${payableAt.toISOString()}.`,
+    });
+  }
+}
+
+export class ComplaintNotResolvableException extends ConflictException {
+  constructor() {
+    super({
+      error: 'COMPLAINT_TOUR_RUNNING',
+      message: 'This complaint can be decided when the tour is closed.',
+    });
+  }
+}
+
 export class ComplaintNotFoundException extends NotFoundException {
   constructor() {
     super({ error: 'COMPLAINT_NOT_FOUND', message: 'Complaint not found.' });

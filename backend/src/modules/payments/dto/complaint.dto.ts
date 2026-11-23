@@ -20,7 +20,11 @@ import {
 } from '../../strikes/dto/strike.dto.js';
 import { Complaint } from '../../strikes/entities/complaint.entity.js';
 import { SanctionLevel } from '../../strikes/sanctions.js';
-import { ComplaintStatus } from '../../strikes/strikes.enums.js';
+import {
+  ComplaintReason,
+  ComplaintStatus,
+} from '../../strikes/strikes.enums.js';
+import { BookingStatus } from '../../bookings/bookings.enums.js';
 import { RefundDto } from './payment.dto.js';
 
 export class CreateComplaintDto {
@@ -31,6 +35,15 @@ export class CreateComplaintDto {
   @IsString()
   @Length(20, 2000)
   description: string;
+
+  @ApiPropertyOptional({
+    enum: ComplaintReason,
+    default: ComplaintReason.GENERAL,
+    description: 'NO_SHOW si el guía o la agencia no se presentó',
+  })
+  @IsOptional()
+  @IsEnum(ComplaintReason)
+  reason?: ComplaintReason;
 }
 
 export class ComplaintQueryDto extends PaginationQueryDto {
@@ -50,7 +63,7 @@ export class ResolveComplaintDto {
     minimum: 0,
     maximum: 100,
     description:
-      'Obligatorio al aceptar. Porcentaje de lo pagado que se devuelve al turista y se descuenta al proveedor',
+      'Obligatorio al aceptar, salvo en una no presentación que siempre devuelve el 100%. Porcentaje de lo pagado que se devuelve al turista y se descuenta al proveedor',
   })
   @IsOptional()
   @Type(() => Number)
@@ -83,6 +96,12 @@ export class ComplaintDto extends SanctionSubjectDto {
   @ApiProperty()
   description: string;
 
+  @ApiProperty({ enum: ComplaintReason })
+  reason: ComplaintReason;
+
+  @ApiProperty({ enum: BookingStatus })
+  bookingStatus: BookingStatus;
+
   @ApiProperty({ enum: ComplaintStatus })
   status: ComplaintStatus;
 
@@ -114,6 +133,8 @@ export class ComplaintDto extends SanctionSubjectDto {
       id: complaint.id,
       touristName: tourist ? `${tourist.firstName} ${tourist.lastName}` : null,
       description: complaint.description,
+      reason: complaint.reason,
+      bookingStatus: booking.status,
       status: complaint.status,
       refundPercent: complaint.refundPercent,
       deductionAmount: complaint.deductionAmount,

@@ -6,15 +6,17 @@ import DifficultyBadge from '../components/DifficultyBadge';
 import RouteMap from '../components/RouteMap';
 import SiteHeader from '../components/SiteHeader';
 import { formatDays, formatPrice } from '../format';
+import { useI18n } from '../i18n/I18nContext';
 
-const FILTERS: { label: string; value?: Difficulty }[] = [
-  { label: 'Todas' },
-  { label: 'Fáciles', value: 'EASY' },
-  { label: 'Moderadas', value: 'MODERATE' },
-  { label: 'Difíciles', value: 'HARD' },
+const FILTERS: { es: string; en: string; value?: Difficulty }[] = [
+  { es: 'Todas', en: 'All' },
+  { es: 'Fáciles', en: 'Easy', value: 'EASY' },
+  { es: 'Moderadas', en: 'Moderate', value: 'MODERATE' },
+  { es: 'Difíciles', en: 'Hard', value: 'HARD' },
 ];
 
 export default function RoutesPage() {
+  const { locale, pick } = useI18n();
   const [difficulty, setDifficulty] = useState<Difficulty | undefined>();
   const [search, setSearch] = useState('');
   const [routes, setRoutes] = useState<RouteSummary[]>([]);
@@ -49,9 +51,9 @@ export default function RoutesPage() {
         <aside className="explore-list">
           <section className="explore-hero">
             <p className="eyebrow eyebrow-on-dark">La Paz, Bolivia</p>
-            <h1 className="h1">Hay un camino esperándote</h1>
+            <h1 className="h1">{pick('Hay un camino esperándote', 'A trail is waiting for you')}</h1>
             <p className="small">
-              Senderos de La Paz con guías verificados y salidas grupales.
+              {pick('Senderos de La Paz con guías verificados y salidas grupales.', 'La Paz trails with verified guides and group departures.')}
             </p>
           </section>
 
@@ -62,37 +64,37 @@ export default function RoutesPage() {
             </svg>
             <input
               type="search"
-              placeholder="Busca una ruta"
+              placeholder={pick('Busca una ruta', 'Search a trail')}
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              aria-label="Buscar ruta"
+              aria-label={pick('Buscar ruta', 'Search trail')}
             />
           </label>
 
-          <div className="chips" role="group" aria-label="Filtrar por dificultad">
+          <div className="chips" role="group" aria-label={pick('Filtrar por dificultad', 'Filter by difficulty')}>
             {FILTERS.map((filter) => (
               <button
-                key={filter.label}
+                key={filter.es}
                 type="button"
                 className="chip"
                 aria-pressed={difficulty === filter.value}
                 onClick={() => setDifficulty(filter.value)}
               >
-                {filter.label}
+                {pick(filter.es, filter.en)}
               </button>
             ))}
           </div>
 
           <div className="list-head">
-            <h2 className="h3">Rutas para descubrir</h2>
+            <h2 className="h3">{pick('Rutas para descubrir', 'Trails to discover')}</h2>
             <span className="small muted">
-              {loading ? 'Cargando...' : `${routes.length} rutas publicadas`}
+              {loading ? pick('Cargando...', 'Loading...') : pick(`${routes.length} rutas publicadas`, `${routes.length} published trails`)}
             </span>
           </div>
 
           {error && <p className="notice notice-danger">{error}</p>}
           {!loading && !error && routes.length === 0 && (
-            <p className="notice">No hay rutas con esos filtros.</p>
+            <p className="notice">{pick('No hay rutas con esos filtros.', 'No trails match those filters.')}</p>
           )}
 
           <ul className="route-list">
@@ -114,9 +116,9 @@ export default function RoutesPage() {
                   </span>
                   <span className="route-info">
                     <DifficultyBadge difficulty={route.difficulty} />
-                    <span className="route-name body-strong">{route.nameEs}</span>
+                    <span className="route-name body-strong">{locale === 'en' ? route.nameEn : route.nameEs}</span>
                     <span className="route-meta small">
-                      {route.distanceKm} km · {formatDays(route.days)} · ↗{' '}
+                      {route.distanceKm} km · {formatDays(route.days, locale)} · ↗{' '}
                       {route.elevationGainM} m
                     </span>
                   </span>
@@ -126,7 +128,7 @@ export default function RoutesPage() {
           </ul>
         </aside>
 
-        <section className="explore-map" aria-label="Mapa de rutas">
+        <section className="explore-map" aria-label={pick('Mapa de rutas', 'Trail map')}>
           <RouteMap
             className="map"
             routes={routes}
@@ -138,32 +140,32 @@ export default function RoutesPage() {
               <button
                 type="button"
                 className="map-card-close"
-                aria-label="Cerrar"
+                aria-label={pick('Cerrar', 'Close')}
                 onClick={() => setSelected(null)}
               >
                 ×
               </button>
               <DifficultyBadge difficulty={selected.difficulty} />
-              <h3 className="h3">{selected.nameEs}</h3>
+              <h3 className="h3">{locale === 'en' ? selected.nameEn : selected.nameEs}</h3>
               <div className="stats">
                 <div>
                   <p className="body-strong">{selected.distanceKm} km</p>
-                  <p className="caption muted">Distancia</p>
+                  <p className="caption muted">{pick('Distancia', 'Distance')}</p>
                 </div>
                 <div>
-                  <p className="body-strong">{formatDays(selected.days)}</p>
-                  <p className="caption muted">Duración</p>
+                  <p className="body-strong">{formatDays(selected.days, locale)}</p>
+                  <p className="caption muted">{pick('Duración', 'Duration')}</p>
                 </div>
                 <div>
                   <p className="body-strong">{selected.maxAltitudeM} m</p>
-                  <p className="caption muted">Altura máxima</p>
+                  <p className="caption muted">{pick('Altura máxima', 'Max altitude')}</p>
                 </div>
               </div>
               <p className="small muted">
-                Tour particular desde {formatPrice(selected.privatePrice)}
+                {pick('Tour particular desde', 'Private tour from')} {formatPrice(selected.privatePrice)}
               </p>
               <Link to={`/rutas/${selected.slug}`} className="btn btn-primary wide">
-                Ver ruta
+                {pick('Ver ruta', 'See trail')}
               </Link>
             </article>
           )}
@@ -173,13 +175,13 @@ export default function RoutesPage() {
                 <line x1="2" y1="4" x2="20" y2="4" stroke="#3B2416" strokeWidth="7" strokeLinecap="round" />
                 <line x1="2" y1="4" x2="20" y2="4" stroke="#FCA311" strokeWidth="4" strokeLinecap="round" />
               </svg>
-              Ruta seleccionada
+              {pick('Ruta seleccionada', 'Selected trail')}
             </span>
             <span>
               <svg width="10" height="10" aria-hidden="true">
                 <circle cx="5" cy="5" r="4" fill="#A3284B" />
               </svg>
-              Paradas
+              {pick('Paradas', 'Stops')}
             </span>
           </div>
         </section>

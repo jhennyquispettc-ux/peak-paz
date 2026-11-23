@@ -3,6 +3,7 @@ import { EntityManager } from 'typeorm';
 import { PaginationMetaDto } from '../../../common/dto/pagination-meta.dto.js';
 import { AgencyNotFoundException } from '../../agencies/exceptions/agencies.exceptions.js';
 import { AgenciesRepository } from '../../agencies/repositories/agencies.repository.js';
+import { bookingEndsAt } from '../../bookings/booking-schedule.js';
 import { Booking } from '../../bookings/entities/booking.entity.js';
 import { GuideNotFoundException } from '../../guides/exceptions/guides.exceptions.js';
 import { GuidesRepository } from '../../guides/repositories/guides.repository.js';
@@ -16,9 +17,11 @@ import { PayoutDto, PayoutPageDto, PayoutQueryDto } from '../dto/payout.dto.js';
 import {
   PayoutAlreadyPaidException,
   PayoutNotFoundException,
+  PayoutNotReadyException,
   PayoutOnHoldException,
 } from '../exceptions/payments.exceptions.js';
 import { round2, splitPayout } from '../money.js';
+import { PayoutStage, payableFrom, payoutStage } from '../payout-rules.js';
 import { PayoutStatus } from '../payments.enums.js';
 import { PayoutsRepository } from '../repositories/payouts.repository.js';
 
@@ -37,25 +40,26 @@ export class PayoutsService {
   async createForBooking(
     booking: Booking,
     manager: EntityManager,
+    grossAmount = booking.totalAmount,
   ): Promise<void> {
     if (await this.payouts.existsForBooking(booking.id, manager)) return;
     const commissionRate = await this.settings.getNumber(
       SettingKey.COMMISSION_RATE,
     );
-    const beforeFines = splitPayout(booking.totalAmount, commissionRate);
+    const beforeFines = splitPayout(grossAmount, commissionRate);
     const provider = await this.providerOf(booking, manager);
     const penaltyDeduction = provider
       ? await this.fines.settle(provider, beforeFines.netAmount, manager)
       : 0;
     const { commissionAmount, netAmount } = splitPayout(
-      booking.totalAmount,
+      grossAmount,
       commissionRate,
       penaltyDeduction,
     );
     await this.payouts.insertIfMissing(
       {
         bookingId: booking.id,
-        grossAmount: booking.totalAmount,
+        grossAmount,
         commissionRate,
         commissionAmount,
         penaltyDeduction,
@@ -131,10 +135,19 @@ export class PayoutsService {
     if (payout.status === PayoutStatus.PAID) {
       throw new PayoutAlreadyPaidException();
     }
+    const windowHours = await this.settings.getNumber(
+      SettingKey.COMPLAINT_WINDOW_HOURS,
+    );
+    const payableAt = payableFrom(bookingEndsAt(payout.booking), windowHours);
+    const now = new Date();
+    if (now < payableAt) throw new PayoutNotReadyException(payableAt);
     payout.status = PayoutStatus.PAID;
-    payout.paidAt = new Date();
+    payout.paidAt = now;
     await this.payouts.save(payout);
-    return PayoutDto.fromEntity(payout);
+    return PayoutDto.fromEntity(payout, {
+      stage: PayoutStage.PAID,
+      payableAt,
+    });
   }
 
   private async page(
@@ -149,8 +162,29 @@ export class PayoutsService {
       guideProfileId,
       agencyId,
     });
+    const windowHours = await this.settings.getNumber(
+      SettingKey.COMPLAINT_WINDOW_HOURS,
+    );
+    const open = await this.complaints.openBookingIds(
+      payouts.map((payout) => payout.bookingId),
+    );
+    const now = new Date();
     return {
-      data: payouts.map((payout) => PayoutDto.fromEntity(payout)),
+      data: payouts.map((payout) => {
+        const payableAt = payableFrom(
+          bookingEndsAt(payout.booking),
+          windowHours,
+        );
+        return PayoutDto.fromEntity(payout, {
+          payableAt,
+          stage: payoutStage({
+            paid: payout.status === PayoutStatus.PAID,
+            hasOpenComplaint: open.has(payout.bookingId),
+            payableAt,
+            now,
+          }),
+        });
+      }),
       meta: PaginationMetaDto.of(query.page, query.limit, total),
     };
   }

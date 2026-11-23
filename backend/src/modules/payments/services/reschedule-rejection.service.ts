@@ -46,7 +46,7 @@ export class RescheduleRejectionService {
           now,
           manager,
         );
-      await this.reschedules.markRejected(reschedule, now, manager);
+      await this.reschedules.markRejected(reschedule, booking, now, manager);
       const review = await this.reviews.openForBooking(booking, null, manager);
       return { refund, reviewId: review.id };
     });

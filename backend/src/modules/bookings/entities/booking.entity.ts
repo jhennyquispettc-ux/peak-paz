@@ -199,6 +199,13 @@ export class Booking {
   @Column({ name: 'tourist_started_at', type: 'timestamptz', nullable: true })
   touristStartedAt: Date | null;
 
+  @Column({
+    name: 'reconfirmation_alerted_at',
+    type: 'timestamptz',
+    nullable: true,
+  })
+  reconfirmationAlertedAt: Date | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 
