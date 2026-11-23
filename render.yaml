@@ -7,8 +7,10 @@ databases:
 envVarGroups:
   - name: peak-paz-shared
     envVars:
-      - key: VERIFICATION_SERVICE_KEY
-        generateValue: true
+      - key: RABBITMQ_URL
+        sync: false
+      - key: DOCUMENT_BASE_URL
+        sync: false
       - key: NODE_ENV
         value: production
       - key: MAIL_TRANSPORT
@@ -57,8 +59,6 @@ services:
         sync: false
       - key: SEED_ADMIN_PASSWORD
         sync: false
-      - key: VERIFICATION_SERVICE_URL
-        sync: false
       - key: PAYMENT_DRIVER
         value: fake
       - key: PAYMENT_RETURN_URL
@@ -75,35 +75,17 @@ services:
         sync: false
 
   - type: web
-    name: peak-paz-verification
+    name: peak-paz-verification-python
     runtime: docker
     plan: free
-    dockerfilePath: ./verification-service/Dockerfile
-    dockerContext: ./verification-service
+    dockerfilePath: ./verification-python/Dockerfile
+    dockerContext: ./verification-python
     healthCheckPath: /health
     autoDeploy: true
     envVars:
       - fromGroup: peak-paz-shared
-      - key: DB_HOST
-        fromDatabase:
-          name: peak-paz-db
-          property: host
-      - key: DB_PORT
-        fromDatabase:
-          name: peak-paz-db
-          property: port
-      - key: DB_USER
-        fromDatabase:
-          name: peak-paz-db
-          property: user
-      - key: DB_PASSWORD
-        fromDatabase:
-          name: peak-paz-db
-          property: password
-      - key: DB_NAME
-        value: peak_paz_verification
-      - key: EMAIL_TOKEN_SECRET
-        generateValue: true
+      - key: PORT
+        value: 3030
 
   - type: web
     name: peak-paz-web

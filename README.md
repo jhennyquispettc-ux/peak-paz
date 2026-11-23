@@ -1,6 +1,6 @@
 # Peak Paz
 
-Plataforma de rutas, guías y salidas grupales en La Paz. El repositorio contiene la web pública, la API principal y un microservicio independiente de verificación de cuentas y credenciales.
+Plataforma de rutas, guías y salidas grupales en La Paz. El repositorio contiene la web pública, la API principal y un microservicio en Python para el correo de verificación y la revisión de documentos, comunicado con la API por RabbitMQ.
 
 ## Ejecutar en la laptop
 
@@ -13,7 +13,7 @@ npm run install:all
 npm run dev
 ```
 
-`dev` prepara los archivos `.env` que falten, genera secretos locales, construye el microservicio, inicia PostgreSQL y Mailpit, aplica las migraciones, crea el administrador si no existe e inicia la API y la web. Conserva los datos de los volúmenes existentes.
+`dev` prepara los archivos `.env` que falten, genera secretos locales, construye el microservicio, inicia PostgreSQL, RabbitMQ y Mailpit, aplica las migraciones, crea el administrador si no existe e inicia la API y la web. Conserva los datos de los volúmenes existentes.
 
 | Componente | Dirección local |
 | --- | --- |
@@ -23,7 +23,8 @@ npm run dev
 | Revisión de guías, solo administrador | http://localhost:5173/admin/verificaciones |
 | Buzón de correos de prueba | http://localhost:8025 |
 | API y Swagger | http://localhost:3010/api/docs |
-| Salud del microservicio | http://localhost:3020/health |
+| Salud del microservicio | http://localhost:3030/health |
+| Panel de RabbitMQ | http://localhost:15672 |
 
 El administrador inicial usa el correo de `SEED_ADMIN_EMAIL` y la contraseña de `SEED_ADMIN_PASSWORD` en `backend/.env`. Los secretos se guardan en archivos ignorados por Git; no deben publicarse. Ejecutar de nuevo `npm run setup` conserva los valores configurados.
 
@@ -66,7 +67,7 @@ No se solicita CI o pasaporte al turista. La confirmación prueba acceso al corr
 4. El administrador descarga y revisa los documentos desde **Revisar guías**.
 5. El administrador aprueba o rechaza; un rechazo requiere un motivo. El guía puede corregir los documentos y volver a solicitar revisión.
 
-Se aceptan PDF, JPG y PNG de hasta 5 MB. Se comprueban la presencia, el tipo de archivo y las fechas de vencimiento declaradas. La decisión queda en el historial del microservicio con el administrador y la fecha.
+Se aceptan PDF, JPG y PNG de hasta 5 MB. Se comprueban la presencia, el tipo de archivo y las fechas de vencimiento declaradas. El servicio Python lee los documentos con OCR y compara los nombres como apoyo. La decisión siempre es del administrador, requiere una entrevista registrada y queda en el historial con su autor y la fecha.
 
 La autenticidad documental se revisa manualmente. No hay consulta a SEGIP, registro de profesionales u otra entidad emisora, ni se presenta la comprobación de formato como prueba de autenticidad. Un futuro proveedor de identidad se puede integrar detrás del servicio manteniendo este flujo de revisión.
 
@@ -80,20 +81,21 @@ Los turistas y guías que ya existían antes de esta actualización también deb
 flowchart LR
   Web[React] --> API[API NestJS]
   API --> MainDB[(Base principal)]
-  MainDB --> RegistrationOutbox[Outbox de registro]
-  RegistrationOutbox -->|HTTP interno| Verification[Microservicio NestJS]
-  API -->|HTTP interno| Verification
-  Verification --> VerificationDB[(Base de verificaciones)]
-  VerificationDB --> MailOutbox[Outbox de correo]
-  MailOutbox --> SMTP[SMTP / Mailpit local]
+  MainDB --> Outbox[Outbox de la API]
+  Outbox -->|Comandos| RabbitMQ[RabbitMQ]
+  RabbitMQ --> Python[Microservicio Python]
+  Python -->|Eventos| RabbitMQ
+  RabbitMQ -->|Resultados| API
+  Python -->|Enlace temporal firmado| API
+  Python --> SMTP[SMTP / Mailpit local]
 ```
 
 - `frontend/`: formularios de turista y guía, confirmación de correo, documentos y panel administrativo.
-- `backend/`: usuarios, contraseñas, sesiones, permisos, archivos privados y negocio turístico. Mantiene una copia local de `emailVerifiedAt` para comprobar permisos sin consultar al microservicio en cada petición.
-- `verification-service/`: casos de verificación, enlaces, solicitudes documentales, decisiones e historial. Se ejecuta y se despliega por separado, con otra base PostgreSQL y su propio Dockerfile.
+- `backend/`: usuarios, contraseñas, sesiones, permisos, archivos privados y negocio turístico. Guarda el estado de los correos, los análisis, las entrevistas y las decisiones.
+- `verification-python/`: envía el correo y revisa formato, legibilidad y nombres con Tesseract. No guarda estado, nunca aprueba ni rechaza y se ejecuta en Docker.
 - `scripts/`: preparación local, arranque y pruebas de integración aisladas.
 
-El microservicio recibe solo los datos necesarios. Nunca recibe contraseñas, hashes de contraseñas ni JWT de usuarios. Los archivos originales permanecen en el almacenamiento privado de la API y solo sus propietarios y administradores pueden descargarlos. El microservicio registra las referencias y metadatos de los documentos revisados, sin relaciones de base de datos entre servicios.
+El microservicio recibe solo los datos necesarios. Nunca recibe contraseñas ni JWT de usuarios. Descarga cada documento con un enlace temporal firmado y solo devuelve resultados, sin el texto leído.
 
 ### Persistencia y reintentos
 
@@ -118,7 +120,7 @@ Las decisiones usan una instantánea de los datos y documentos. Los cambios post
 | GET | `/api/verification/admin/delivery-failures` | Administrador, solicitudes agotadas |
 | POST | `/api/verification/admin/delivery-failures/:id/retry` | Administrador, reintento de solicitud agotada |
 
-Las rutas `/internal/*` del microservicio exigen `X-Service-Key`. La clave nunca se incluye en el frontend. Su API interna incluye creación y consulta de casos, reenvío y confirmación, presentación de revisiones y decisiones. `/internal/delivery-failures` y `/internal/delivery-failures/:id/retry` permiten inspeccionar y reintentar los envíos que agotaron sus intentos, usando la misma credencial interna.
+La ruta `/api/internal/document-files/:token` solo entrega archivos con un enlace firmado, vigente y ligado a un análisis pendiente.
 
 ## Correo real y configuración
 
@@ -126,7 +128,7 @@ En desarrollo, Mailpit captura todos los mensajes. No los entrega a las direccio
 
 Para enviar correos reales, configurar `SMTP_URL` y `MAIL_FROM` con un servidor autorizado, y `PUBLIC_WEB_URL` con la dirección pública de la web. En el Compose de desarrollo, `SMTP_URL` está sobrescrita a `smtp://mailpit:1025`: hay que sustituir esa entrada al preparar un despliegue real. En producción, el transporte exige STARTTLS o TLS.
 
-`VERIFICATION_SERVICE_KEY` debe coincidir entre backend y microservicio. `EMAIL_TOKEN_SECRET` es un secreto diferente y estable para emitir los enlaces; cambiarlo invalida los enlaces pendientes. Las bases de datos usan credenciales independientes. Los puertos de desarrollo se publican solo en localhost.
+`RABBITMQ_URL` conecta la API con RabbitMQ y `DOCUMENT_BASE_URL` indica al servicio Python dónde descargar los documentos. Cambiar `JWT_SECRET` invalida los enlaces de correo pendientes. Los puertos de desarrollo se publican solo en localhost.
 
 Ambas aplicaciones aplican migraciones al arrancar, incluidas las del outbox. Esto exige un usuario de base de datos con permisos de migración; para producción se debe establecer una política de despliegue, secretos, retención de documentos y copias de seguridad acorde con el entorno.
 
@@ -160,14 +162,11 @@ El PDF `docs/demo-verification/documento-vencido-demo.pdf` sirve para probar el 
 npm run build --prefix backend
 npm run lint --prefix backend
 npm test --prefix backend
-npm run build --prefix verification-service
-npm run lint --prefix verification-service
-npm test --prefix verification-service
 npm run build --prefix frontend
 npm run test:integration
 ```
 
-`test:integration` inicia dos PostgreSQL y un Mailpit independientes con puertos dinámicos y credenciales efímeras. Ejecuta el microservicio, las migraciones, su suite de integración y todos los e2e del backend. Confirma correos usando los mensajes reales capturados en Mailpit; no desactiva la verificación. Al finalizar retira los contenedores de prueba, sin tocar el entorno local del proyecto.
+`test:integration` inicia PostgreSQL, RabbitMQ, Mailpit y el servicio Python con puertos dinámicos y credenciales efímeras. Ejecuta las pruebas de Python, las migraciones y todos los e2e del backend. Confirma correos usando los mensajes reales capturados en Mailpit y al finalizar retira los contenedores de prueba, sin tocar el entorno local del proyecto.
 
 Las pruebas cubren enlaces inválidos, vencidos y usados; confirmaciones concurrentes; reenvíos; permisos de cuentas pendientes; rechazo y aprobación documental; historial; documentos reemplazados o vencidos; autenticación entre servicios; y registro durante una indisponibilidad simulada del servicio.
 
