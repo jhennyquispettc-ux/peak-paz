@@ -14,8 +14,10 @@ from app.contracts import (
 )
 from app.document_review import (
     DocumentDownloader,
+    MAX_SIDE_PIXELS,
     DownloadError,
     analyze_document,
+    load_pages,
     name_score,
     normalize,
     recommendation,
@@ -80,6 +82,22 @@ def review_command():
 def handler(files):
     settings = Settings(rabbitmq_url="amqp://unused")
     return build_handlers(settings, FakeMail(), files)[DOCUMENT_REVIEW_TYPE]
+
+
+def test_large_photos_are_reduced_before_reading():
+    buffer = io.BytesIO()
+    Image.new("RGB", (4000, 3000), "white").save(buffer, "JPEG")
+    page = load_pages(buffer.getvalue())[0]
+    assert max(page.shape) == MAX_SIDE_PIXELS
+
+
+def test_photo_orientation_is_applied():
+    exif = Image.Exif()
+    exif[0x0112] = 6
+    buffer = io.BytesIO()
+    Image.new("RGB", (1200, 800), "white").save(buffer, "JPEG", exif=exif)
+    height, width = load_pages(buffer.getvalue())[0].shape
+    assert (width, height) == (800, 1200)
 
 
 def test_normalize_removes_accents():

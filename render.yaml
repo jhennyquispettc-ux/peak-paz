@@ -59,6 +59,8 @@ services:
         sync: false
       - key: SEED_ADMIN_PASSWORD
         sync: false
+      - key: VERIFICATION_WAKE_URL
+        sync: false
       - key: PAYMENT_DRIVER
         value: fake
       - key: PAYMENT_RETURN_URL
@@ -66,7 +68,7 @@ services:
       - key: PAYMENT_CANCEL_URL
         sync: false
       - key: STORAGE_DRIVER
-        value: local
+        value: cloudinary
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
       - key: CLOUDINARY_API_KEY
@@ -85,7 +87,7 @@ services:
     envVars:
       - fromGroup: peak-paz-shared
       - key: PORT
-        value: 3030
+        value: "3030"
 
   - type: web
     name: peak-paz-web
