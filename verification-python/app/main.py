@@ -6,6 +6,7 @@ from fastapi import FastAPI, Request, Response
 
 from app.broker import Broker
 from app.config import Settings
+from app.email_sender import SmtpSender
 from app.handlers import build_handlers
 
 logging.basicConfig(level=logging.INFO)
@@ -14,7 +15,7 @@ logging.basicConfig(level=logging.INFO)
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings = Settings()
-    broker = Broker(settings, build_handlers(settings))
+    broker = Broker(settings, build_handlers(settings, SmtpSender(settings)))
     app.state.settings = settings
     app.state.broker = broker
     broker.start()

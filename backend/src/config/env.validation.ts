@@ -14,6 +14,8 @@ export const envValidation = Joi.object({
     .min(500)
     .max(30000)
     .default(5000),
+  EMAIL_TOKEN_MINUTES: Joi.number().integer().min(1).max(1440).default(30),
+  EMAIL_RESEND_SECONDS: Joi.number().integer().min(30).default(60),
   RABBITMQ_URL: Joi.string()
     .uri({ scheme: ['amqp', 'amqps'] })
     .allow('')

@@ -223,6 +223,7 @@ export class GuideProfilesService {
       await this.accountVerification.submitGuide(
         profile,
         profile.verificationStatus === VerificationStatus.REJECTED,
+        manager,
       );
       profile.verificationStatus = VerificationStatus.PENDING;
       profile.rejectionReason = null;

@@ -1,8 +1,8 @@
 import {
   Injectable,
   Logger,
+  OnApplicationBootstrap,
   OnModuleDestroy,
-  OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import amqp from 'amqplib';
@@ -15,6 +15,8 @@ import {
   DEAD_EXCHANGE,
   DIRECT_REPLY_QUEUE,
   Envelope,
+  EVENT_BINDING,
+  EVENTS_QUEUE,
   EXCHANGE,
   parseEnvelope,
   PING_ROUTING_KEY,
@@ -26,6 +28,9 @@ import { MessagingUnavailableException } from './messaging.exceptions.js';
 
 const RECONNECT_MS = 3000;
 const REPLY_TIMEOUT_MS = 5000;
+const EVENT_PREFETCH = 10;
+
+type EventHandler = (event: Envelope) => Promise<void>;
 
 interface PendingReply {
   resolve: (reply: Envelope) => void;
@@ -34,9 +39,12 @@ interface PendingReply {
 }
 
 @Injectable()
-export class MessagingService implements OnModuleInit, OnModuleDestroy {
+export class MessagingService
+  implements OnApplicationBootstrap, OnModuleDestroy
+{
   private readonly logger = new Logger(MessagingService.name);
   private readonly pending = new Map<string, PendingReply>();
+  private readonly eventHandlers = new Map<string, EventHandler>();
   private readonly url: string;
   private connection: ChannelModel | null = null;
   private channel: ConfirmChannel | null = null;
@@ -47,8 +55,12 @@ export class MessagingService implements OnModuleInit, OnModuleDestroy {
     this.url = config.get<string>('RABBITMQ_URL') ?? '';
   }
 
-  onModuleInit(): void {
+  onApplicationBootstrap(): void {
     if (this.url) void this.connect();
+  }
+
+  onEvent(type: string, handler: EventHandler): void {
+    this.eventHandlers.set(type, handler);
   }
 
   async onModuleDestroy(): Promise<void> {
@@ -79,20 +91,8 @@ export class MessagingService implements OnModuleInit, OnModuleDestroy {
     };
     const reply = this.waitForReply(command.id);
     try {
-      await new Promise<void>((resolve, reject) => {
-        channel.publish(
-          EXCHANGE,
-          PING_ROUTING_KEY,
-          Buffer.from(JSON.stringify(command)),
-          {
-            persistent: true,
-            contentType: 'application/json',
-            messageId: command.id,
-            correlationId: command.id,
-            replyTo: DIRECT_REPLY_QUEUE,
-          },
-          (error) => (error ? reject(error) : resolve()),
-        );
+      await this.publish(channel, PING_ROUTING_KEY, command, {
+        replyTo: DIRECT_REPLY_QUEUE,
       });
     } catch {
       this.settle(command.id);
@@ -104,6 +104,50 @@ export class MessagingService implements OnModuleInit, OnModuleDestroy {
       version: String(pong.data.version),
       roundTripMs: Date.now() - startedAt,
     };
+  }
+
+  async sendCommand(
+    type: string,
+    data: Record<string, unknown>,
+  ): Promise<void> {
+    const channel = this.channel;
+    if (!channel) throw new MessagingUnavailableException();
+    const command: Envelope = {
+      id: randomUUID(),
+      type,
+      version: 1,
+      occurredAt: new Date().toISOString(),
+      correlationId: null,
+      data,
+    };
+    try {
+      await this.publish(channel, `command.${type}`, command);
+    } catch {
+      throw new MessagingUnavailableException();
+    }
+  }
+
+  private publish(
+    channel: ConfirmChannel,
+    routingKey: string,
+    command: Envelope,
+    options: { replyTo?: string } = {},
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      channel.publish(
+        EXCHANGE,
+        routingKey,
+        Buffer.from(JSON.stringify(command)),
+        {
+          persistent: true,
+          contentType: 'application/json',
+          messageId: command.id,
+          correlationId: command.id,
+          ...options,
+        },
+        (error) => (error ? reject(error) : resolve()),
+      );
+    });
   }
 
   private waitForReply(id: string): Promise<Envelope> {
@@ -153,6 +197,10 @@ export class MessagingService implements OnModuleInit, OnModuleDestroy {
         (message) => this.onReply(message),
         { noAck: true },
       );
+      await channel.prefetch(EVENT_PREFETCH);
+      await channel.consume(EVENTS_QUEUE, (message) => {
+        if (message) void this.onEventMessage(channel, message);
+      });
       this.channel = channel;
       this.logger.log('Connected to RabbitMQ');
     } catch {
@@ -171,6 +219,36 @@ export class MessagingService implements OnModuleInit, OnModuleDestroy {
       arguments: { 'x-dead-letter-exchange': DEAD_EXCHANGE },
     });
     await channel.bindQueue(COMMANDS_QUEUE, EXCHANGE, COMMAND_BINDING);
+    await channel.assertQueue(EVENTS_QUEUE, {
+      durable: true,
+      arguments: { 'x-dead-letter-exchange': DEAD_EXCHANGE },
+    });
+    await channel.bindQueue(EVENTS_QUEUE, EXCHANGE, EVENT_BINDING);
+  }
+
+  private async onEventMessage(
+    channel: ConfirmChannel,
+    message: ConsumeMessage,
+  ): Promise<void> {
+    const event = parseEnvelope(message.content);
+    const handler = event ? this.eventHandlers.get(event.type) : undefined;
+    try {
+      if (!event || !handler) {
+        channel.nack(message, false, false);
+        return;
+      }
+      await handler(event);
+      channel.ack(message);
+    } catch (error) {
+      this.logger.warn(
+        `Event ${message.properties.messageId} failed: ${(error as Error).message}`,
+      );
+      try {
+        channel.nack(message, false, !message.fields.redelivered);
+      } catch {
+        return;
+      }
+    }
   }
 
   private onReply(message: ConsumeMessage | null): void {

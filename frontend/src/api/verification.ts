@@ -29,6 +29,7 @@ export interface GuideProfile {
 export interface VerificationState {
   emailVerifiedAt: string | null;
   emailSentAt: string | null;
+  emailFailedAt: string | null;
   nextResendAt: string;
   reviews: {
     id: string;

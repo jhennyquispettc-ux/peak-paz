@@ -92,6 +92,7 @@ export class GuideVerificationService {
         dto.status,
         adminId,
         dto.rejectionReason,
+        manager,
       );
       profile.verificationStatus = dto.status;
       profile.rejectionReason =

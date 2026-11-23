@@ -44,9 +44,12 @@ services:
       target: test
     environment:
       RABBITMQ_URL: amqp://test:test-local-only@rabbitmq:5672
+      SMTP_URL: smtp://mailpit:1025
     depends_on:
       rabbitmq:
         condition: service_healthy
+      mailpit:
+        condition: service_started
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:3030/health')"]
       interval: 1s

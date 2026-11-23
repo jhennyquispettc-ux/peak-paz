@@ -282,6 +282,14 @@ function VerificationContent() {
                   'Open the Peak Paz message and press “Confirm my email”. Also check your spam folder. The link expires in 30 minutes.',
                 )}
               </p>
+              {state?.emailFailedAt && (
+                <p role="alert" className="notice notice-danger">
+                  {pick(
+                    'No pudimos entregar el correo. Revisa tu dirección o solicita otro.',
+                    'We could not deliver the email. Check your address or request another one.',
+                  )}
+                </p>
+              )}
               {!state && !error && (
                 <p role="status">
                   {pick(

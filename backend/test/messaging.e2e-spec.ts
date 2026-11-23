@@ -53,7 +53,7 @@ describe('RabbitMQ messaging (e2e)', () => {
       .expect(200);
     expect(pong.body).toMatchObject({
       service: 'verification-python',
-      version: '0.1.0',
+      version: '0.2.0',
     });
     expect(pong.body.roundTripMs).toBeGreaterThanOrEqual(0);
   });

@@ -69,11 +69,14 @@ services:
     restart: unless-stopped
     environment:
       RABBITMQ_URL: amqp://peakpaz:${RABBITMQ_PASSWORD:?Run npm run setup}@rabbitmq:5672
+      SMTP_URL: smtp://mailpit:1025
     ports:
       - "127.0.0.1:3030:3030"
     depends_on:
       rabbitmq:
         condition: service_healthy
+      mailpit:
+        condition: service_started
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:3030/health')"]
       interval: 5s
