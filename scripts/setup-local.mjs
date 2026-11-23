@@ -33,10 +33,20 @@ const password =
   [existing[0].VERIFICATION_DB_PASSWORD, existing[2].DB_PASSWORD].find(
     (value) => value && !value.startsWith('replace-'),
   ) ?? secret();
+const rabbitPassword =
+  existing[0].RABBITMQ_PASSWORD &&
+  !existing[0].RABBITMQ_PASSWORD.startsWith('replace-')
+    ? existing[0].RABBITMQ_PASSWORD
+    : secret();
 const values = [
-  { VERIFICATION_SERVICE_KEY: key, VERIFICATION_DB_PASSWORD: password },
   {
     VERIFICATION_SERVICE_KEY: key,
+    VERIFICATION_DB_PASSWORD: password,
+    RABBITMQ_PASSWORD: rabbitPassword,
+  },
+  {
+    VERIFICATION_SERVICE_KEY: key,
+    RABBITMQ_URL: `amqp://peakpaz:${rabbitPassword}@localhost:5672`,
     JWT_SECRET:
       existing[1].JWT_SECRET && !existing[1].JWT_SECRET.startsWith('replace-')
         ? existing[1].JWT_SECRET

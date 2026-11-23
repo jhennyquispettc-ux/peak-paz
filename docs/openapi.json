@@ -143,6 +143,110 @@
         ]
       }
     },
+    "/api/admin/messaging/status": {
+      "get": {
+        "operationId": "MessagingController_status",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessagingStatusDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Ver si el backend está conectado a RabbitMQ",
+        "tags": [
+          "Admin / Messaging"
+        ]
+      }
+    },
+    "/api/admin/messaging/ping": {
+      "post": {
+        "operationId": "MessagingController_ping",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessagingPingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Probar la comunicación con el microservicio Python por RabbitMQ",
+        "tags": [
+          "Admin / Messaging"
+        ]
+      }
+    },
     "/api/health": {
       "get": {
         "operationId": "HealthController_check",
@@ -10444,6 +10548,46 @@
           "message",
           "path",
           "timestamp"
+        ]
+      },
+      "MessagingStatusDto": {
+        "type": "object",
+        "properties": {
+          "configured": {
+            "type": "boolean",
+            "description": "RABBITMQ_URL está configurada"
+          },
+          "connected": {
+            "type": "boolean",
+            "description": "El backend está conectado a RabbitMQ"
+          }
+        },
+        "required": [
+          "configured",
+          "connected"
+        ]
+      },
+      "MessagingPingDto": {
+        "type": "object",
+        "properties": {
+          "service": {
+            "type": "string",
+            "example": "verification-python"
+          },
+          "version": {
+            "type": "string",
+            "example": "0.1.0"
+          },
+          "roundTripMs": {
+            "type": "number",
+            "example": 12,
+            "description": "Milisegundos de ida y vuelta"
+          }
+        },
+        "required": [
+          "service",
+          "version",
+          "roundTripMs"
         ]
       },
       "UserDto": {

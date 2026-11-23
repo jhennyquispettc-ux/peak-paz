@@ -44,6 +44,42 @@ services:
       - "127.0.0.1:1025:1025"
       - "127.0.0.1:8025:8025"
 
+  rabbitmq:
+    image: rabbitmq:4.0-management-alpine
+    hostname: peak-paz-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: peakpaz
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?Run npm run setup}
+    ports:
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 5672"]
+      interval: 5s
+      timeout: 10s
+      retries: 20
+
+  verification-python:
+    build:
+      context: ./verification-python
+      target: runtime
+    restart: unless-stopped
+    environment:
+      RABBITMQ_URL: amqp://peakpaz:${RABBITMQ_PASSWORD:?Run npm run setup}@rabbitmq:5672
+    ports:
+      - "127.0.0.1:3030:3030"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:3030/health')"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
   verification:
     build: ./verification-service
     restart: unless-stopped
@@ -70,3 +106,4 @@ services:
 volumes:
   postgres_data:
   verification_data:
+  rabbitmq_data:

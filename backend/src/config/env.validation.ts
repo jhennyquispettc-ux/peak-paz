@@ -14,6 +14,10 @@ export const envValidation = Joi.object({
     .min(500)
     .max(30000)
     .default(5000),
+  RABBITMQ_URL: Joi.string()
+    .uri({ scheme: ['amqp', 'amqps'] })
+    .allow('')
+    .default(''),
   MAIL_TRANSPORT: Joi.string().valid('smtp', 'file').default('smtp'),
   SMTP_URL: Joi.string()
     .uri({ scheme: ['smtp', 'smtps'] })
