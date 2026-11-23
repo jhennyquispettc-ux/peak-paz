@@ -14,6 +14,7 @@ import {
   OpenedFile,
   StorageService,
 } from '../../../storage/storage.service.js';
+import { InterviewService } from '../../verification/interview.service.js';
 import { REQUIRED_AGENCY_DOCUMENTS } from '../agencies.enums.js';
 import {
   AgencyDto,
@@ -32,6 +33,7 @@ export class AgencyVerificationService {
     @InjectRepository(AgencyDocument)
     private readonly documents: Repository<AgencyDocument>,
     private readonly storage: StorageService,
+    private readonly interviews: InterviewService,
   ) {}
 
   async list(query: VerificationQueryDto): Promise<AgencyPageDto> {
@@ -63,6 +65,7 @@ export class AgencyVerificationService {
         agency.documents,
       );
       if (missing.length > 0) throw new DocumentsIncompleteException(missing);
+      await this.interviews.assertCanApprove('AGENCY', id);
     }
 
     agency.verificationStatus = dto.status;

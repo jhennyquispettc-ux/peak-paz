@@ -24,8 +24,6 @@ export default function LoginPage({ mode }: { mode: Mode }) {
   const [agency, setAgency] = useState({
     legalName: '',
     taxId: '',
-    operatorLicense: '',
-    association: '',
     address: '',
   });
   const [replay, setReplay] = useState(0);
@@ -67,8 +65,6 @@ export default function LoginPage({ mode }: { mode: Mode }) {
                 ? {
                     legalName: agency.legalName.trim(),
                     taxId: agency.taxId.trim(),
-                    operatorLicense: agency.operatorLicense.trim(),
-                    association: agency.association.trim(),
                     address: agency.address.trim(),
                   }
                 : {}),
@@ -292,49 +288,16 @@ export default function LoginPage({ mode }: { mode: Mode }) {
                   required
                 />
               </div>
-              <div className="field-row">
-                <div className="field">
-                  <label htmlFor="taxId">{pick('NIT', 'Tax ID')}</label>
-                  <input
-                    id="taxId"
-                    inputMode="numeric"
-                    value={agency.taxId}
-                    onChange={(event) =>
-                      setAgency({ ...agency, taxId: event.target.value })
-                    }
-                    pattern="[0-9]{7,15}"
-                    required
-                  />
-                </div>
-                <div className="field">
-                  <label htmlFor="operatorLicense">
-                    {pick('Licencia de operador', 'Operator license')}
-                  </label>
-                  <input
-                    id="operatorLicense"
-                    value={agency.operatorLicense}
-                    onChange={(event) =>
-                      setAgency({
-                        ...agency,
-                        operatorLicense: event.target.value,
-                      })
-                    }
-                    maxLength={40}
-                    required
-                  />
-                </div>
-              </div>
               <div className="field">
-                <label htmlFor="association">
-                  {pick('Asociación', 'Association')}
-                </label>
+                <label htmlFor="taxId">{pick('NIT', 'Tax ID')}</label>
                 <input
-                  id="association"
-                  value={agency.association}
+                  id="taxId"
+                  inputMode="numeric"
+                  value={agency.taxId}
                   onChange={(event) =>
-                    setAgency({ ...agency, association: event.target.value })
+                    setAgency({ ...agency, taxId: event.target.value })
                   }
-                  maxLength={120}
+                  pattern="[0-9]{7,15}"
                   required
                 />
               </div>

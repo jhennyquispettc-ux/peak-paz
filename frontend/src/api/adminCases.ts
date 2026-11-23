@@ -137,8 +137,6 @@ export interface AgencyDetail {
   user: User;
   legalName: string;
   taxId: string;
-  operatorLicense: string;
-  association: string;
   address: string;
   verificationStatus: VerificationFilter;
   rejectionReason: string | null;
@@ -151,10 +149,40 @@ export interface SanctionOutcome {
   sanction: SanctionLevel | null;
 }
 
+export type ReviewSubject = 'GUIDE' | 'AGENCY';
+
+export interface DocumentFinding {
+  documentId: string;
+  type: string;
+  readable: boolean;
+  confidence: number;
+  nameScore: number | null;
+  alerts: string[];
+}
+
+export interface DocumentReview {
+  id: string;
+  status: 'PENDING' | 'COMPLETED' | 'FAILED';
+  recommendation: 'NO_ALERTS' | 'HAS_ALERTS' | 'MANUAL_REVIEW' | null;
+  documents: DocumentFinding[];
+  createdAt: string;
+  completedAt: string | null;
+}
+
+export const getDocumentReview = (subject: ReviewSubject, id: string) =>
+  api<{ review: DocumentReview | null }>(
+    `/admin/document-reviews/${subject}/${id}`,
+  );
+
+export const requestDocumentReview = (subject: ReviewSubject, id: string) =>
+  api<DocumentReview>(`/admin/document-reviews/${subject}/${id}`, {
+    method: 'POST',
+  });
+
 export const AGENCY_DOCUMENTS = [
   { type: 'TAX_ID', label: 'NIT' },
-  { type: 'OPERATOR_LICENSE', label: 'Licencia de operador' },
-  { type: 'ASSOCIATION_CERTIFICATE', label: 'Certificado de asociación' },
+  { type: 'COMMERCE_REGISTRATION', label: 'Matrícula de comercio (SEPREC)' },
+  { type: 'MUNICIPAL_LICENSE', label: 'Licencia de funcionamiento municipal' },
   { type: 'REPRESENTATIVE_ID', label: 'Cédula del representante' },
 ] as const;
 

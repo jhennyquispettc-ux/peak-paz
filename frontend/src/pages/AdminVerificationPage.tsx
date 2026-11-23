@@ -8,8 +8,11 @@ import {
   type GuideProfile,
   type VerificationState,
 } from '../api/verification';
+import type { ApprovalState } from '../api/interviews';
 import type { Page, User } from '../api/types';
 import { useAuth } from '../auth/AuthContext';
+import DocumentAnalysis from '../ui/DocumentAnalysis';
+import InterviewPanel from '../ui/InterviewPanel';
 
 export default function AdminVerificationPage() {
   const { user, loading } = useAuth();
@@ -22,6 +25,7 @@ export default function AdminVerificationPage() {
   const [profile, setProfile] = useState<GuideProfile | null>(null);
   const [history, setHistory] = useState<VerificationState | null>(null);
   const [reason, setReason] = useState('');
+  const [approval, setApproval] = useState<ApprovalState | null>(null);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
@@ -195,6 +199,19 @@ export default function AdminVerificationPage() {
                 <span className="badge badge-info">
                   {REVIEW_LABELS[profile.verificationStatus]}
                 </span>
+                <DocumentAnalysis
+                  key={profile.id}
+                  subject="GUIDE"
+                  subjectId={profile.id}
+                  labels={DOCUMENTS}
+                  complete={profile.missingDocuments.length === 0}
+                />
+                <InterviewPanel
+                  key={`interview-${profile.id}`}
+                  subject="GUIDE"
+                  subjectId={profile.id}
+                  onApproval={setApproval}
+                />
                 {DOCUMENTS.map((document) => {
                   const file = profile.documents.find(
                     (item) => item.type === document.type,
@@ -276,7 +293,8 @@ export default function AdminVerificationPage() {
                         disabled={
                           busy ||
                           !profile.user.emailVerifiedAt ||
-                          profile.missingDocuments.length > 0
+                          profile.missingDocuments.length > 0 ||
+                          !approval?.canApprove
                         }
                         onClick={() => void decide('APPROVED')}
                       >

@@ -1,3 +1,4 @@
+import { passInterview } from './helpers/pass-interview.js';
 import { confirmTestEmail } from './helpers/confirm-email.js';
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -207,6 +208,7 @@ describe('Notifications in the app and by email (e2e)', () => {
       .set(auth(guideToken))
       .expect(200);
     guideId = me.body.id;
+    await passInterview(server, adminToken, 'GUIDE', guideId);
     await request(server)
       .patch(`/api/admin/guides/${guideId}/verification`)
       .set(auth(adminToken))

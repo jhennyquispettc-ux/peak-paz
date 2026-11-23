@@ -143,6 +143,352 @@
         ]
       }
     },
+    "/api/admin/document-reviews/{subject}/{id}": {
+      "get": {
+        "operationId": "DocumentReviewController_latest",
+        "parameters": [
+          {
+            "name": "subject",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Último análisis automático de los documentos",
+        "tags": [
+          "Document review"
+        ]
+      },
+      "post": {
+        "operationId": "DocumentReviewController_request",
+        "parameters": [
+          {
+            "name": "subject",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Solicita un nuevo análisis de los documentos",
+        "tags": [
+          "Document review"
+        ]
+      }
+    },
+    "/api/interviews/me": {
+      "get": {
+        "operationId": "InterviewController_mine",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Próxima entrevista del proveedor",
+        "tags": [
+          "Provider interviews"
+        ]
+      }
+    },
+    "/api/admin/interviews/{subject}/{id}": {
+      "get": {
+        "operationId": "InterviewController_overview",
+        "parameters": [
+          {
+            "name": "subject",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Entrevistas del proveedor y si se puede aprobar",
+        "tags": [
+          "Provider interviews"
+        ]
+      },
+      "post": {
+        "operationId": "InterviewController_schedule",
+        "parameters": [
+          {
+            "name": "subject",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleInterviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Agendar una entrevista y avisar al proveedor",
+        "tags": [
+          "Provider interviews"
+        ]
+      }
+    },
+    "/api/admin/interviews/{id}/result": {
+      "patch": {
+        "operationId": "InterviewController_record",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordInterviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Registrar el resultado de la entrevista",
+        "tags": [
+          "Provider interviews"
+        ]
+      }
+    },
+    "/api/admin/interviews/{id}/cancel": {
+      "post": {
+        "operationId": "InterviewController_cancel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancelar una entrevista agendada",
+        "tags": [
+          "Provider interviews"
+        ]
+      }
+    },
+    "/api/admin/messaging/status": {
+      "get": {
+        "operationId": "MessagingController_status",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessagingStatusDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Ver si el backend está conectado a RabbitMQ",
+        "tags": [
+          "Admin / Messaging"
+        ]
+      }
+    },
+    "/api/admin/messaging/ping": {
+      "post": {
+        "operationId": "MessagingController_ping",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessagingPingDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Probar la comunicación con el microservicio Python por RabbitMQ",
+        "tags": [
+          "Admin / Messaging"
+        ]
+      }
+    },
     "/api/health": {
       "get": {
         "operationId": "HealthController_check",
@@ -4590,8 +4936,8 @@
                     "type": "string",
                     "enum": [
                       "TAX_ID",
-                      "OPERATOR_LICENSE",
-                      "ASSOCIATION_CERTIFICATE",
+                      "COMMERCE_REGISTRATION",
+                      "MUNICIPAL_LICENSE",
                       "REPRESENTATIVE_ID"
                     ]
                   },
@@ -10404,6 +10750,63 @@
         "type": "object",
         "properties": {}
       },
+      "ScheduleInterviewDto": {
+        "type": "object",
+        "properties": {
+          "scheduledAt": {
+            "type": "string",
+            "example": "2026-12-10T15:00:00-04:00"
+          },
+          "modality": {
+            "type": "string",
+            "enum": [
+              "IN_PERSON",
+              "VIRTUAL"
+            ]
+          },
+          "location": {
+            "type": "string",
+            "example": "Calle Sagárnaga 213, La Paz",
+            "description": "Lugar de la entrevista o enlace de la reunión virtual"
+          }
+        },
+        "required": [
+          "scheduledAt",
+          "modality",
+          "location"
+        ]
+      },
+      "RecordInterviewDto": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "string",
+            "enum": [
+              "PASSED",
+              "FAILED"
+            ]
+          },
+          "notes": {
+            "type": "string",
+            "example": "Presentó sus documentos originales."
+          },
+          "premisesVisited": {
+            "type": "boolean",
+            "description": "Agencia: se visitó el local"
+          },
+          "credentialType": {
+            "type": "string",
+            "enum": [
+              "SIRETUR",
+              "FEBOGUIT"
+            ]
+          }
+        },
+        "required": [
+          "result",
+          "notes"
+        ]
+      },
       "ErrorResponseDto": {
         "type": "object",
         "properties": {
@@ -10444,6 +10847,46 @@
           "message",
           "path",
           "timestamp"
+        ]
+      },
+      "MessagingStatusDto": {
+        "type": "object",
+        "properties": {
+          "configured": {
+            "type": "boolean",
+            "description": "RABBITMQ_URL está configurada"
+          },
+          "connected": {
+            "type": "boolean",
+            "description": "El backend está conectado a RabbitMQ"
+          }
+        },
+        "required": [
+          "configured",
+          "connected"
+        ]
+      },
+      "MessagingPingDto": {
+        "type": "object",
+        "properties": {
+          "service": {
+            "type": "string",
+            "example": "verification-python"
+          },
+          "version": {
+            "type": "string",
+            "example": "0.1.0"
+          },
+          "roundTripMs": {
+            "type": "number",
+            "example": 12,
+            "description": "Milisegundos de ida y vuelta"
+          }
+        },
+        "required": [
+          "service",
+          "version",
+          "roundTripMs"
         ]
       },
       "UserDto": {
@@ -10802,15 +11245,6 @@
             "example": "1020304025",
             "description": "NIT de la agencia"
           },
-          "operatorLicense": {
-            "type": "string",
-            "example": "RNT-LP-0421",
-            "description": "Licencia de operador turístico"
-          },
-          "association": {
-            "type": "string",
-            "example": "ASOGUIA La Paz"
-          },
           "address": {
             "type": "string",
             "example": "Calle Sagárnaga 213, La Paz"
@@ -10829,8 +11263,6 @@
           "lastName",
           "legalName",
           "taxId",
-          "operatorLicense",
-          "association",
           "address"
         ]
       },
@@ -10933,6 +11365,14 @@
             "type": "string",
             "example": "6123456-1B"
           },
+          "credentialType": {
+            "type": "string",
+            "enum": [
+              "SIRETUR",
+              "FEBOGUIT"
+            ],
+            "nullable": true
+          },
           "bioEs": {
             "type": "object",
             "nullable": true
@@ -11010,6 +11450,7 @@
           "id",
           "user",
           "nationalId",
+          "credentialType",
           "bioEs",
           "bioEn",
           "languages",
@@ -11491,6 +11932,14 @@
             "type": "string",
             "example": "Mamani"
           },
+          "credentialType": {
+            "type": "string",
+            "enum": [
+              "SIRETUR",
+              "FEBOGUIT"
+            ],
+            "nullable": true
+          },
           "languages": {
             "example": [
               "es",
@@ -11530,6 +11979,7 @@
           "id",
           "firstName",
           "lastName",
+          "credentialType",
           "languages",
           "yearsExperience",
           "bioEs",
@@ -12845,12 +13295,6 @@
           "taxId": {
             "type": "string"
           },
-          "operatorLicense": {
-            "type": "string"
-          },
-          "association": {
-            "type": "string"
-          },
           "address": {
             "type": "string"
           },
@@ -12897,8 +13341,8 @@
               "type": "string",
               "enum": [
                 "TAX_ID",
-                "OPERATOR_LICENSE",
-                "ASSOCIATION_CERTIFICATE",
+                "COMMERCE_REGISTRATION",
+                "MUNICIPAL_LICENSE",
                 "REPRESENTATIVE_ID"
               ]
             }
@@ -12909,8 +13353,6 @@
           "user",
           "legalName",
           "taxId",
-          "operatorLicense",
-          "association",
           "address",
           "descriptionEs",
           "descriptionEn",
@@ -12934,15 +13376,6 @@
             "type": "string",
             "example": "1020304025",
             "description": "NIT de la agencia"
-          },
-          "operatorLicense": {
-            "type": "string",
-            "example": "RNT-LP-0421",
-            "description": "Licencia de operador turístico"
-          },
-          "association": {
-            "type": "string",
-            "example": "ASOGUIA La Paz"
           },
           "address": {
             "type": "string",

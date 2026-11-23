@@ -1,3 +1,4 @@
+import { passInterview } from './helpers/pass-interview.js';
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
@@ -6,10 +7,11 @@ import { randomUUID } from 'node:crypto';
 import { DataSource } from 'typeorm';
 import { AppModule } from '../src/app.module.js';
 import { configureApp } from '../src/app.setup.js';
-import { VerificationClient } from '../src/modules/verification/verification.client.js';
+import { MessagingUnavailableException } from '../src/modules/messaging/messaging.exceptions.js';
+import { MessagingService } from '../src/modules/messaging/messaging.service.js';
 import { confirmationToken } from './helpers/confirm-email.js';
 
-describe('Account verification through the real microservice', () => {
+describe('Account verification through RabbitMQ and the Python service', () => {
   let app: INestApplication<App>;
   let server: App;
   let tourist: { accessToken: string; user: { id: string; email: string } };
@@ -102,6 +104,18 @@ describe('Account verification through the real microservice', () => {
       .set(auth(tourist.accessToken))
       .expect(429);
   });
+  it('records that the Python service delivered the email', async () => {
+    let sentAt: string | null = null;
+    for (let attempt = 0; attempt < 80 && !sentAt; attempt++) {
+      const state = await request(server)
+        .get('/api/verification/me')
+        .set(auth(tourist.accessToken))
+        .expect(200);
+      sentAt = state.body.emailSentAt;
+      if (!sentAt) await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    expect(sentAt).toBeTruthy();
+  });
   it('confirms the email without login, rejects replay and allows business requests with the original session', async () => {
     const token = await confirmationToken(tourist.user.email);
     await request(server)
@@ -168,6 +182,7 @@ describe('Account verification through the real microservice', () => {
         .attach('file', PDF, 'credential.pdf')
         .expect(201);
     }
+    await passInterview(server, adminToken, 'GUIDE', guideId);
     await request(server)
       .patch(`/api/admin/guides/${guideId}/verification`)
       .set(auth(adminToken))
@@ -212,6 +227,7 @@ describe('Account verification through the real microservice', () => {
       .post('/api/guides/me/verification-request')
       .set(auth(guide.accessToken))
       .expect(200);
+    await passInterview(server, adminToken, 'GUIDE', guideId);
     await request(server)
       .patch(`/api/admin/guides/${guideId}/verification`)
       .set(auth(adminToken))
@@ -285,11 +301,10 @@ describe('Account verification through the real microservice', () => {
         expect(response.body.error).toBe('DOCUMENTS_IN_REVIEW'),
       );
   });
-  it('keeps registration durable when the verification service is unavailable', async () => {
-    const client = app.get(VerificationClient);
+  it('keeps registration durable when RabbitMQ is unavailable', async () => {
     const unavailable = vi
-      .spyOn(client, 'call')
-      .mockRejectedValue(new Error('Simulated verification outage'));
+      .spyOn(app.get(MessagingService), 'sendCommand')
+      .mockRejectedValue(new MessagingUnavailableException());
     let session: typeof tourist;
     try {
       session = (

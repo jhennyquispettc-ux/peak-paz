@@ -15,6 +15,7 @@ import ErrorState from '../../ui/ErrorState';
 import { Field } from '../../ui/Field';
 import LoadingState from '../../ui/LoadingState';
 import PageHeader from '../../ui/PageHeader';
+import ProviderInterviewNotice from '../../ui/ProviderInterviewNotice';
 import StatusBadge from '../../ui/StatusBadge';
 import { useToast } from '../../ui/Toast';
 import AgencyStatusNotice from './AgencyStatusNotice';
@@ -31,8 +32,6 @@ function DataForm({
   const [form, setForm] = useState({
     legalName: agency.legalName,
     taxId: agency.taxId,
-    operatorLicense: agency.operatorLicense,
-    association: agency.association,
     address: agency.address,
     descriptionEs: agency.descriptionEs ?? '',
     descriptionEn: agency.descriptionEn ?? '',
@@ -52,8 +51,6 @@ function DataForm({
           : {
               legalName: form.legalName.trim(),
               taxId: form.taxId.trim(),
-              operatorLicense: form.operatorLicense.trim(),
-              association: form.association.trim(),
             }),
         address: form.address.trim(),
         ...(form.descriptionEs.trim()
@@ -82,27 +79,11 @@ function DataForm({
             <br />
             {agency.taxId}
           </p>
-          <p>
-            <span className="small muted">Licencia de operador</span>
-            <br />
-            {agency.operatorLicense}
-          </p>
-          <p>
-            <span className="small muted">Asociación</span>
-            <br />
-            {agency.association}
-          </p>
         </div>
       ) : (
         <div className="form-grid">
           <Field label="Razón social" required {...bind('legalName')} />
           <Field label="NIT" required {...bind('taxId')} />
-          <Field
-            label="Licencia de operador"
-            required
-            {...bind('operatorLicense')}
-          />
-          <Field label="Asociación" required {...bind('association')} />
         </div>
       )}
       {locked && (
@@ -253,6 +234,7 @@ export default function AgencyProfilePage() {
             </StatusBadge>
           </span>
           <AgencyStatusNotice agency={agency} />
+          <ProviderInterviewNotice />
           {agency.verificationStatus === 'REJECTED' && (
             <div className="action-bar">
               <button

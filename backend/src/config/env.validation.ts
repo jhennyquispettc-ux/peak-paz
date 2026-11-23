@@ -14,6 +14,15 @@ export const envValidation = Joi.object({
     .min(500)
     .max(30000)
     .default(5000),
+  EMAIL_TOKEN_MINUTES: Joi.number().integer().min(1).max(1440).default(30),
+  EMAIL_RESEND_SECONDS: Joi.number().integer().min(30).default(60),
+  DOCUMENT_BASE_URL: Joi.string()
+    .uri({ scheme: ['http', 'https'] })
+    .default('http://host.docker.internal:3010'),
+  RABBITMQ_URL: Joi.string()
+    .uri({ scheme: ['amqp', 'amqps'] })
+    .allow('')
+    .default(''),
   MAIL_TRANSPORT: Joi.string().valid('smtp', 'file').default('smtp'),
   SMTP_URL: Joi.string()
     .uri({ scheme: ['smtp', 'smtps'] })

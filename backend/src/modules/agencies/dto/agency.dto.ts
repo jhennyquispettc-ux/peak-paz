@@ -24,12 +24,6 @@ export class AgencyDto {
   taxId: string;
 
   @ApiProperty()
-  operatorLicense: string;
-
-  @ApiProperty()
-  association: string;
-
-  @ApiProperty()
   address: string;
 
   @ApiProperty({ nullable: true })
@@ -70,8 +64,6 @@ export class AgencyDto {
       user: UserDto.fromEntity(agency.user),
       legalName: agency.legalName,
       taxId: agency.taxId,
-      operatorLicense: agency.operatorLicense,
-      association: agency.association,
       address: agency.address,
       descriptionEs: agency.descriptionEs,
       descriptionEn: agency.descriptionEn,

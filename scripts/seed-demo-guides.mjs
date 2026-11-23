@@ -169,6 +169,25 @@ for (const scenario of scenarios) {
       await call('/guides/me/verification-request', { token, body: {} });
       if (scenario.decision) {
         const profile = await call('/guides/me', { token });
+        if (scenario.decision === 'APPROVED') {
+          const interview = await call(`/admin/interviews/GUIDE/${profile.id}`, {
+            token: admin.accessToken,
+            body: {
+              scheduledAt: new Date(Date.now() + 86_400_000).toISOString(),
+              modality: 'IN_PERSON',
+              location: 'Oficina de Peak Paz, La Paz',
+            },
+          });
+          await call(`/admin/interviews/${interview.id}/result`, {
+            token: admin.accessToken,
+            method: 'PATCH',
+            body: {
+              result: 'PASSED',
+              notes: 'Entrevista de demostración satisfactoria.',
+              credentialType: 'SIRETUR',
+            },
+          });
+        }
         await call(`/admin/guides/${profile.id}/verification`, {
           token: admin.accessToken,
           method: 'PATCH',

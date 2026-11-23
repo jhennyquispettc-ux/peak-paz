@@ -12,6 +12,7 @@ import {
 import { useAuth } from '../auth/AuthContext';
 import SiteHeader from '../components/SiteHeader';
 import { SpanishScope, useI18n } from '../i18n/I18nContext';
+import ProviderInterviewNotice from '../ui/ProviderInterviewNotice';
 
 function DocumentUpload({
   type,
@@ -46,6 +47,7 @@ function DocumentUpload({
         type,
         file,
         String(data.get('expiresAt') || ''),
+        String(data.get('credentialType') || ''),
       );
       form.reset();
       await reload();
@@ -106,6 +108,24 @@ function DocumentUpload({
             disabled={busy}
           />
         </div>
+        {type === 'GUIDE_CREDENTIAL' && (
+          <div className="field">
+            <label htmlFor="credentialType">Entidad de la credencial</label>
+            <select
+              id="credentialType"
+              name="credentialType"
+              defaultValue={profile.credentialType ?? ''}
+              required
+              disabled={busy}
+            >
+              <option value="" disabled>
+                Selecciona
+              </option>
+              <option value="SIRETUR">SIRETUR</option>
+              <option value="FEBOGUIT">FEBOGUIT</option>
+            </select>
+          </div>
+        )}
         <div className="field">
           <label htmlFor={`expiry-${type}`}>Vencimiento, si corresponde</label>
           <input
@@ -282,6 +302,14 @@ function VerificationContent() {
                   'Open the Peak Paz message and press “Confirm my email”. Also check your spam folder. The link expires in 30 minutes.',
                 )}
               </p>
+              {state?.emailFailedAt && (
+                <p role="alert" className="notice notice-danger">
+                  {pick(
+                    'No pudimos entregar el correo. Revisa tu dirección o solicita otro.',
+                    'We could not deliver the email. Check your address or request another one.',
+                  )}
+                </p>
+              )}
               {!state && !error && (
                 <p role="status">
                   {pick(
@@ -349,6 +377,7 @@ function VerificationContent() {
                 Corrige lo siguiente: {profile.rejectionReason}
               </p>
             )}
+            <ProviderInterviewNotice />
             {DOCUMENTS.map((document) => (
               <DocumentUpload
                 key={document.type}

@@ -282,6 +282,8 @@ export default function RouteDetailPage() {
                           {guide.firstName} {guide.lastName}
                         </span>
                         <span className="small muted">
+                          {guide.credentialType &&
+                            `${pick('Guía', 'Guide')} ${guide.credentialType} · `}
                           {guide.yearsExperience} {pick('años de experiencia', 'years of experience')} ·{' '}
                           {guide.languages.join(', ').toUpperCase()}
                         </span>

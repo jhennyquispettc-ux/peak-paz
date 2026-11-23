@@ -14,8 +14,6 @@ interface RegisterData {
   role?: 'TOURIST' | 'GUIDE' | 'AGENCY';
   legalName?: string;
   taxId?: string;
-  operatorLicense?: string;
-  association?: string;
   address?: string;
   nationalId?: string;
   languages?: string[];
