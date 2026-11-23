@@ -15,6 +15,7 @@ import ErrorState from '../../ui/ErrorState';
 import { Field } from '../../ui/Field';
 import LoadingState from '../../ui/LoadingState';
 import PageHeader from '../../ui/PageHeader';
+import ProviderInterviewNotice from '../../ui/ProviderInterviewNotice';
 import StatusBadge from '../../ui/StatusBadge';
 import { useToast } from '../../ui/Toast';
 import AgencyStatusNotice from './AgencyStatusNotice';
@@ -233,6 +234,7 @@ export default function AgencyProfilePage() {
             </StatusBadge>
           </span>
           <AgencyStatusNotice agency={agency} />
+          <ProviderInterviewNotice />
           {agency.verificationStatus === 'REJECTED' && (
             <div className="action-bar">
               <button

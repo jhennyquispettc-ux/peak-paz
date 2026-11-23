@@ -18,6 +18,30 @@ interface Template {
 type Templates = Record<NotificationType, Record<Language, Template>>;
 
 const TEMPLATES: Templates = {
+  [NotificationType.INTERVIEW_SCHEDULED]: {
+    es: {
+      subject: 'Tienes una entrevista agendada en Peak Paz',
+      body: 'Tu entrevista de verificación será {modality} el {date}. Lugar o enlace: {location}',
+      link: '{path}',
+    },
+    en: {
+      subject: 'You have an interview scheduled on Peak Paz',
+      body: 'Your verification interview will be {modality} on {date}. Place or link: {location}',
+      link: '{path}',
+    },
+  },
+  [NotificationType.INTERVIEW_CANCELLED]: {
+    es: {
+      subject: 'Tu entrevista en Peak Paz fue cancelada',
+      body: 'La entrevista del {date} fue cancelada. Te avisaremos cuando se agende una nueva.',
+      link: '{path}',
+    },
+    en: {
+      subject: 'Your interview on Peak Paz was cancelled',
+      body: 'The interview on {date} was cancelled. We will let you know when a new one is scheduled.',
+      link: '{path}',
+    },
+  },
   [NotificationType.BOOKING_REQUESTED]: {
     es: {
       subject: 'Nueva solicitud de reserva {code}',
@@ -258,6 +282,8 @@ const WORDS: Record<Language, Record<string, string>> = {
     CANCELLATION_CASE: 'cancelación de un proveedor',
     COMPLAINT_CASE: 'reclamo de un turista',
     HELP_CASE: 'un turista pide ayuda durante el tour',
+    IN_PERSON: 'presencial',
+    VIRTUAL: 'virtual',
   },
   en: {
     ACCEPTED: 'accepted',
@@ -280,6 +306,8 @@ const WORDS: Record<Language, Record<string, string>> = {
     CANCELLATION_CASE: 'cancellation by a provider',
     COMPLAINT_CASE: 'complaint from a tourist',
     HELP_CASE: 'a tourist asks for help during the tour',
+    IN_PERSON: 'in person',
+    VIRTUAL: 'online',
   },
 };
 

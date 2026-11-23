@@ -175,6 +175,8 @@ export default function RouteBookingPanel({
                       {guide.firstName} {guide.lastName}
                     </strong>
                     <small>
+                      {guide.credentialType &&
+                        `${pick('Guía', 'Guide')} ${guide.credentialType}, `}
                       {guide.yearsExperience} {pick('años', 'years')},{' '}
                       {guide.languages.join(', ').toUpperCase()},{' '}
                       {Number(guide.ratingAverage).toFixed(1)} / 5

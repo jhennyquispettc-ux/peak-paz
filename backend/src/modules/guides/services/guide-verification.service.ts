@@ -1,4 +1,5 @@
 import { DataSource } from 'typeorm';
+import { InterviewService } from '../../verification/interview.service.js';
 import { AccountVerificationService } from '../../verification/verification.service.js';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -39,6 +40,7 @@ export class GuideVerificationService {
   constructor(
     private readonly db: DataSource,
     private readonly accountVerification: AccountVerificationService,
+    private readonly interviews: InterviewService,
     private readonly guides: GuidesRepository,
     @InjectRepository(GuideDocument)
     private readonly documents: Repository<GuideDocument>,
@@ -94,6 +96,9 @@ export class GuideVerificationService {
         dto.rejectionReason,
         manager,
       );
+      if (dto.status === VerificationStatus.APPROVED) {
+        await this.interviews.assertCanApprove('GUIDE', id);
+      }
       profile.verificationStatus = dto.status;
       profile.rejectionReason =
         dto.status === VerificationStatus.REJECTED

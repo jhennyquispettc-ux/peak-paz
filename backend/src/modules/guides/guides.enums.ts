@@ -4,6 +4,9 @@ export enum GuideDocumentType {
   FIRST_AID = 'FIRST_AID',
 }
 
+export const GUIDE_CREDENTIAL_TYPES = ['SIRETUR', 'FEBOGUIT'] as const;
+export type GuideCredentialType = (typeof GUIDE_CREDENTIAL_TYPES)[number];
+
 export const REQUIRED_GUIDE_DOCUMENTS = [
   GuideDocumentType.NATIONAL_ID,
   GuideDocumentType.GUIDE_CREDENTIAL,

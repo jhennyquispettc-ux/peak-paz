@@ -1,3 +1,4 @@
+import { passInterview } from './helpers/pass-interview.js';
 import { confirmTestEmail } from './helpers/confirm-email.js';
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -212,6 +213,7 @@ describe('Group departures (e2e)', () => {
       .set(auth(agencyToken))
       .expect(200);
     agencyId = me.body.id;
+    await passInterview(server, adminToken, 'AGENCY', agencyId);
     await request(server)
       .patch(`/api/admin/agencies/${agencyId}/verification`)
       .set(auth(adminToken))

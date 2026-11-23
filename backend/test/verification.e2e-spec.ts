@@ -1,3 +1,4 @@
+import { passInterview } from './helpers/pass-interview.js';
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
@@ -181,6 +182,7 @@ describe('Account verification through RabbitMQ and the Python service', () => {
         .attach('file', PDF, 'credential.pdf')
         .expect(201);
     }
+    await passInterview(server, adminToken, 'GUIDE', guideId);
     await request(server)
       .patch(`/api/admin/guides/${guideId}/verification`)
       .set(auth(adminToken))
@@ -225,6 +227,7 @@ describe('Account verification through RabbitMQ and the Python service', () => {
       .post('/api/guides/me/verification-request')
       .set(auth(guide.accessToken))
       .expect(200);
+    await passInterview(server, adminToken, 'GUIDE', guideId);
     await request(server)
       .patch(`/api/admin/guides/${guideId}/verification`)
       .set(auth(adminToken))

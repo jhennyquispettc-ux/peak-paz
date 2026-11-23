@@ -215,6 +215,176 @@
         ]
       }
     },
+    "/api/interviews/me": {
+      "get": {
+        "operationId": "InterviewController_mine",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Próxima entrevista del proveedor",
+        "tags": [
+          "Provider interviews"
+        ]
+      }
+    },
+    "/api/admin/interviews/{subject}/{id}": {
+      "get": {
+        "operationId": "InterviewController_overview",
+        "parameters": [
+          {
+            "name": "subject",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Entrevistas del proveedor y si se puede aprobar",
+        "tags": [
+          "Provider interviews"
+        ]
+      },
+      "post": {
+        "operationId": "InterviewController_schedule",
+        "parameters": [
+          {
+            "name": "subject",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleInterviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Agendar una entrevista y avisar al proveedor",
+        "tags": [
+          "Provider interviews"
+        ]
+      }
+    },
+    "/api/admin/interviews/{id}/result": {
+      "patch": {
+        "operationId": "InterviewController_record",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordInterviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Registrar el resultado de la entrevista",
+        "tags": [
+          "Provider interviews"
+        ]
+      }
+    },
+    "/api/admin/interviews/{id}/cancel": {
+      "post": {
+        "operationId": "InterviewController_cancel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancelar una entrevista agendada",
+        "tags": [
+          "Provider interviews"
+        ]
+      }
+    },
     "/api/admin/messaging/status": {
       "get": {
         "operationId": "MessagingController_status",
@@ -10580,6 +10750,63 @@
         "type": "object",
         "properties": {}
       },
+      "ScheduleInterviewDto": {
+        "type": "object",
+        "properties": {
+          "scheduledAt": {
+            "type": "string",
+            "example": "2026-12-10T15:00:00-04:00"
+          },
+          "modality": {
+            "type": "string",
+            "enum": [
+              "IN_PERSON",
+              "VIRTUAL"
+            ]
+          },
+          "location": {
+            "type": "string",
+            "example": "Calle Sagárnaga 213, La Paz",
+            "description": "Lugar de la entrevista o enlace de la reunión virtual"
+          }
+        },
+        "required": [
+          "scheduledAt",
+          "modality",
+          "location"
+        ]
+      },
+      "RecordInterviewDto": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "string",
+            "enum": [
+              "PASSED",
+              "FAILED"
+            ]
+          },
+          "notes": {
+            "type": "string",
+            "example": "Presentó sus documentos originales."
+          },
+          "premisesVisited": {
+            "type": "boolean",
+            "description": "Agencia: se visitó el local"
+          },
+          "credentialType": {
+            "type": "string",
+            "enum": [
+              "SIRETUR",
+              "FEBOGUIT"
+            ]
+          }
+        },
+        "required": [
+          "result",
+          "notes"
+        ]
+      },
       "ErrorResponseDto": {
         "type": "object",
         "properties": {
@@ -11138,6 +11365,14 @@
             "type": "string",
             "example": "6123456-1B"
           },
+          "credentialType": {
+            "type": "string",
+            "enum": [
+              "SIRETUR",
+              "FEBOGUIT"
+            ],
+            "nullable": true
+          },
           "bioEs": {
             "type": "object",
             "nullable": true
@@ -11215,6 +11450,7 @@
           "id",
           "user",
           "nationalId",
+          "credentialType",
           "bioEs",
           "bioEn",
           "languages",
@@ -11696,6 +11932,14 @@
             "type": "string",
             "example": "Mamani"
           },
+          "credentialType": {
+            "type": "string",
+            "enum": [
+              "SIRETUR",
+              "FEBOGUIT"
+            ],
+            "nullable": true
+          },
           "languages": {
             "example": [
               "es",
@@ -11735,6 +11979,7 @@
           "id",
           "firstName",
           "lastName",
+          "credentialType",
           "languages",
           "yearsExperience",
           "bioEs",

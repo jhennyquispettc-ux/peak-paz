@@ -1,6 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { VerificationStatus } from '../../../common/enums/verification-status.enum.js';
 import { GuideProfile } from '../entities/guide-profile.entity.js';
+import { GUIDE_CREDENTIAL_TYPES } from '../guides.enums.js';
+import type { GuideCredentialType } from '../guides.enums.js';
 
 export class PublicGuideRouteDto {
   @ApiProperty({ format: 'uuid' })
@@ -25,6 +27,9 @@ export class PublicGuideDto {
 
   @ApiProperty({ example: 'Mamani' })
   lastName: string;
+
+  @ApiProperty({ enum: GUIDE_CREDENTIAL_TYPES, nullable: true })
+  credentialType: GuideCredentialType | null;
 
   @ApiProperty({ example: ['es', 'en'] })
   languages: string[];
@@ -52,6 +57,7 @@ export class PublicGuideDto {
       id: profile.id,
       firstName: profile.user.firstName,
       lastName: profile.user.lastName,
+      credentialType: profile.credentialType,
       languages: profile.languages,
       yearsExperience: profile.yearsExperience,
       bioEs: profile.bioEs,

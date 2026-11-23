@@ -107,6 +107,7 @@ export interface PublicGuide {
   id: string;
   firstName: string;
   lastName: string;
+  credentialType: 'SIRETUR' | 'FEBOGUIT' | null;
   languages: string[];
   yearsExperience: number;
   ratingAverage: number;

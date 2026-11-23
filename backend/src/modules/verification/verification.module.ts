@@ -10,6 +10,10 @@ import { DocumentReviewService } from './document-review.service.js';
 import { CredentialReview } from './entities/credential-review.entity.js';
 import { DocumentReview } from './entities/document-review.entity.js';
 import { EmailVerification } from './entities/email-verification.entity.js';
+import { ProviderInterview } from './entities/provider-interview.entity.js';
+import { InterviewController } from './interview.controller.js';
+import { InterviewRepository } from './interview.repository.js';
+import { InterviewService } from './interview.service.js';
 import { VerificationRepository } from './verification.repository.js';
 import { AccountVerificationController } from './verification.controller.js';
 import { AccountVerificationService } from './verification.service.js';
@@ -22,6 +26,7 @@ import { AccountVerificationService } from './verification.service.js';
       EmailVerification,
       CredentialReview,
       DocumentReview,
+      ProviderInterview,
     ]),
     MessagingModule,
   ],
@@ -30,6 +35,8 @@ import { AccountVerificationService } from './verification.service.js';
     AccountVerificationService,
     DocumentReviewRepository,
     DocumentReviewService,
+    InterviewRepository,
+    InterviewService,
     {
       provide: PostgresOutboxStore,
       inject: [DataSource, OutboxStorage],
@@ -40,7 +47,15 @@ import { AccountVerificationService } from './verification.service.js';
         ),
     },
   ],
-  controllers: [AccountVerificationController, DocumentReviewController],
-  exports: [AccountVerificationService, DocumentReviewService],
+  controllers: [
+    AccountVerificationController,
+    DocumentReviewController,
+    InterviewController,
+  ],
+  exports: [
+    AccountVerificationService,
+    DocumentReviewService,
+    InterviewService,
+  ],
 })
 export class VerificationModule {}

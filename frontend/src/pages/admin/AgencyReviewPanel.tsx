@@ -7,12 +7,14 @@ import {
   type AgencyDetail,
   type VerificationFilter,
 } from '../../api/adminCases';
+import type { ApprovalState } from '../../api/interviews';
 import { downloadDocument, REVIEW_LABELS } from '../../api/verification';
 import { useAction } from '../../hooks/useAction';
 import { useCaseList } from '../../hooks/useCaseList';
 import ErrorState from '../../ui/ErrorState';
 import Facts from '../../ui/Facts';
 import FilterChips from '../../ui/FilterChips';
+import InterviewPanel from '../../ui/InterviewPanel';
 import LoadingState from '../../ui/LoadingState';
 import PageHeader from '../../ui/PageHeader';
 import DocumentAnalysis from '../../ui/DocumentAnalysis';
@@ -34,6 +36,7 @@ export default function AgencyReviewPanel() {
   );
   const [agency, setAgency] = useState<AgencyDetail | null>(null);
   const [reason, setReason] = useState('');
+  const [approval, setApproval] = useState<ApprovalState | null>(null);
   const { busy, error, run } = useAction();
 
   const select = (id: string) =>
@@ -141,6 +144,12 @@ export default function AgencyReviewPanel() {
                 labels={AGENCY_DOCUMENTS}
                 complete={agency.missingDocuments.length === 0}
               />
+              <InterviewPanel
+                key={`interview-${agency.id}`}
+                subject="AGENCY"
+                subjectId={agency.id}
+                onApproval={setApproval}
+              />
               {AGENCY_DOCUMENTS.map((document) => {
                 const file = agency.documents.find(
                   (item) => item.type === document.type,
@@ -198,7 +207,11 @@ export default function AgencyReviewPanel() {
                     <button
                       type="button"
                       className="btn btn-primary"
-                      disabled={busy || agency.missingDocuments.length > 0}
+                      disabled={
+                        busy ||
+                        agency.missingDocuments.length > 0 ||
+                        !approval?.canApprove
+                      }
                       onClick={() => void decide('APPROVED')}
                     >
                       Aprobar agencia

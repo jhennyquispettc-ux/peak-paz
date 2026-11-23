@@ -37,7 +37,10 @@ import {
   GuideRouteAlreadyRequestedException,
   GuideRouteNotFoundException,
 } from '../exceptions/guides.exceptions.js';
-import { REQUIRED_GUIDE_DOCUMENTS } from '../guides.enums.js';
+import {
+  GuideDocumentType,
+  REQUIRED_GUIDE_DOCUMENTS,
+} from '../guides.enums.js';
 import { GuidesRepository } from '../repositories/guides.repository.js';
 
 @Injectable()
@@ -144,6 +147,14 @@ export class GuideProfilesService {
             status: VerificationStatus.APPROVED,
           })
           .execute();
+        if (
+          dto.type === GuideDocumentType.GUIDE_CREDENTIAL &&
+          dto.credentialType
+        ) {
+          await manager
+            .getRepository(GuideProfile)
+            .update({ id: profile.id }, { credentialType: dto.credentialType });
+        }
         return manager.getRepository(GuideDocument).save(
           manager.getRepository(GuideDocument).create({
             guideProfileId: profile.id,
