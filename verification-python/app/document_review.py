@@ -11,11 +11,12 @@ import httpx
 import numpy as np
 import pypdfium2
 import pytesseract
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageOps, UnidentifiedImageError
 from pydantic import BaseModel, Field
 
 MAX_FILE_BYTES = 5 * 1024 * 1024
 MAX_IMAGE_PIXELS = 25_000_000
+MAX_SIDE_PIXELS = 2000
 MAX_PDF_PAGES = 3
 PDF_SCALE = 200 / 72
 OCR_TIMEOUT_SECONDS = 45
@@ -92,7 +93,9 @@ def load_pages(content: bytes) -> list[np.ndarray]:
     with Image.open(io.BytesIO(content)) as image:
         if image.width * image.height > MAX_IMAGE_PIXELS:
             raise ValueError("Image too large")
-        return [np.array(image.convert("L"))]
+        page = ImageOps.exif_transpose(image).convert("L")
+        page.thumbnail((MAX_SIDE_PIXELS, MAX_SIDE_PIXELS))
+        return [np.array(page)]
 
 
 def read_text(page: np.ndarray) -> tuple[list[str], list[float]]:

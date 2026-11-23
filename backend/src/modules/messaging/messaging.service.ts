@@ -25,6 +25,7 @@ import {
 } from './messaging.contracts.js';
 import { MessagingPingDto, MessagingStatusDto } from './messaging.dto.js';
 import { MessagingUnavailableException } from './messaging.exceptions.js';
+import { WorkerWakeService } from './worker-wake.service.js';
 
 const RECONNECT_MS = 3000;
 const REPLY_TIMEOUT_MS = 5000;
@@ -51,7 +52,10 @@ export class MessagingService
   private reconnectTimer: NodeJS.Timeout | null = null;
   private stopping = false;
 
-  constructor(config: ConfigService) {
+  constructor(
+    config: ConfigService,
+    private readonly worker: WorkerWakeService,
+  ) {
     this.url = config.get<string>('RABBITMQ_URL') ?? '';
   }
 
@@ -125,6 +129,7 @@ export class MessagingService
     } catch {
       throw new MessagingUnavailableException();
     }
+    this.worker.wake();
   }
 
   private publish(

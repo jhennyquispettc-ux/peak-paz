@@ -1,28 +1,46 @@
 import Joi from 'joi';
 import { Environment } from '../common/enums/environment.enum.js';
 
+const requiredInProduction = (schema: Joi.StringSchema) =>
+  schema.when('NODE_ENV', {
+    is: Environment.PRODUCTION,
+    then: Joi.required().invalid(''),
+  });
+
 export const envValidation = Joi.object({
   NODE_ENV: Joi.string()
     .valid(...Object.values(Environment))
     .default(Environment.DEVELOPMENT),
   EMAIL_TOKEN_MINUTES: Joi.number().integer().min(1).max(1440).default(30),
   EMAIL_RESEND_SECONDS: Joi.number().integer().min(30).default(60),
-  DOCUMENT_BASE_URL: Joi.string()
+  DOCUMENT_BASE_URL: requiredInProduction(
+    Joi.string()
+      .uri({ scheme: ['http', 'https'] })
+      .default('http://host.docker.internal:3010'),
+  ),
+  RABBITMQ_URL: requiredInProduction(
+    Joi.string()
+      .uri({ scheme: ['amqp', 'amqps'] })
+      .allow('')
+      .default(''),
+  ),
+  VERIFICATION_WAKE_URL: Joi.string()
     .uri({ scheme: ['http', 'https'] })
-    .default('http://host.docker.internal:3010'),
-  RABBITMQ_URL: Joi.string()
-    .uri({ scheme: ['amqp', 'amqps'] })
     .allow('')
     .default(''),
   MAIL_TRANSPORT: Joi.string().valid('smtp', 'file').default('smtp'),
-  SMTP_URL: Joi.string()
-    .uri({ scheme: ['smtp', 'smtps'] })
-    .default('smtp://localhost:1025'),
+  SMTP_URL: requiredInProduction(
+    Joi.string()
+      .uri({ scheme: ['smtp', 'smtps'] })
+      .default('smtp://localhost:1025'),
+  ),
   MAIL_FROM: Joi.string().default('Peak Paz <avisos@peakpaz.local>'),
   MAIL_DIRECTORY: Joi.string().default('var/mail'),
-  PUBLIC_WEB_URL: Joi.string()
-    .uri({ scheme: ['http', 'https'] })
-    .default('http://localhost:5173'),
+  PUBLIC_WEB_URL: requiredInProduction(
+    Joi.string()
+      .uri({ scheme: ['http', 'https'] })
+      .default('http://localhost:5173'),
+  ),
   PORT: Joi.number().port().default(3010),
   API_PREFIX: Joi.string().default('api'),
 
