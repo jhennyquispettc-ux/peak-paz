@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "setup": "node scripts/setup-local.mjs",
-    "install:all": "npm ci --prefix backend && npm ci --prefix frontend && npm ci --prefix verification-service",
+    "install:all": "npm ci --prefix backend && npm ci --prefix frontend",
     "dev": "node scripts/dev.mjs",
     "test:integration": "node scripts/test-integration.mjs",
     "demo:guides": "node scripts/seed-demo-guides.mjs"
