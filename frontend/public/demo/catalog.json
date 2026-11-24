@@ -1,0 +1,1007 @@
+[
+  {
+    "id": "demo-choro-2-dias",
+    "slug": "choro-2-dias",
+    "nameEs": "El Choro en 2 días",
+    "nameEn": "El Choro in 2 days",
+    "difficulty": "HARD",
+    "days": 2,
+    "distanceKm": 57,
+    "elevationGainM": 600,
+    "elevationLossM": 3900,
+    "maxAltitudeM": 4860,
+    "privatePrice": 900,
+    "groupMinPrice": 380,
+    "privateMaxPeople": 5,
+    "coverPhotoUrl": null,
+    "descriptionEs": "Camino prehispánico que baja desde la cordillera hasta los Yungas, pasando del altiplano al bosque nublado. Versión exigente en dos jornadas largas. Datos referenciales para la demostración. Deben verificarse con el trazado GPX real.",
+    "descriptionEn": "Camino prehispánico que baja desde la cordillera hasta los Yungas, pasando del altiplano al bosque nublado. Versión exigente en dos jornadas largas. Datos referenciales para la demostración. Deben verificarse con el trazado GPX real.",
+    "howToGetThereEs": "Transporte desde Villa Fátima hasta La Cumbre, en el camino a los Yungas.",
+    "howToGetThereEn": "Transporte desde Villa Fátima hasta La Cumbre, en el camino a los Yungas.",
+    "bestSeasonEs": "De mayo a septiembre, en la época seca.",
+    "bestSeasonEn": "From May to September, in the dry season.",
+    "emergencyContacts": "Policía 110 · Bomberos 119 · Ambulancia 165",
+    "startLatitude": -16.354,
+    "startLongitude": -68.039,
+    "startTimeFrom": "06:00",
+    "startTimeTo": "08:00",
+    "track": {
+      "type": "LineString",
+      "coordinates": [
+        [
+          -68.039,
+          -16.354,
+          4650
+        ],
+        [
+          -68.016,
+          -16.335,
+          4860
+        ],
+        [
+          -67.95,
+          -16.29,
+          2800
+        ],
+        [
+          -67.95,
+          -16.29,
+          2800
+        ],
+        [
+          -67.84,
+          -16.24,
+          2050
+        ],
+        [
+          -67.735,
+          -16.215,
+          1300
+        ]
+      ]
+    },
+    "pointsOfInterest": [
+      {
+        "id": "choro-2-dias-stop-0",
+        "type": "START",
+        "nameEs": "La Cumbre",
+        "nameEn": "La Cumbre",
+        "latitude": -16.354,
+        "longitude": -68.039,
+        "altitudeM": 4650,
+        "isItineraryStop": true,
+        "stageOrder": 1,
+        "dayNumber": 1,
+        "minutesFromPrevious": 0,
+        "isOvernight": false
+      },
+      {
+        "id": "choro-2-dias-stop-1",
+        "type": "VIEWPOINT",
+        "nameEs": "Apacheta Chucura",
+        "nameEn": "Apacheta Chucura",
+        "latitude": -16.335,
+        "longitude": -68.016,
+        "altitudeM": 4860,
+        "isItineraryStop": true,
+        "stageOrder": 2,
+        "dayNumber": 1,
+        "minutesFromPrevious": 120,
+        "isOvernight": false
+      },
+      {
+        "id": "choro-2-dias-stop-2",
+        "type": "CAMPSITE",
+        "nameEs": "Challapampa",
+        "nameEn": "Challapampa",
+        "latitude": -16.29,
+        "longitude": -67.95,
+        "altitudeM": 2800,
+        "isItineraryStop": true,
+        "stageOrder": 3,
+        "dayNumber": 1,
+        "minutesFromPrevious": 330,
+        "isOvernight": true
+      },
+      {
+        "id": "choro-2-dias-stop-3",
+        "type": "CAMPSITE",
+        "nameEs": "Challapampa",
+        "nameEn": "Challapampa",
+        "latitude": -16.29,
+        "longitude": -67.95,
+        "altitudeM": 2800,
+        "isItineraryStop": true,
+        "stageOrder": 4,
+        "dayNumber": 2,
+        "minutesFromPrevious": 0,
+        "isOvernight": false
+      },
+      {
+        "id": "choro-2-dias-stop-4",
+        "type": "SHELTER",
+        "nameEs": "Sandillani",
+        "nameEn": "Sandillani",
+        "latitude": -16.24,
+        "longitude": -67.84,
+        "altitudeM": 2050,
+        "isItineraryStop": true,
+        "stageOrder": 5,
+        "dayNumber": 2,
+        "minutesFromPrevious": 300,
+        "isOvernight": false
+      },
+      {
+        "id": "choro-2-dias-stop-5",
+        "type": "END",
+        "nameEs": "Chairo",
+        "nameEn": "Chairo",
+        "latitude": -16.215,
+        "longitude": -67.735,
+        "altitudeM": 1300,
+        "isItineraryStop": true,
+        "stageOrder": 6,
+        "dayNumber": 2,
+        "minutesFromPrevious": 240,
+        "isOvernight": false
+      }
+    ],
+    "gearRecommendations": [
+      {
+        "id": "demo-gear-0",
+        "descriptionEs": "Chamarra impermeable",
+        "descriptionEn": "Waterproof jacket",
+        "isRequired": true
+      },
+      {
+        "id": "demo-gear-1",
+        "descriptionEs": "Dos litros de agua",
+        "descriptionEn": "Two liters of water",
+        "isRequired": true
+      },
+      {
+        "id": "demo-gear-2",
+        "descriptionEs": "Protector solar y gorra",
+        "descriptionEn": "Sunscreen and cap",
+        "isRequired": false
+      }
+    ]
+  },
+  {
+    "id": "demo-choro-3-dias",
+    "slug": "choro-3-dias",
+    "nameEs": "El Choro en 3 días",
+    "nameEn": "El Choro in 3 days",
+    "difficulty": "MODERATE",
+    "days": 3,
+    "distanceKm": 57,
+    "elevationGainM": 600,
+    "elevationLossM": 3900,
+    "maxAltitudeM": 4860,
+    "privatePrice": 1100,
+    "groupMinPrice": 450,
+    "privateMaxPeople": 5,
+    "coverPhotoUrl": null,
+    "descriptionEs": "El mismo camino prehispánico del Choro, repartido en tres días para caminar con calma y disfrutar el cambio de paisaje. Datos referenciales para la demostración. Deben verificarse con el trazado GPX real.",
+    "descriptionEn": "El mismo camino prehispánico del Choro, repartido en tres días para caminar con calma y disfrutar el cambio de paisaje. Datos referenciales para la demostración. Deben verificarse con el trazado GPX real.",
+    "howToGetThereEs": "Transporte desde Villa Fátima hasta La Cumbre, en el camino a los Yungas.",
+    "howToGetThereEn": "Transporte desde Villa Fátima hasta La Cumbre, en el camino a los Yungas.",
+    "bestSeasonEs": "De mayo a septiembre, en la época seca.",
+    "bestSeasonEn": "From May to September, in the dry season.",
+    "emergencyContacts": "Policía 110 · Bomberos 119 · Ambulancia 165",
+    "startLatitude": -16.354,
+    "startLongitude": -68.039,
+    "startTimeFrom": "06:00",
+    "startTimeTo": "08:00",
+    "track": {
+      "type": "LineString",
+      "coordinates": [
+        [
+          -68.039,
+          -16.354,
+          4650
+        ],
+        [
+          -68.016,
+          -16.335,
+          4860
+        ],
+        [
+          -67.95,
+          -16.29,
+          2800
+        ],
+        [
+          -67.95,
+          -16.29,
+          2800
+        ],
+        [
+          -67.84,
+          -16.24,
+          2050
+        ],
+        [
+          -67.84,
+          -16.24,
+          2050
+        ],
+        [
+          -67.735,
+          -16.215,
+          1300
+        ]
+      ]
+    },
+    "pointsOfInterest": [
+      {
+        "id": "choro-3-dias-stop-0",
+        "type": "START",
+        "nameEs": "La Cumbre",
+        "nameEn": "La Cumbre",
+        "latitude": -16.354,
+        "longitude": -68.039,
+        "altitudeM": 4650,
+        "isItineraryStop": true,
+        "stageOrder": 1,
+        "dayNumber": 1,
+        "minutesFromPrevious": 0,
+        "isOvernight": false
+      },
+      {
+        "id": "choro-3-dias-stop-1",
+        "type": "VIEWPOINT",
+        "nameEs": "Apacheta Chucura",
+        "nameEn": "Apacheta Chucura",
+        "latitude": -16.335,
+        "longitude": -68.016,
+        "altitudeM": 4860,
+        "isItineraryStop": true,
+        "stageOrder": 2,
+        "dayNumber": 1,
+        "minutesFromPrevious": 120,
+        "isOvernight": false
+      },
+      {
+        "id": "choro-3-dias-stop-2",
+        "type": "CAMPSITE",
+        "nameEs": "Challapampa",
+        "nameEn": "Challapampa",
+        "latitude": -16.29,
+        "longitude": -67.95,
+        "altitudeM": 2800,
+        "isItineraryStop": true,
+        "stageOrder": 3,
+        "dayNumber": 1,
+        "minutesFromPrevious": 330,
+        "isOvernight": true
+      },
+      {
+        "id": "choro-3-dias-stop-3",
+        "type": "CAMPSITE",
+        "nameEs": "Challapampa",
+        "nameEn": "Challapampa",
+        "latitude": -16.29,
+        "longitude": -67.95,
+        "altitudeM": 2800,
+        "isItineraryStop": true,
+        "stageOrder": 4,
+        "dayNumber": 2,
+        "minutesFromPrevious": 0,
+        "isOvernight": false
+      },
+      {
+        "id": "choro-3-dias-stop-4",
+        "type": "CAMPSITE",
+        "nameEs": "Sandillani",
+        "nameEn": "Sandillani",
+        "latitude": -16.24,
+        "longitude": -67.84,
+        "altitudeM": 2050,
+        "isItineraryStop": true,
+        "stageOrder": 5,
+        "dayNumber": 2,
+        "minutesFromPrevious": 300,
+        "isOvernight": true
+      },
+      {
+        "id": "choro-3-dias-stop-5",
+        "type": "CAMPSITE",
+        "nameEs": "Sandillani",
+        "nameEn": "Sandillani",
+        "latitude": -16.24,
+        "longitude": -67.84,
+        "altitudeM": 2050,
+        "isItineraryStop": true,
+        "stageOrder": 6,
+        "dayNumber": 3,
+        "minutesFromPrevious": 0,
+        "isOvernight": false
+      },
+      {
+        "id": "choro-3-dias-stop-6",
+        "type": "END",
+        "nameEs": "Chairo",
+        "nameEn": "Chairo",
+        "latitude": -16.215,
+        "longitude": -67.735,
+        "altitudeM": 1300,
+        "isItineraryStop": true,
+        "stageOrder": 7,
+        "dayNumber": 3,
+        "minutesFromPrevious": 240,
+        "isOvernight": false
+      }
+    ],
+    "gearRecommendations": [
+      {
+        "id": "demo-gear-0",
+        "descriptionEs": "Chamarra impermeable",
+        "descriptionEn": "Waterproof jacket",
+        "isRequired": true
+      },
+      {
+        "id": "demo-gear-1",
+        "descriptionEs": "Dos litros de agua",
+        "descriptionEn": "Two liters of water",
+        "isRequired": true
+      },
+      {
+        "id": "demo-gear-2",
+        "descriptionEs": "Protector solar y gorra",
+        "descriptionEn": "Sunscreen and cap",
+        "isRequired": false
+      }
+    ]
+  },
+  {
+    "id": "demo-takesi-1-dia",
+    "slug": "takesi-1-dia",
+    "nameEs": "Takesi en 1 día",
+    "nameEn": "Takesi in 1 day",
+    "difficulty": "HARD",
+    "days": 1,
+    "distanceKm": 23,
+    "elevationGainM": 400,
+    "elevationLossM": 2400,
+    "maxAltitudeM": 4630,
+    "privatePrice": 550,
+    "groupMinPrice": 250,
+    "privateMaxPeople": 5,
+    "coverPhotoUrl": null,
+    "descriptionEs": "Uno de los caminos empedrados mejor conservados de Bolivia, desde la apacheta de Takesi hasta el valle. Jornada larga para caminantes con experiencia en altura. Datos referenciales para la demostración. Deben verificarse con el trazado GPX real.",
+    "descriptionEn": "Uno de los caminos empedrados mejor conservados de Bolivia, desde la apacheta de Takesi hasta el valle. Jornada larga para caminantes con experiencia en altura. Datos referenciales para la demostración. Deben verificarse con el trazado GPX real.",
+    "howToGetThereEs": "Transporte desde La Paz hasta Choquekhota, por Palca.",
+    "howToGetThereEn": "Transporte desde La Paz hasta Choquekhota, por Palca.",
+    "bestSeasonEs": "De mayo a septiembre, en la época seca.",
+    "bestSeasonEn": "From May to September, in the dry season.",
+    "emergencyContacts": "Policía 110 · Bomberos 119 · Ambulancia 165",
+    "startLatitude": -16.43,
+    "startLongitude": -67.98,
+    "startTimeFrom": "05:30",
+    "startTimeTo": "07:00",
+    "track": {
+      "type": "LineString",
+      "coordinates": [
+        [
+          -67.98,
+          -16.43,
+          4200
+        ],
+        [
+          -67.935,
+          -16.415,
+          4630
+        ],
+        [
+          -67.87,
+          -16.39,
+          3600
+        ],
+        [
+          -67.81,
+          -16.37,
+          2600
+        ]
+      ]
+    },
+    "pointsOfInterest": [
+      {
+        "id": "takesi-1-dia-stop-0",
+        "type": "START",
+        "nameEs": "Choquekhota",
+        "nameEn": "Choquekhota",
+        "latitude": -16.43,
+        "longitude": -67.98,
+        "altitudeM": 4200,
+        "isItineraryStop": true,
+        "stageOrder": 1,
+        "dayNumber": 1,
+        "minutesFromPrevious": 0,
+        "isOvernight": false
+      },
+      {
+        "id": "takesi-1-dia-stop-1",
+        "type": "VIEWPOINT",
+        "nameEs": "Apacheta de Takesi",
+        "nameEn": "Apacheta de Takesi",
+        "latitude": -16.415,
+        "longitude": -67.935,
+        "altitudeM": 4630,
+        "isItineraryStop": true,
+        "stageOrder": 2,
+        "dayNumber": 1,
+        "minutesFromPrevious": 150,
+        "isOvernight": false
+      },
+      {
+        "id": "takesi-1-dia-stop-2",
+        "type": "SHELTER",
+        "nameEs": "Takesi",
+        "nameEn": "Takesi",
+        "latitude": -16.39,
+        "longitude": -67.87,
+        "altitudeM": 3600,
+        "isItineraryStop": true,
+        "stageOrder": 3,
+        "dayNumber": 1,
+        "minutesFromPrevious": 180,
+        "isOvernight": false
+      },
+      {
+        "id": "takesi-1-dia-stop-3",
+        "type": "END",
+        "nameEs": "Kakapi",
+        "nameEn": "Kakapi",
+        "latitude": -16.37,
+        "longitude": -67.81,
+        "altitudeM": 2600,
+        "isItineraryStop": true,
+        "stageOrder": 4,
+        "dayNumber": 1,
+        "minutesFromPrevious": 150,
+        "isOvernight": false
+      }
+    ],
+    "gearRecommendations": [
+      {
+        "id": "demo-gear-0",
+        "descriptionEs": "Chamarra impermeable",
+        "descriptionEn": "Waterproof jacket",
+        "isRequired": true
+      },
+      {
+        "id": "demo-gear-1",
+        "descriptionEs": "Dos litros de agua",
+        "descriptionEn": "Two liters of water",
+        "isRequired": true
+      },
+      {
+        "id": "demo-gear-2",
+        "descriptionEs": "Protector solar y gorra",
+        "descriptionEn": "Sunscreen and cap",
+        "isRequired": false
+      }
+    ]
+  },
+  {
+    "id": "demo-takesi-2-dias",
+    "slug": "takesi-2-dias",
+    "nameEs": "Takesi en 2 días",
+    "nameEn": "Takesi in 2 days",
+    "difficulty": "MODERATE",
+    "days": 2,
+    "distanceKm": 40,
+    "elevationGainM": 450,
+    "elevationLossM": 2900,
+    "maxAltitudeM": 4630,
+    "privatePrice": 800,
+    "groupMinPrice": 350,
+    "privateMaxPeople": 5,
+    "coverPhotoUrl": null,
+    "descriptionEs": "El camino prehispánico de Takesi completo hasta Yanacachi, con noche de campamento en el valle. Datos referenciales para la demostración. Deben verificarse con el trazado GPX real.",
+    "descriptionEn": "El camino prehispánico de Takesi completo hasta Yanacachi, con noche de campamento en el valle. Datos referenciales para la demostración. Deben verificarse con el trazado GPX real.",
+    "howToGetThereEs": "Transporte desde La Paz hasta Choquekhota, por Palca.",
+    "howToGetThereEn": "Transporte desde La Paz hasta Choquekhota, por Palca.",
+    "bestSeasonEs": "De mayo a septiembre, en la época seca.",
+    "bestSeasonEn": "From May to September, in the dry season.",
+    "emergencyContacts": "Policía 110 · Bomberos 119 · Ambulancia 165",
+    "startLatitude": -16.43,
+    "startLongitude": -67.98,
+    "startTimeFrom": "06:00",
+    "startTimeTo": "08:00",
+    "track": {
+      "type": "LineString",
+      "coordinates": [
+        [
+          -67.98,
+          -16.43,
+          4200
+        ],
+        [
+          -67.935,
+          -16.415,
+          4630
+        ],
+        [
+          -67.87,
+          -16.39,
+          3600
+        ],
+        [
+          -67.87,
+          -16.39,
+          3600
+        ],
+        [
+          -67.81,
+          -16.37,
+          2600
+        ],
+        [
+          -67.75,
+          -16.39,
+          2100
+        ]
+      ]
+    },
+    "pointsOfInterest": [
+      {
+        "id": "takesi-2-dias-stop-0",
+        "type": "START",
+        "nameEs": "Choquekhota",
+        "nameEn": "Choquekhota",
+        "latitude": -16.43,
+        "longitude": -67.98,
+        "altitudeM": 4200,
+        "isItineraryStop": true,
+        "stageOrder": 1,
+        "dayNumber": 1,
+        "minutesFromPrevious": 0,
+        "isOvernight": false
+      },
+      {
+        "id": "takesi-2-dias-stop-1",
+        "type": "VIEWPOINT",
+        "nameEs": "Apacheta de Takesi",
+        "nameEn": "Apacheta de Takesi",
+        "latitude": -16.415,
+        "longitude": -67.935,
+        "altitudeM": 4630,
+        "isItineraryStop": true,
+        "stageOrder": 2,
+        "dayNumber": 1,
+        "minutesFromPrevious": 150,
+        "isOvernight": false
+      },
+      {
+        "id": "takesi-2-dias-stop-2",
+        "type": "CAMPSITE",
+        "nameEs": "Takesi",
+        "nameEn": "Takesi",
+        "latitude": -16.39,
+        "longitude": -67.87,
+        "altitudeM": 3600,
+        "isItineraryStop": true,
+        "stageOrder": 3,
+        "dayNumber": 1,
+        "minutesFromPrevious": 180,
+        "isOvernight": true
+      },
+      {
+        "id": "takesi-2-dias-stop-3",
+        "type": "CAMPSITE",
+        "nameEs": "Takesi",
+        "nameEn": "Takesi",
+        "latitude": -16.39,
+        "longitude": -67.87,
+        "altitudeM": 3600,
+        "isItineraryStop": true,
+        "stageOrder": 4,
+        "dayNumber": 2,
+        "minutesFromPrevious": 0,
+        "isOvernight": false
+      },
+      {
+        "id": "takesi-2-dias-stop-4",
+        "type": "WATER",
+        "nameEs": "Kakapi",
+        "nameEn": "Kakapi",
+        "latitude": -16.37,
+        "longitude": -67.81,
+        "altitudeM": 2600,
+        "isItineraryStop": true,
+        "stageOrder": 5,
+        "dayNumber": 2,
+        "minutesFromPrevious": 150,
+        "isOvernight": false
+      },
+      {
+        "id": "takesi-2-dias-stop-5",
+        "type": "END",
+        "nameEs": "Yanacachi",
+        "nameEn": "Yanacachi",
+        "latitude": -16.39,
+        "longitude": -67.75,
+        "altitudeM": 2100,
+        "isItineraryStop": true,
+        "stageOrder": 6,
+        "dayNumber": 2,
+        "minutesFromPrevious": 180,
+        "isOvernight": false
+      }
+    ],
+    "gearRecommendations": [
+      {
+        "id": "demo-gear-0",
+        "descriptionEs": "Chamarra impermeable",
+        "descriptionEn": "Waterproof jacket",
+        "isRequired": true
+      },
+      {
+        "id": "demo-gear-1",
+        "descriptionEs": "Dos litros de agua",
+        "descriptionEn": "Two liters of water",
+        "isRequired": true
+      },
+      {
+        "id": "demo-gear-2",
+        "descriptionEs": "Protector solar y gorra",
+        "descriptionEn": "Sunscreen and cap",
+        "isRequired": false
+      }
+    ]
+  },
+  {
+    "id": "demo-valle-de-las-animas-medio-dia",
+    "slug": "valle-de-las-animas-medio-dia",
+    "nameEs": "Valle de las Ánimas, medio día",
+    "nameEn": "Valley of the Souls, half day",
+    "difficulty": "EASY",
+    "days": 1,
+    "distanceKm": 6,
+    "elevationGainM": 350,
+    "elevationLossM": 350,
+    "maxAltitudeM": 3900,
+    "privatePrice": 250,
+    "groupMinPrice": 120,
+    "privateMaxPeople": 5,
+    "coverPhotoUrl": null,
+    "descriptionEs": "Caminata corta entre torres de arcilla erosionada al sur de la ciudad, con vista al Illimani. Ideal para aclimatarse. Datos referenciales para la demostración. Deben verificarse con el trazado GPX real.",
+    "descriptionEn": "Caminata corta entre torres de arcilla erosionada al sur de la ciudad, con vista al Illimani. Ideal para aclimatarse. Datos referenciales para la demostración. Deben verificarse con el trazado GPX real.",
+    "howToGetThereEs": "Transporte público hasta Ovejuyo y luego a pie hasta el inicio del sendero.",
+    "howToGetThereEn": "Transporte público hasta Ovejuyo y luego a pie hasta el inicio del sendero.",
+    "bestSeasonEs": "De mayo a septiembre, en la época seca.",
+    "bestSeasonEn": "From May to September, in the dry season.",
+    "emergencyContacts": "Policía 110 · Bomberos 119 · Ambulancia 165",
+    "startLatitude": -16.528,
+    "startLongitude": -68.04,
+    "startTimeFrom": "07:00",
+    "startTimeTo": "10:00",
+    "track": {
+      "type": "LineString",
+      "coordinates": [
+        [
+          -68.04,
+          -16.528,
+          3650
+        ],
+        [
+          -68.025,
+          -16.515,
+          3900
+        ],
+        [
+          -68.04,
+          -16.528,
+          3650
+        ]
+      ]
+    },
+    "pointsOfInterest": [
+      {
+        "id": "valle-de-las-animas-medio-dia-stop-0",
+        "type": "START",
+        "nameEs": "Ovejuyo",
+        "nameEn": "Ovejuyo",
+        "latitude": -16.528,
+        "longitude": -68.04,
+        "altitudeM": 3650,
+        "isItineraryStop": true,
+        "stageOrder": 1,
+        "dayNumber": 1,
+        "minutesFromPrevious": 0,
+        "isOvernight": false
+      },
+      {
+        "id": "valle-de-las-animas-medio-dia-stop-1",
+        "type": "VIEWPOINT",
+        "nameEs": "Mirador de las Ánimas",
+        "nameEn": "Mirador de las Ánimas",
+        "latitude": -16.515,
+        "longitude": -68.025,
+        "altitudeM": 3900,
+        "isItineraryStop": true,
+        "stageOrder": 2,
+        "dayNumber": 1,
+        "minutesFromPrevious": 90,
+        "isOvernight": false
+      },
+      {
+        "id": "valle-de-las-animas-medio-dia-stop-2",
+        "type": "END",
+        "nameEs": "Ovejuyo",
+        "nameEn": "Ovejuyo",
+        "latitude": -16.528,
+        "longitude": -68.04,
+        "altitudeM": 3650,
+        "isItineraryStop": true,
+        "stageOrder": 3,
+        "dayNumber": 1,
+        "minutesFromPrevious": 75,
+        "isOvernight": false
+      }
+    ],
+    "gearRecommendations": [
+      {
+        "id": "demo-gear-0",
+        "descriptionEs": "Chamarra impermeable",
+        "descriptionEn": "Waterproof jacket",
+        "isRequired": true
+      },
+      {
+        "id": "demo-gear-1",
+        "descriptionEs": "Dos litros de agua",
+        "descriptionEn": "Two liters of water",
+        "isRequired": true
+      },
+      {
+        "id": "demo-gear-2",
+        "descriptionEs": "Protector solar y gorra",
+        "descriptionEn": "Sunscreen and cap",
+        "isRequired": false
+      }
+    ]
+  },
+  {
+    "id": "demo-valle-de-las-animas-canon-de-palca",
+    "slug": "valle-de-las-animas-canon-de-palca",
+    "nameEs": "Valle de las Ánimas hasta el Cañón de Palca",
+    "nameEn": "Valley of the Souls to Palca Canyon",
+    "difficulty": "MODERATE",
+    "days": 1,
+    "distanceKm": 16,
+    "elevationGainM": 600,
+    "elevationLossM": 900,
+    "maxAltitudeM": 4100,
+    "privatePrice": 450,
+    "groupMinPrice": 200,
+    "privateMaxPeople": 5,
+    "coverPhotoUrl": null,
+    "descriptionEs": "Travesía de un día desde el Valle de las Ánimas hasta el cañón de Palca, entre formaciones de roca y quebradas. Datos referenciales para la demostración. Deben verificarse con el trazado GPX real.",
+    "descriptionEn": "Travesía de un día desde el Valle de las Ánimas hasta el cañón de Palca, entre formaciones de roca y quebradas. Datos referenciales para la demostración. Deben verificarse con el trazado GPX real.",
+    "howToGetThereEs": "Transporte público hasta Ovejuyo. El regreso se hace en transporte desde Palca.",
+    "howToGetThereEn": "Transporte público hasta Ovejuyo. El regreso se hace en transporte desde Palca.",
+    "bestSeasonEs": "De mayo a septiembre, en la época seca.",
+    "bestSeasonEn": "From May to September, in the dry season.",
+    "emergencyContacts": "Policía 110 · Bomberos 119 · Ambulancia 165",
+    "startLatitude": -16.528,
+    "startLongitude": -68.04,
+    "startTimeFrom": "06:30",
+    "startTimeTo": "08:30",
+    "track": {
+      "type": "LineString",
+      "coordinates": [
+        [
+          -68.04,
+          -16.528,
+          3650
+        ],
+        [
+          -68.02,
+          -16.515,
+          4000
+        ],
+        [
+          -67.975,
+          -16.555,
+          3300
+        ],
+        [
+          -67.955,
+          -16.56,
+          3200
+        ]
+      ]
+    },
+    "pointsOfInterest": [
+      {
+        "id": "valle-de-las-animas-canon-de-palca-stop-0",
+        "type": "START",
+        "nameEs": "Ovejuyo",
+        "nameEn": "Ovejuyo",
+        "latitude": -16.528,
+        "longitude": -68.04,
+        "altitudeM": 3650,
+        "isItineraryStop": true,
+        "stageOrder": 1,
+        "dayNumber": 1,
+        "minutesFromPrevious": 0,
+        "isOvernight": false
+      },
+      {
+        "id": "valle-de-las-animas-canon-de-palca-stop-1",
+        "type": "VIEWPOINT",
+        "nameEs": "Valle de las Ánimas",
+        "nameEn": "Valle de las Ánimas",
+        "latitude": -16.515,
+        "longitude": -68.02,
+        "altitudeM": 4000,
+        "isItineraryStop": true,
+        "stageOrder": 2,
+        "dayNumber": 1,
+        "minutesFromPrevious": 120,
+        "isOvernight": false
+      },
+      {
+        "id": "valle-de-las-animas-canon-de-palca-stop-2",
+        "type": "VIEWPOINT",
+        "nameEs": "Cañón de Palca",
+        "nameEn": "Cañón de Palca",
+        "latitude": -16.555,
+        "longitude": -67.975,
+        "altitudeM": 3300,
+        "isItineraryStop": true,
+        "stageOrder": 3,
+        "dayNumber": 1,
+        "minutesFromPrevious": 180,
+        "isOvernight": false
+      },
+      {
+        "id": "valle-de-las-animas-canon-de-palca-stop-3",
+        "type": "END",
+        "nameEs": "Palca",
+        "nameEn": "Palca",
+        "latitude": -16.56,
+        "longitude": -67.955,
+        "altitudeM": 3200,
+        "isItineraryStop": true,
+        "stageOrder": 4,
+        "dayNumber": 1,
+        "minutesFromPrevious": 60,
+        "isOvernight": false
+      }
+    ],
+    "gearRecommendations": [
+      {
+        "id": "demo-gear-0",
+        "descriptionEs": "Chamarra impermeable",
+        "descriptionEn": "Waterproof jacket",
+        "isRequired": true
+      },
+      {
+        "id": "demo-gear-1",
+        "descriptionEs": "Dos litros de agua",
+        "descriptionEn": "Two liters of water",
+        "isRequired": true
+      },
+      {
+        "id": "demo-gear-2",
+        "descriptionEs": "Protector solar y gorra",
+        "descriptionEn": "Sunscreen and cap",
+        "isRequired": false
+      }
+    ]
+  },
+  {
+    "id": "demo-muela-del-diablo",
+    "slug": "muela-del-diablo",
+    "nameEs": "Muela del Diablo",
+    "nameEn": "Devil's Tooth",
+    "difficulty": "EASY",
+    "days": 1,
+    "distanceKm": 7,
+    "elevationGainM": 450,
+    "elevationLossM": 450,
+    "maxAltitudeM": 3830,
+    "privatePrice": 250,
+    "groupMinPrice": 120,
+    "privateMaxPeople": 5,
+    "coverPhotoUrl": null,
+    "descriptionEs": "Subida al cerro con forma de muela que domina la zona sur de La Paz, con vista a la ciudad y a la cordillera. Datos referenciales para la demostración. Deben verificarse con el trazado GPX real.",
+    "descriptionEn": "Subida al cerro con forma de muela que domina la zona sur de La Paz, con vista a la ciudad y a la cordillera. Datos referenciales para la demostración. Deben verificarse con el trazado GPX real.",
+    "howToGetThereEs": "Transporte hasta el cementerio de Calacoto o Pedregal, y desde ahí a pie.",
+    "howToGetThereEn": "Transporte hasta el cementerio de Calacoto o Pedregal, y desde ahí a pie.",
+    "bestSeasonEs": "De mayo a septiembre, en la época seca.",
+    "bestSeasonEn": "From May to September, in the dry season.",
+    "emergencyContacts": "Policía 110 · Bomberos 119 · Ambulancia 165",
+    "startLatitude": -16.555,
+    "startLongitude": -68.09,
+    "startTimeFrom": "07:00",
+    "startTimeTo": "10:00",
+    "track": {
+      "type": "LineString",
+      "coordinates": [
+        [
+          -68.09,
+          -16.555,
+          3400
+        ],
+        [
+          -68.075,
+          -16.565,
+          3830
+        ],
+        [
+          -68.09,
+          -16.555,
+          3400
+        ]
+      ]
+    },
+    "pointsOfInterest": [
+      {
+        "id": "muela-del-diablo-stop-0",
+        "type": "START",
+        "nameEs": "Pedregal",
+        "nameEn": "Pedregal",
+        "latitude": -16.555,
+        "longitude": -68.09,
+        "altitudeM": 3400,
+        "isItineraryStop": true,
+        "stageOrder": 1,
+        "dayNumber": 1,
+        "minutesFromPrevious": 0,
+        "isOvernight": false
+      },
+      {
+        "id": "muela-del-diablo-stop-1",
+        "type": "VIEWPOINT",
+        "nameEs": "Muela del Diablo",
+        "nameEn": "Muela del Diablo",
+        "latitude": -16.565,
+        "longitude": -68.075,
+        "altitudeM": 3830,
+        "isItineraryStop": true,
+        "stageOrder": 2,
+        "dayNumber": 1,
+        "minutesFromPrevious": 120,
+        "isOvernight": false
+      },
+      {
+        "id": "muela-del-diablo-stop-2",
+        "type": "END",
+        "nameEs": "Pedregal",
+        "nameEn": "Pedregal",
+        "latitude": -16.555,
+        "longitude": -68.09,
+        "altitudeM": 3400,
+        "isItineraryStop": true,
+        "stageOrder": 3,
+        "dayNumber": 1,
+        "minutesFromPrevious": 90,
+        "isOvernight": false
+      }
+    ],
+    "gearRecommendations": [
+      {
+        "id": "demo-gear-0",
+        "descriptionEs": "Chamarra impermeable",
+        "descriptionEn": "Waterproof jacket",
+        "isRequired": true
+      },
+      {
+        "id": "demo-gear-1",
+        "descriptionEs": "Dos litros de agua",
+        "descriptionEn": "Two liters of water",
+        "isRequired": true
+      },
+      {
+        "id": "demo-gear-2",
+        "descriptionEs": "Protector solar y gorra",
+        "descriptionEn": "Sunscreen and cap",
+        "isRequired": false
+      }
+    ]
+  }
+]

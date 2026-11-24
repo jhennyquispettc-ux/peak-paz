@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthContext';
 import { homeFor } from '../auth/roles';
 import { useI18n } from '../i18n/I18nContext';
 import NotificationBell from '../notifications/NotificationBell';
+import { STATIC_DEMO } from '../deployment';
 
 export default function SiteHeader() {
   const { user, logout } = useAuth();
@@ -16,7 +17,7 @@ export default function SiteHeader() {
     <header className="site-header">
       <Link to="/rutas" aria-label="Peak Paz" className="site-logo">
         <img
-          src="/brand/peakpaz-logo-negativo.svg"
+          src={`${import.meta.env.BASE_URL}brand/peakpaz-logo-negativo.svg`}
           alt="Peak Paz"
           height="30"
         />
@@ -60,6 +61,8 @@ export default function SiteHeader() {
               {t('nav.signOut')}
             </button>
           </>
+        ) : STATIC_DEMO ? (
+          <a href={`${import.meta.env.BASE_URL}swagger/`} className="btn btn-sm btn-on-dark">Swagger</a>
         ) : (
           <Link to="/ingresar" className="btn btn-sm btn-on-dark">
             {t('nav.signIn')}

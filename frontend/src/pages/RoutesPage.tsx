@@ -5,6 +5,7 @@ import type { Difficulty, RouteDetail, RouteSummary } from '../api/types';
 import DifficultyBadge from '../components/DifficultyBadge';
 import RouteMap from '../components/RouteMap';
 import SiteHeader from '../components/SiteHeader';
+import { STATIC_DEMO } from '../deployment';
 import { formatDays, formatPrice } from '../format';
 import { useI18n } from '../i18n/I18nContext';
 
@@ -88,7 +89,7 @@ export default function RoutesPage() {
           <div className="list-head">
             <h2 className="h3">{pick('Rutas para descubrir', 'Trails to discover')}</h2>
             <span className="small muted">
-              {loading ? pick('Cargando...', 'Loading...') : pick(`${routes.length} rutas publicadas`, `${routes.length} published trails`)}
+              {loading ? pick('Cargando...', 'Loading...') : STATIC_DEMO ? pick(`${routes.length} rutas de ejemplo`, `${routes.length} sample trails`) : pick(`${routes.length} rutas publicadas`, `${routes.length} published trails`)}
             </span>
           </div>
 

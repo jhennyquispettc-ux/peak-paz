@@ -4,6 +4,7 @@ import { ApiError } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { homeFor } from '../auth/roles';
 import PeakPazHero from '../brand/PeakPazHero';
+import { STATIC_DEMO } from '../deployment';
 import { useI18n } from '../i18n/I18nContext';
 
 type Mode = 'login' | 'register';
@@ -89,6 +90,14 @@ export default function LoginPage({ mode }: { mode: Mode }) {
       setSending(false);
     }
   }
+
+  if (STATIC_DEMO) return (
+    <main className="detail">
+      <h1 className="h1">{pick('Demostración del catálogo', 'Catalog demo')}</h1>
+      <p>{pick('Las cuentas, reservas y pagos requieren el backend y no están habilitados en esta demostración.', 'Accounts, bookings and payments require the backend and are unavailable in this demo.')}</p>
+      <Link to="/rutas">{pick('Explorar rutas', 'Explore trails')}</Link>
+    </main>
+  );
 
   return (
     <main className="login pp">

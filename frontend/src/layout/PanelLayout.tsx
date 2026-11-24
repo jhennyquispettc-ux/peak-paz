@@ -61,7 +61,7 @@ export default function PanelLayout() {
           <div className="panel-brand">
             <Link to={base} aria-label="Peak Paz, inicio del panel">
               <img
-                src="/brand/peakpaz-logo-negativo.svg"
+                src={`${import.meta.env.BASE_URL}brand/peakpaz-logo-negativo.svg`}
                 alt="Peak Paz"
                 height="30"
               />

@@ -48,6 +48,32 @@ Ctrl+C detiene la API y la web. Para detener los contenedores, conservando los d
 docker compose down
 ```
 
+## Catálogo y Swagger en GitHub Pages
+
+El workflow `.github/workflows/pages.yml` publica una demostración de consulta y la documentación Swagger desde `main`.
+
+La propietaria del repositorio debe abrir **Settings → Pages → Build and deployment → Source**, elegir **GitHub Actions** y ejecutar **Actions → Publicar catálogo y Swagger en GitHub Pages → Run workflow** si no hay una publicación en curso.
+
+- Catálogo de demostración: https://jhennyquispettc-ux.github.io/peak-paz/
+- Swagger navegable: https://jhennyquispettc-ux.github.io/peak-paz/swagger/
+- Contrato OpenAPI: https://jhennyquispettc-ux.github.io/peak-paz/swagger/openapi.json
+
+Estos enlaces estarán disponibles cuando el workflow termine correctamente. GitHub Pages aloja archivos estáticos: esta demostración usa las siete rutas ficticias del seed y permite buscar, filtrar, consultar mapas, fichas e itinerarios. No publica usuarios ni documentos de la base local. Las cuentas, reservas, pagos, pronósticos en tiempo real y peticiones de prueba de Swagger están deshabilitados. El sistema completo requiere desplegar también la API y sus servicios, por ejemplo con la configuración de Render del repositorio.
+
+Para comprobar la publicación antes de subir cambios:
+
+```bash
+npm ci --prefix frontend
+npm ci --prefix backend
+npm run demo:export --prefix backend
+VITE_STATIC_DEMO=true VITE_BASE_PATH=/peak-paz/ npm run build:pages --prefix frontend
+VITE_BASE_PATH=/peak-paz/ npm run preview --prefix frontend -- --host 127.0.0.1
+```
+
+Abrir `http://127.0.0.1:4173/peak-paz/` y `http://127.0.0.1:4173/peak-paz/swagger/`. Las rutas con `#` permiten recargar o compartir una ficha sin errores 404 en Pages. Las compilaciones normales conservan el modo conectado al backend. `VITE_API_URL` permite configurar una API pública, con su prefijo `/api`, cuando ese servidor admita el origen del frontend mediante CORS.
+
+El Swagger local sigue disponible en `http://localhost:3010/api/docs` con el backend en desarrollo. `docs/openapi.json` se actualiza con `npm run openapi:export --prefix backend` cuando la base y las variables locales estén configuradas.
+
 ## Verificación de cuentas
 
 ### Turistas

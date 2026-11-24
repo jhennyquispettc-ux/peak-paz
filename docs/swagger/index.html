@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Documentación OpenAPI de Peak Paz, plataforma de reserva de guías y salidas de senderismo en La Paz."
+    />
+    <title>Peak Paz API · Swagger</title>
+    <link rel="icon" href="../brand/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./swagger-ui.css" />
+    <style>
+      body {
+        margin: 0;
+        background: #fafafa;
+      }
+      .documentation-header {
+        padding: 24px max(24px, calc((100% - 1460px) / 2));
+        background: #3b2416;
+        color: #fbf4ea;
+        font:
+          16px/1.6 system-ui,
+          sans-serif;
+      }
+      .documentation-header h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+      }
+      .documentation-header p {
+        margin: 0 0 12px;
+        max-width: 80ch;
+      }
+      .documentation-header nav {
+        display: flex;
+        gap: 24px;
+        flex-wrap: wrap;
+      }
+      .documentation-header a {
+        color: #ffd166;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="documentation-header">
+      <h1>Peak Paz · Documentación de la API</h1>
+      <p>
+        Contrato OpenAPI del proyecto. Esta publicación permite consultar los
+        endpoints y esquemas; las peticiones de prueba requieren el backend y
+        están deshabilitadas aquí.
+      </p>
+      <nav aria-label="Documentación">
+        <a href="../">Ver catálogo de demostración</a>
+        <a href="./openapi.json" download="peak-paz-openapi.json"
+          >Descargar OpenAPI JSON</a
+        >
+        <a
+          href="https://github.com/jhennyquispettc-ux/peak-paz#ejecutar-en-la-laptop"
+          >Manual de instalación</a
+        >
+      </nav>
+    </header>
+    <div id="swagger-ui"></div>
+    <script src="./swagger-ui-bundle.js"></script>
+    <script>
+      window.ui = SwaggerUIBundle({
+        url: "./openapi.json",
+        dom_id: "#swagger-ui",
+        deepLinking: true,
+        displayRequestDuration: true,
+        docExpansion: "list",
+        defaultModelsExpandDepth: -1,
+        supportedSubmitMethods: [],
+        tryItOutEnabled: false,
+        persistAuthorization: false,
+        validatorUrl: null,
+      });
+    </script>
+  </body>
+</html>

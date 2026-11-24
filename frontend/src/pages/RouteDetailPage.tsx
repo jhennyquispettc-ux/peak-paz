@@ -16,6 +16,7 @@ import { useAuth } from '../auth/AuthContext';
 import DifficultyBadge from '../components/DifficultyBadge';
 import RouteMap from '../components/RouteMap';
 import SiteHeader from '../components/SiteHeader';
+import { STATIC_DEMO } from '../deployment';
 import { useI18n } from '../i18n/I18nContext';
 import RouteBookingPanel from './tourist/RouteBookingPanel';
 import {
@@ -144,8 +145,9 @@ export default function RouteDetailPage() {
               type="button"
               className="btn btn-primary wide"
               onClick={reserve}
+              disabled={STATIC_DEMO}
             >
-              {pick('Reservar', 'Book now')}
+              {STATIC_DEMO ? pick('Reserva no habilitada en la demo', 'Booking unavailable in demo') : pick('Reservar', 'Book now')}
             </button>
           </div>
         </header>
@@ -237,12 +239,12 @@ export default function RouteDetailPage() {
           </div>
 
           <aside className="detail-side">
-            <RouteBookingPanel route={route} times={options} />
+            {!STATIC_DEMO && <RouteBookingPanel route={route} times={options} />}
             <section className="card side-card">
               <h2 className="h3">{pick('Clima en el punto de inicio', 'Weather at the trailhead')}</h2>
               {weatherError && (
                 <p className="notice notice-info small">
-                  {pick('El pronóstico no está disponible en este momento.', 'The forecast is not available right now.')}
+                  {STATIC_DEMO ? pick('La demostración no incluye pronósticos en tiempo real.', 'This demo does not include live forecasts.') : pick('El pronóstico no está disponible en este momento.', 'The forecast is not available right now.')}
                 </p>
               )}
               {weather && (
@@ -267,7 +269,7 @@ export default function RouteDetailPage() {
               <h2 className="h3">{pick('Guías para esta ruta', 'Guides for this trail')}</h2>
               {guides.length === 0 ? (
                 <p className="small muted">
-                  {pick('Todavía no hay guías verificados para esta ruta.', 'There are no verified guides for this trail yet.')}
+                  {STATIC_DEMO ? pick('La demostración no publica cuentas de guías.', 'This demo does not publish guide accounts.') : pick('Todavía no hay guías verificados para esta ruta.', 'There are no verified guides for this trail yet.')}
                 </p>
               ) : (
                 <ul className="guides">

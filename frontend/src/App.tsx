@@ -1,5 +1,7 @@
 import { lazy, Suspense } from 'react';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, HashRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { STATIC_DEMO } from './deployment';
+import DemoNotice from './components/DemoNotice';
 import { AuthProvider } from './auth/AuthContext';
 import RequireApprovedGuide from './auth/RequireApprovedGuide';
 import RequireRole from './auth/RequireRole';
@@ -82,11 +84,13 @@ const PaymentReturnPage = lazy(
 );
 
 export default function App() {
+  const Router = STATIC_DEMO ? HashRouter : BrowserRouter;
   return (
     <I18nProvider>
       <AuthProvider>
         <ToastProvider>
-          <BrowserRouter>
+          <Router>
+            {STATIC_DEMO && <DemoNotice />}
             <Suspense fallback={<LoadingState />}>
               <Routes>
                 <Route path="/" element={<Navigate to="/rutas" replace />} />
@@ -286,7 +290,7 @@ export default function App() {
                 <Route path="*" element={<Navigate to="/rutas" replace />} />
               </Routes>
             </Suspense>
-          </BrowserRouter>
+          </Router>
         </ToastProvider>
       </AuthProvider>
     </I18nProvider>

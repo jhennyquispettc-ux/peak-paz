@@ -1,3 +1,5 @@
+import { STATIC_DEMO } from '../deployment';
+
 const TOKEN_KEY = 'peakpaz.token';
 
 const MESSAGES: Record<string, string> = {
@@ -185,6 +187,10 @@ export function writeToken(token: string | null): void {
 }
 
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
+  if (STATIC_DEMO) {
+    const { demoApi } = await import('./demo');
+    return demoApi<T>(path, init);
+  }
   const token = readToken();
   const headers = new Headers(init.headers);
   if (init.body && !(init.body instanceof FormData))
@@ -193,7 +199,8 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
 
   let response: Response;
   try {
-    response = await fetch(`/api${path}`, { ...init, headers });
+    const base = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '');
+    response = await fetch(`${base}${path}`, { ...init, headers });
   } catch {
     throw new ApiError(
       0,
